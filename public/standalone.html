@@ -1,0 +1,1098 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Food Processor CRM - HubSpot Style (Single HTML Format)</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Lucide Icons CDN -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+    body {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+    }
+    .font-mono {
+      font-family: 'JetBrains Mono', monospace;
+    }
+    /* Custom scrollbar */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #f1f5f9;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 4px;
+    }
+  </style>
+</head>
+<body class="bg-[#f5f8fa] text-slate-800 min-h-screen flex flex-col antialiased selection:bg-[#ff7a59] selection:text-white">
+
+  <!-- Toast Notification -->
+  <div id="toast" class="fixed top-5 right-5 z-50 bg-slate-900 text-white px-4 py-3 rounded-lg shadow-xl flex items-center gap-3 border border-slate-800 transition-all duration-300 opacity-0 pointer-events-none translate-y-[-10px]">
+    <i data-lucide="check-circle-2" class="w-5 h-5 text-emerald-400"></i>
+    <span id="toast-msg" class="text-sm font-medium">Notification message</span>
+  </div>
+
+  <!-- HubSpot Global Top Header -->
+  <header class="h-14 bg-[#2e3f50] text-white px-6 flex items-center justify-between sticky top-0 z-30 shadow-sm">
+    <div class="flex items-center gap-3">
+      <div class="w-8 h-8 rounded-full bg-[#ff7a59] flex items-center justify-center font-bold text-white text-xs shadow-xs">
+        FP
+      </div>
+      <div>
+        <div class="flex items-center gap-2">
+          <span class="text-white font-bold text-sm tracking-tight">Provisions CRM</span>
+          <span class="text-[10px] font-semibold bg-slate-700/90 text-slate-300 px-2 py-0.5 rounded">
+            Food & Protein Hub
+          </span>
+          <span class="text-[10px] font-medium bg-[#ff7a59]/20 text-[#ff7a59] border border-[#ff7a59]/30 px-1.5 py-0.5 rounded">
+            Single HTML Format
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <div class="flex items-center gap-2.5">
+      <button onclick="resetDemoData()" title="Reset demo data" class="p-1.5 text-slate-300 hover:text-white hover:bg-slate-700/60 rounded transition-colors text-xs flex items-center gap-1">
+        <i data-lucide="rotate-ccw" class="w-4 h-4"></i>
+      </button>
+      <button onclick="exportCSV()" class="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-slate-200 hover:text-white bg-slate-700/80 hover:bg-slate-700 rounded transition-colors">
+        <i data-lucide="download" class="w-3.5 h-3.5"></i>
+        Export CSV
+      </button>
+      <button onclick="openCreateModal()" class="inline-flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-semibold text-white bg-[#ff7a59] hover:bg-[#e06545] active:bg-[#c95335] rounded shadow-sm transition-all">
+        <i data-lucide="plus" class="w-4 h-4"></i>
+        <span>Create company</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- HubSpot Sub-header with Metrics -->
+  <div class="bg-white border-b border-slate-200 px-6 py-3">
+    <div class="max-w-7xl mx-auto flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div>
+        <div class="flex items-center gap-2">
+          <h1 class="text-xl font-bold text-slate-900 tracking-tight">Companies</h1>
+          <span id="metric-total-badge" class="text-xs font-semibold bg-slate-100 text-slate-600 px-2 py-0.5 rounded-full">
+            0 total
+          </span>
+        </div>
+        <p class="text-xs text-slate-500 mt-0.5">
+          Small business customer relationship management for meat, poultry, fish & food processing
+        </p>
+      </div>
+
+      <!-- Quick Metrics -->
+      <div class="flex items-center gap-3 text-xs">
+        <div class="px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-lg">
+          <span class="text-slate-500 block text-[10px] uppercase font-semibold">Active Supply Partners</span>
+          <span id="metric-active" class="font-bold text-slate-900 text-sm text-emerald-600">0 Accounts</span>
+        </div>
+        <div class="px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-lg">
+          <span class="text-slate-500 block text-[10px] uppercase font-semibold">Contract Throughput</span>
+          <span id="metric-volume" class="font-bold text-slate-900 text-sm">0 MT / mo</span>
+        </div>
+        <div class="px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-lg hidden sm:block">
+          <span class="text-slate-500 block text-[10px] uppercase font-semibold">Pipeline Value</span>
+          <span id="metric-value" class="font-bold text-slate-900 text-sm text-blue-600">$0.00M</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Workspace Container -->
+  <main class="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 space-y-4">
+    
+    <!-- Filter, View Toggle & Search Toolbar -->
+    <div class="bg-white border border-slate-200 rounded-xl p-3 shadow-sm space-y-3">
+      <div class="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 pb-3">
+        <!-- Quick View Tabs -->
+        <div class="flex items-center gap-1 overflow-x-auto text-xs font-medium" id="quick-tabs">
+          <button onclick="setTabFilter('all')" class="tab-btn px-3 py-1.5 rounded-md whitespace-nowrap bg-slate-100 text-slate-900 font-semibold" data-tab="all">All Companies</button>
+          <button onclick="setTabFilter('meat')" class="tab-btn px-3 py-1.5 rounded-md whitespace-nowrap text-slate-600 hover:text-slate-900 hover:bg-slate-50" data-tab="meat">🥩 Meat & Beef</button>
+          <button onclick="setTabFilter('poultry')" class="tab-btn px-3 py-1.5 rounded-md whitespace-nowrap text-slate-600 hover:text-slate-900 hover:bg-slate-50" data-tab="poultry">🍗 Poultry</button>
+          <button onclick="setTabFilter('seafood')" class="tab-btn px-3 py-1.5 rounded-md whitespace-nowrap text-slate-600 hover:text-slate-900 hover:bg-slate-50" data-tab="seafood">🐟 Seafood</button>
+          <button onclick="setTabFilter('prepared')" class="tab-btn px-3 py-1.5 rounded-md whitespace-nowrap text-slate-600 hover:text-slate-900 hover:bg-slate-50" data-tab="prepared">🏭 Prepared Foods</button>
+          <button onclick="setTabFilter('high_volume')" class="tab-btn px-3 py-1.5 rounded-md whitespace-nowrap text-slate-600 hover:text-slate-900 hover:bg-slate-50" data-tab="high_volume">⚡ High Volume (>500 MT)</button>
+        </div>
+
+        <!-- View Mode (Table / Board) -->
+        <div class="flex items-center bg-slate-100 p-0.5 rounded-lg border border-slate-200">
+          <button id="btn-view-list" onclick="switchView('table')" class="flex items-center gap-1.5 px-3 py-1 text-xs font-semibold rounded-md bg-white text-slate-900 shadow-xs">
+            <i data-lucide="table" class="w-3.5 h-3.5"></i>
+            <span>List</span>
+          </button>
+          <button id="btn-view-board" onclick="switchView('board')" class="flex items-center gap-1.5 px-3 py-1 text-xs font-semibold rounded-md text-slate-500 hover:text-slate-900">
+            <i data-lucide="kanban" class="w-3.5 h-3.5"></i>
+            <span>Board</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Search & Sort Row -->
+      <div class="flex flex-col sm:flex-row items-center justify-between gap-3">
+        <div class="relative w-full sm:w-80">
+          <i data-lucide="search" class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400"></i>
+          <input
+            id="search-input"
+            type="text"
+            placeholder="Search by company, contact, Est #, city..."
+            oninput="handleSearch(this.value)"
+            class="w-full pl-9 pr-8 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-xs text-slate-900 placeholder-slate-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#ff7a59]/30 focus:border-[#ff7a59] transition-all"
+          />
+        </div>
+
+        <div class="flex items-center gap-2 w-full sm:w-auto justify-end text-xs text-slate-500">
+          <span>Sort:</span>
+          <select id="sort-select" onchange="handleSortChange(this.value)" class="bg-slate-50 border border-slate-200 text-slate-800 text-xs rounded-lg px-2.5 py-1.5 focus:outline-none focus:ring-1 focus:ring-[#ff7a59]">
+            <option value="companyName-asc">Company name (A-Z)</option>
+            <option value="companyName-desc">Company name (Z-A)</option>
+            <option value="monthlyVolumeMetricTons-desc">Monthly volume (High to Low)</option>
+            <option value="annualContractValue-desc">Contract value (High to Low)</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <!-- VIEW 1: HubSpot Table / List View -->
+    <div id="container-table" class="bg-white border border-slate-200 rounded-xl shadow-xs overflow-hidden">
+      <div class="overflow-x-auto">
+        <table class="w-full text-left text-xs whitespace-nowrap">
+          <thead class="bg-slate-50 border-b border-slate-200 text-slate-600 font-semibold uppercase tracking-wider text-[11px]">
+            <tr>
+              <th class="px-4 py-3">Company Name</th>
+              <th class="px-4 py-3">Industry Sector</th>
+              <th class="px-4 py-3">Pipeline Stage</th>
+              <th class="px-4 py-3">Primary Contact</th>
+              <th class="px-4 py-3">Throughput (MT)</th>
+              <th class="px-4 py-3">Contract ($)</th>
+              <th class="px-4 py-3 text-right">Actions</th>
+            </tr>
+          </thead>
+          <tbody id="table-body" class="divide-y divide-slate-100 text-slate-700">
+            <!-- Rendered by JS -->
+          </tbody>
+        </table>
+      </div>
+      <div class="px-6 py-3 bg-slate-50 border-t border-slate-200 flex items-center justify-between text-xs text-slate-500">
+        <div>
+          Showing <strong id="filter-count" class="text-slate-800">0</strong> companies
+        </div>
+        <div id="haccp-badge" class="font-medium text-emerald-600">
+          HACCP Coverage: 100%
+        </div>
+      </div>
+    </div>
+
+    <!-- VIEW 2: Kanban Pipeline Board View -->
+    <div id="container-board" class="hidden grid grid-cols-1 md:grid-cols-5 gap-3 overflow-x-auto pb-4 items-start">
+      <!-- Rendered by JS -->
+    </div>
+  </main>
+
+  <!-- ========================================================= -->
+  <!-- MODAL: Create / Edit Company Drawer                      -->
+  <!-- ========================================================= -->
+  <div id="company-modal" class="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 hidden backdrop-blur-xs">
+    <div class="bg-white rounded-xl shadow-2xl max-w-2xl w-full max-h-[90vh] flex flex-col overflow-hidden">
+      <div class="px-6 py-4 border-b border-slate-200 flex items-center justify-between bg-slate-50">
+        <div>
+          <h2 id="modal-title" class="text-base font-bold text-slate-900">Create company</h2>
+          <p class="text-xs text-slate-500">Configure regulatory IDs, cold-chain specs and commercial contacts</p>
+        </div>
+        <button onclick="closeModal()" class="text-slate-400 hover:text-slate-600 p-1">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      <form id="company-form" onsubmit="handleFormSubmit(event)" class="flex-1 overflow-y-auto p-6 space-y-4 text-xs">
+        <input type="hidden" id="form-id" />
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label class="block font-semibold text-slate-700 mb-1">Company Legal Name *</label>
+            <input type="text" id="form-name" required placeholder="e.g. Apex Primal Beef & Fabricators" class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-[#ff7a59] focus:outline-none" />
+          </div>
+          <div>
+            <label class="block font-semibold text-slate-700 mb-1">Establishment / Facility ID *</label>
+            <input type="text" id="form-est" required placeholder="USDA-EST-XXXX or FDA-FAC-XXXX" class="w-full px-3 py-2 border border-slate-300 rounded-lg font-mono focus:ring-2 focus:ring-[#ff7a59] focus:outline-none" />
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label class="block font-semibold text-slate-700 mb-1">Industry Sector</label>
+            <select id="form-sector" class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-[#ff7a59] focus:outline-none">
+              <option value="Meat & Beef Processing">🥩 Meat & Beef Processing</option>
+              <option value="Poultry Integration">🍗 Poultry Integration</option>
+              <option value="Seafood & Aquaculture">🐟 Seafood & Aquaculture</option>
+              <option value="Further Food Processing">🏭 Further Food Processing</option>
+            </select>
+          </div>
+          <div>
+            <label class="block font-semibold text-slate-700 mb-1">Pipeline Stage</label>
+            <select id="form-stage" class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-[#ff7a59] focus:outline-none">
+              <option value="Lead / Inbound">Lead / Inbound</option>
+              <option value="Sample & Spec Review">Sample & Spec Review</option>
+              <option value="Plant & HACCP Audit">Plant & HACCP Audit</option>
+              <option value="Contract Negotiation">Contract Negotiation</option>
+              <option value="Active Supply Partner">Active Supply Partner</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="p-3 bg-slate-50 border border-slate-200 rounded-lg space-y-3">
+          <span class="font-bold text-slate-700 block uppercase tracking-wider text-[10px]">Primary Commercial Contact</span>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label class="block text-slate-600 mb-1">Contact Name *</label>
+              <input type="text" id="form-contact-name" required placeholder="Marcus Vance" class="w-full px-3 py-1.5 border border-slate-300 rounded-md bg-white focus:outline-none focus:ring-1 focus:ring-[#ff7a59]" />
+            </div>
+            <div>
+              <label class="block text-slate-600 mb-1">Job Title</label>
+              <input type="text" id="form-contact-title" placeholder="VP of Procurement" class="w-full px-3 py-1.5 border border-slate-300 rounded-md bg-white focus:outline-none focus:ring-1 focus:ring-[#ff7a59]" />
+            </div>
+            <div>
+              <label class="block text-slate-600 mb-1">Email *</label>
+              <input type="email" id="form-contact-email" required placeholder="m.vance@company.com" class="w-full px-3 py-1.5 border border-slate-300 rounded-md bg-white focus:outline-none focus:ring-1 focus:ring-[#ff7a59]" />
+            </div>
+            <div>
+              <label class="block text-slate-600 mb-1">Phone</label>
+              <input type="text" id="form-contact-phone" placeholder="(555) 019-2831" class="w-full px-3 py-1.5 border border-slate-300 rounded-md bg-white focus:outline-none focus:ring-1 focus:ring-[#ff7a59]" />
+            </div>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div>
+            <label class="block font-semibold text-slate-700 mb-1">City *</label>
+            <input type="text" id="form-city" required placeholder="Omaha" class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-[#ff7a59]" />
+          </div>
+          <div>
+            <label class="block font-semibold text-slate-700 mb-1">State / Province</label>
+            <input type="text" id="form-state" placeholder="NE" class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-[#ff7a59]" />
+          </div>
+          <div>
+            <label class="block font-semibold text-slate-700 mb-1">Cold-Chain SLA Tier</label>
+            <select id="form-coldchain" class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-[#ff7a59]">
+              <option value="Deep Freeze (-25°C to -18°C)">Deep Freeze (-25°C to -18°C)</option>
+              <option value="Chilled Storage (0°C to 4°C)">Chilled Storage (0°C to 4°C)</option>
+              <option value="IQF (Individually Quick Frozen)">IQF (Individually Quick Frozen)</option>
+              <option value="Dry Aging / Climate Controlled">Dry Aging / Climate Controlled</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label class="block font-semibold text-slate-700 mb-1">Monthly Throughput (Metric Tons)</label>
+            <input type="number" id="form-volume" min="1" step="10" value="300" class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-[#ff7a59]" />
+          </div>
+          <div>
+            <label class="block font-semibold text-slate-700 mb-1">Annual Contract Value ($)</label>
+            <input type="number" id="form-contract" min="0" step="5000" value="500000" class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-[#ff7a59]" />
+          </div>
+        </div>
+
+        <!-- Food Safety Certifications -->
+        <div>
+          <label class="block font-semibold text-slate-700 mb-1.5">Food Safety & Compliance Certifications</label>
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-2" id="cert-checkboxes">
+            <label class="flex items-center gap-2 p-2 border border-slate-200 rounded-md bg-slate-50 cursor-pointer hover:bg-slate-100">
+              <input type="checkbox" value="HACCP Certified" checked class="text-[#ff7a59] rounded" />
+              <span>HACCP</span>
+            </label>
+            <label class="flex items-center gap-2 p-2 border border-slate-200 rounded-md bg-slate-50 cursor-pointer hover:bg-slate-100">
+              <input type="checkbox" value="SQF Level 3" checked class="text-[#ff7a59] rounded" />
+              <span>SQF Level 3</span>
+            </label>
+            <label class="flex items-center gap-2 p-2 border border-slate-200 rounded-md bg-slate-50 cursor-pointer hover:bg-slate-100">
+              <input type="checkbox" value="BRCGS Food Safety" class="text-[#ff7a59] rounded" />
+              <span>BRCGS</span>
+            </label>
+            <label class="flex items-center gap-2 p-2 border border-slate-200 rounded-md bg-slate-50 cursor-pointer hover:bg-slate-100">
+              <input type="checkbox" value="MSC Seafood" class="text-[#ff7a59] rounded" />
+              <span>MSC Seafood</span>
+            </label>
+            <label class="flex items-center gap-2 p-2 border border-slate-200 rounded-md bg-slate-50 cursor-pointer hover:bg-slate-100">
+              <input type="checkbox" value="Halal Certified" class="text-[#ff7a59] rounded" />
+              <span>Halal</span>
+            </label>
+            <label class="flex items-center gap-2 p-2 border border-slate-200 rounded-md bg-slate-50 cursor-pointer hover:bg-slate-100">
+              <input type="checkbox" value="Kosher Certified" class="text-[#ff7a59] rounded" />
+              <span>Kosher</span>
+            </label>
+            <label class="flex items-center gap-2 p-2 border border-slate-200 rounded-md bg-slate-50 cursor-pointer hover:bg-slate-100">
+              <input type="checkbox" value="FSMA Compliant" checked class="text-[#ff7a59] rounded" />
+              <span>FSMA</span>
+            </label>
+            <label class="flex items-center gap-2 p-2 border border-slate-200 rounded-md bg-slate-50 cursor-pointer hover:bg-slate-100">
+              <input type="checkbox" value="USDA Organic" class="text-[#ff7a59] rounded" />
+              <span>USDA Organic</span>
+            </label>
+          </div>
+        </div>
+
+        <div class="flex items-center justify-end gap-3 pt-4 border-t border-slate-200">
+          <button type="button" onclick="closeModal()" class="px-4 py-2 border border-slate-300 text-slate-700 hover:bg-slate-100 rounded-lg">Cancel</button>
+          <button type="submit" class="px-5 py-2 bg-[#ff7a59] hover:bg-[#e06545] text-white font-semibold rounded-lg shadow-sm">Save company</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ========================================================= -->
+  <!-- MODAL: HubSpot 360 Customer Detail Drawer                -->
+  <!-- ========================================================= -->
+  <div id="detail-drawer" class="fixed inset-0 bg-black/50 z-50 flex justify-end hidden backdrop-blur-xs">
+    <div class="bg-white w-full max-w-xl h-full shadow-2xl flex flex-col overflow-hidden animate-slide-left">
+      <!-- Drawer Header -->
+      <div class="p-6 border-b border-slate-200 bg-slate-50 flex items-start justify-between">
+        <div class="flex items-center gap-3">
+          <div id="drawer-avatar" class="w-10 h-10 rounded-lg bg-slate-800 text-white font-bold flex items-center justify-center text-sm">
+            AP
+          </div>
+          <div>
+            <h2 id="drawer-name" class="text-base font-bold text-slate-900">Apex Primal Beef</h2>
+            <p id="drawer-sub" class="text-xs text-slate-500 font-mono">USDA-EST-4892A • Omaha, NE</p>
+          </div>
+        </div>
+        <div class="flex items-center gap-2">
+          <button onclick="editCurrentDetail()" class="p-1.5 text-slate-500 hover:text-slate-800 hover:bg-slate-200 rounded">
+            <i data-lucide="edit-3" class="w-4 h-4"></i>
+          </button>
+          <button onclick="closeDetailDrawer()" class="p-1.5 text-slate-500 hover:text-slate-800 hover:bg-slate-200 rounded">
+            <i data-lucide="x" class="w-5 h-5"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- Drawer Content -->
+      <div class="flex-1 overflow-y-auto p-6 space-y-6 text-xs">
+        <!-- Stage selector -->
+        <div class="p-3 bg-slate-50 border border-slate-200 rounded-lg flex items-center justify-between">
+          <span class="font-semibold text-slate-600">Pipeline Stage:</span>
+          <select id="drawer-stage-select" onchange="handleDrawerStageChange(this.value)" class="bg-white border border-slate-300 font-semibold text-slate-800 rounded px-2.5 py-1 text-xs focus:ring-1 focus:ring-[#ff7a59]">
+            <option value="Lead / Inbound">Lead / Inbound</option>
+            <option value="Sample & Spec Review">Sample & Spec Review</option>
+            <option value="Plant & HACCP Audit">Plant & HACCP Audit</option>
+            <option value="Contract Negotiation">Contract Negotiation</option>
+            <option value="Active Supply Partner">Active Supply Partner</option>
+          </select>
+        </div>
+
+        <!-- Metrics Grid -->
+        <div class="grid grid-cols-2 gap-3">
+          <div class="p-3 border border-slate-200 rounded-lg">
+            <span class="text-slate-400 block text-[10px] uppercase font-semibold">Monthly Throughput</span>
+            <span id="drawer-volume" class="text-sm font-bold text-slate-900 mt-0.5 block">1,450 MT</span>
+          </div>
+          <div class="p-3 border border-slate-200 rounded-lg">
+            <span class="text-slate-400 block text-[10px] uppercase font-semibold">Annual Contract Value</span>
+            <span id="drawer-contract" class="text-sm font-bold text-slate-900 mt-0.5 block">$2,180,000</span>
+          </div>
+        </div>
+
+        <!-- Cold Chain & Certifications -->
+        <div class="space-y-2">
+          <h3 class="font-bold text-slate-800 uppercase tracking-wider text-[11px]">Cold Chain & Certifications</h3>
+          <div class="p-3 bg-slate-50 rounded-lg space-y-2 border border-slate-200">
+            <div class="flex items-center justify-between">
+              <span class="text-slate-500">Storage SLA:</span>
+              <span id="drawer-coldchain" class="font-semibold text-slate-800">Deep Freeze (-25°C to -18°C)</span>
+            </div>
+            <div>
+              <span class="text-slate-500 block mb-1">Active QA Badges:</span>
+              <div id="drawer-certs" class="flex flex-wrap gap-1">
+                <!-- Cert pills -->
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Contact Info -->
+        <div class="space-y-2">
+          <h3 class="font-bold text-slate-800 uppercase tracking-wider text-[11px]">Primary Contact</h3>
+          <div class="p-3 border border-slate-200 rounded-lg space-y-1.5">
+            <div class="font-semibold text-slate-900" id="drawer-contact-name">Marcus Vance</div>
+            <div class="text-slate-500" id="drawer-contact-title">VP Procurement</div>
+            <div class="flex items-center gap-2 text-slate-600">
+              <i data-lucide="mail" class="w-3.5 h-3.5 text-slate-400"></i>
+              <span id="drawer-contact-email">m.vance@company.com</span>
+            </div>
+            <div class="flex items-center gap-2 text-slate-600">
+              <i data-lucide="phone" class="w-3.5 h-3.5 text-slate-400"></i>
+              <span id="drawer-contact-phone">(402) 555-0182</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Activity Logger (HubSpot Style) -->
+        <div class="space-y-3 pt-2 border-t border-slate-200">
+          <h3 class="font-bold text-slate-800 uppercase tracking-wider text-[11px]">Log CRM Activity</h3>
+          <div class="flex gap-2">
+            <input type="text" id="new-activity-input" placeholder="Log note, call outcome, or HACCP inspection update..." class="flex-1 px-3 py-1.5 border border-slate-300 rounded-lg text-xs focus:ring-1 focus:ring-[#ff7a59] focus:outline-none" />
+            <button onclick="logActivity()" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-900 text-white font-semibold rounded-lg text-xs">Log</button>
+          </div>
+          <div id="activity-timeline" class="space-y-2 max-h-48 overflow-y-auto">
+            <!-- Timeline items -->
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================= -->
+  <!-- JAVASCRIPT: Full Standalone CRUD Engine                   -->
+  <!-- ========================================================= -->
+  <script>
+    // Initial Demonstration Dataset
+    const DEMO_CUSTOMERS = [
+      {
+        id: 'cust-101',
+        establishmentNumber: 'USDA-EST-4892A',
+        companyName: 'Apex Primal Beef & Fabricators',
+        sector: 'Meat & Beef Processing',
+        stage: 'Active Supply Partner',
+        primaryContact: {
+          name: 'Marcus Vance',
+          title: 'VP of Procurement & Fabrication',
+          email: 'm.vance@apexprimal.com',
+          phone: '(402) 555-0182'
+        },
+        facilityLocation: { city: 'Omaha', state: 'NE' },
+        coldChainSpec: 'Deep Freeze (-25°C to -18°C)',
+        monthlyVolumeMetricTons: 1450,
+        annualContractValue: 2180000,
+        certifications: ['HACCP Certified', 'SQF Level 3', 'Halal Certified', 'FSMA Compliant'],
+        notes: [
+          { author: 'Alex Rivera', date: '2026-08-10', content: 'Reviewed Q3 ribeye volume forecast. Plant confirmed capacity.' }
+        ]
+      },
+      {
+        id: 'cust-102',
+        establishmentNumber: 'USDA-EST-P-7740',
+        companyName: 'Shenandoah Broiler Farms & Deboning',
+        sector: 'Poultry Integration',
+        stage: 'Contract Negotiation',
+        primaryContact: {
+          name: 'Elena Rostova',
+          title: 'Head of Quality & Inbound Supply',
+          email: 'elena.r@shenandoahpoultry.com',
+          phone: '(540) 555-8931'
+        },
+        facilityLocation: { city: 'Harrisonburg', state: 'VA' },
+        coldChainSpec: 'Chilled Storage (0°C to 4°C)',
+        monthlyVolumeMetricTons: 980,
+        annualContractValue: 1240000,
+        certifications: ['HACCP Certified', 'USDA Organic', 'BRCGS Food Safety'],
+        notes: [
+          { author: 'Jessica Miller', date: '2026-09-02', content: 'Sent final redlined supply agreement with Net 15 terms.' }
+        ]
+      },
+      {
+        id: 'cust-103',
+        establishmentNumber: 'FDA-FAC-88129',
+        companyName: 'Pacific Rim Marine Harvest & Filleting',
+        sector: 'Seafood & Aquaculture',
+        stage: 'Active Supply Partner',
+        primaryContact: {
+          name: 'Capt. Donald Tanaka',
+          title: 'Commercial Fleet Operations Lead',
+          email: 'd.tanaka@pacificrimharvest.com',
+          phone: '(206) 555-4420'
+        },
+        facilityLocation: { city: 'Seattle', state: 'WA' },
+        coldChainSpec: 'IQF (Individually Quick Frozen)',
+        monthlyVolumeMetricTons: 620,
+        annualContractValue: 1690000,
+        certifications: ['HACCP Certified', 'MSC Seafood', 'BRCGS Food Safety'],
+        notes: [
+          { author: 'Alex Rivera', date: '2026-08-28', content: 'Switched flash freezing lines to Pacific Halibut.' }
+        ]
+      },
+      {
+        id: 'cust-104',
+        establishmentNumber: 'USDA-EST-9921',
+        companyName: 'Silverline Prepared Foods & Smokehouse',
+        sector: 'Further Food Processing',
+        stage: 'Plant & HACCP Audit',
+        primaryContact: {
+          name: 'Genevieve Moreau',
+          title: 'Director of Thermal Processing',
+          email: 'g.moreau@silverlinefoods.com',
+          phone: '(312) 555-7319'
+        },
+        facilityLocation: { city: 'Chicago', state: 'IL' },
+        coldChainSpec: 'Chilled Storage (0°C to 4°C)',
+        monthlyVolumeMetricTons: 410,
+        annualContractValue: 875000,
+        certifications: ['HACCP Certified', 'SQF Level 3', 'FSMA Compliant'],
+        notes: [
+          { author: 'Jessica Miller', date: '2026-09-08', content: 'On-site sanitation walk-through scheduled for Thursday.' }
+        ]
+      },
+      {
+        id: 'cust-105',
+        establishmentNumber: 'USDA-EST-6031B',
+        companyName: 'Lone Star Heritage Pork Cutters',
+        sector: 'Meat & Beef Processing',
+        stage: 'Sample & Spec Review',
+        primaryContact: {
+          name: 'Clint Hollister',
+          title: 'Livestock & Cold Stores Manager',
+          email: 'clint@lonestarporkworks.com',
+          phone: '(806) 555-6602'
+        },
+        facilityLocation: { city: 'Amarillo', state: 'TX' },
+        coldChainSpec: 'Deep Freeze (-25°C to -18°C)',
+        monthlyVolumeMetricTons: 1120,
+        annualContractValue: 1420000,
+        certifications: ['HACCP Certified', 'SQF Level 3', 'Halal Certified'],
+        notes: [
+          { author: 'Alex Rivera', date: '2026-09-01', content: 'Sent test sample lot of 40 cases Duroc pork bellies.' }
+        ]
+      },
+      {
+        id: 'cust-106',
+        establishmentNumber: 'FDA-FAC-34902',
+        companyName: 'Kodiak Bay Seafood Canneries',
+        sector: 'Seafood & Aquaculture',
+        stage: 'Lead / Inbound',
+        primaryContact: {
+          name: 'Arthur Sterling',
+          title: 'Commercial Export Coordinator',
+          email: 'asterling@kodiakbay.com',
+          phone: '(907) 555-3109'
+        },
+        facilityLocation: { city: 'Kodiak', state: 'AK' },
+        coldChainSpec: 'IQF (Individually Quick Frozen)',
+        monthlyVolumeMetricTons: 350,
+        annualContractValue: 650000,
+        certifications: ['HACCP Certified', 'MSC Seafood'],
+        notes: [
+          { author: 'Jessica Miller', date: '2026-09-10', content: 'Inbound inquiry via website requesting quote for salmon fillets.' }
+        ]
+      }
+    ];
+
+    const PIPELINE_STAGES = [
+      { id: 'Lead / Inbound', label: 'Lead / Inbound', color: 'bg-slate-400' },
+      { id: 'Sample & Spec Review', label: 'Sample & QA', color: 'bg-amber-400' },
+      { id: 'Plant & HACCP Audit', label: 'HACCP Audit', color: 'bg-blue-400' },
+      { id: 'Contract Negotiation', label: 'Negotiation', color: 'bg-purple-400' },
+      { id: 'Active Supply Partner', label: 'Active Partner', color: 'bg-emerald-500' }
+    ];
+
+    // State
+    let customers = [];
+    let currentView = 'table';
+    let currentTab = 'all';
+    let searchQuery = '';
+    let sortField = 'companyName';
+    let sortDirection = 'asc';
+    let currentDetailCustomer = null;
+
+    // Initialize
+    function init() {
+      try {
+        const stored = localStorage.getItem('food_processor_crm_standalone_data');
+        if (stored) {
+          customers = JSON.parse(stored);
+        } else {
+          customers = [...DEMO_CUSTOMERS];
+          saveStorage();
+        }
+      } catch (e) {
+        customers = [...DEMO_CUSTOMERS];
+      }
+      render();
+    }
+
+    function saveStorage() {
+      try {
+        localStorage.setItem('food_processor_crm_standalone_data', JSON.stringify(customers));
+      } catch (e) {}
+    }
+
+    function showToast(msg) {
+      const toast = document.getElementById('toast');
+      const toastMsg = document.getElementById('toast-msg');
+      toastMsg.innerText = msg;
+      toast.classList.remove('opacity-0', 'pointer-events-none', 'translate-y-[-10px]');
+      setTimeout(() => {
+        toast.classList.add('opacity-0', 'pointer-events-none', 'translate-y-[-10px]');
+      }, 3000);
+    }
+
+    function getFilteredCustomers() {
+      return customers.filter(c => {
+        const q = searchQuery.toLowerCase().trim();
+        const matchesQuery = !q ||
+          c.companyName.toLowerCase().includes(q) ||
+          c.establishmentNumber.toLowerCase().includes(q) ||
+          c.primaryContact.name.toLowerCase().includes(q) ||
+          c.facilityLocation.city.toLowerCase().includes(q);
+
+        let matchesTab = true;
+        if (currentTab === 'meat') matchesTab = c.sector === 'Meat & Beef Processing';
+        else if (currentTab === 'poultry') matchesTab = c.sector === 'Poultry Integration';
+        else if (currentTab === 'seafood') matchesTab = c.sector === 'Seafood & Aquaculture';
+        else if (currentTab === 'prepared') matchesTab = c.sector === 'Further Food Processing';
+        else if (currentTab === 'high_volume') matchesTab = c.monthlyVolumeMetricTons >= 500;
+
+        return matchesQuery && matchesTab;
+      }).sort((a, b) => {
+        const valA = a[sortField];
+        const valB = b[sortField];
+        if (typeof valA === 'string') {
+          return sortDirection === 'asc' ? valA.localeCompare(valB) : valB.localeCompare(valA);
+        }
+        return sortDirection === 'asc' ? valA - valB : valB - valA;
+      });
+    }
+
+    function renderMetrics() {
+      const total = customers.length;
+      const active = customers.filter(c => c.stage === 'Active Supply Partner').length;
+      const volume = customers.reduce((sum, c) => sum + (c.monthlyVolumeMetricTons || 0), 0);
+      const val = customers.reduce((sum, c) => sum + (c.annualContractValue || 0), 0);
+      const haccpCount = customers.filter(c => c.certifications && c.certifications.some(crt => crt.includes('HACCP'))).length;
+
+      document.getElementById('metric-total-badge').innerText = `${total} total`;
+      document.getElementById('metric-active').innerText = `${active} Accounts`;
+      document.getElementById('metric-volume').innerText = `${volume.toLocaleString()} MT / mo`;
+      document.getElementById('metric-value').innerText = `$${(val / 1000000).toFixed(2)}M`;
+      document.getElementById('filter-count').innerText = getFilteredCustomers().length;
+      document.getElementById('haccp-badge').innerText = `HACCP Coverage: ${total > 0 ? Math.round((haccpCount / total) * 100) : 0}%`;
+    }
+
+    function renderSectorBadge(sector) {
+      if (sector === 'Meat & Beef Processing') {
+        return '<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-medium bg-rose-50 text-rose-700 border border-rose-200">🥩 Meat & Beef</span>';
+      }
+      if (sector === 'Poultry Integration') {
+        return '<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-medium bg-amber-50 text-amber-800 border border-amber-200">🍗 Poultry</span>';
+      }
+      if (sector === 'Seafood & Aquaculture') {
+        return '<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-medium bg-sky-50 text-sky-700 border border-sky-200">🐟 Seafood</span>';
+      }
+      return '<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-medium bg-purple-50 text-purple-700 border border-purple-200">🏭 Food Processor</span>';
+    }
+
+    function renderStageBadge(stage) {
+      let bg = 'bg-slate-100 text-slate-700';
+      let dot = 'bg-slate-400';
+      if (stage === 'Active Supply Partner') { bg = 'bg-emerald-50 text-emerald-700'; dot = 'bg-emerald-500'; }
+      else if (stage === 'Contract Negotiation') { bg = 'bg-purple-50 text-purple-700'; dot = 'bg-purple-500'; }
+      else if (stage === 'Plant & HACCP Audit') { bg = 'bg-blue-50 text-blue-700'; dot = 'bg-blue-500'; }
+      else if (stage === 'Sample & Spec Review') { bg = 'bg-amber-50 text-amber-700'; dot = 'bg-amber-500'; }
+
+      return `<span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold ${bg}">
+        <span class="w-1.5 h-1.5 rounded-full ${dot}"></span>
+        ${stage}
+      </span>`;
+    }
+
+    function renderTable() {
+      const list = getFilteredCustomers();
+      const tbody = document.getElementById('table-body');
+      if (list.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="7" class="px-6 py-12 text-center text-slate-400">No matching food processor accounts found.</td></tr>`;
+        return;
+      }
+      tbody.innerHTML = list.map(c => `
+        <tr class="hover:bg-slate-50 transition-colors">
+          <td class="px-4 py-3">
+            <div class="flex items-center gap-2.5">
+              <div class="w-8 h-8 rounded-lg bg-slate-100 border border-slate-200 text-slate-700 font-bold flex items-center justify-center text-xs">
+                ${c.companyName.substring(0, 2).toUpperCase()}
+              </div>
+              <div>
+                <button onclick="openDetail('${c.id}')" class="font-semibold text-slate-900 hover:text-[#ff7a59] text-left transition-colors">
+                  ${c.companyName}
+                </button>
+                <div class="text-[11px] text-slate-400 font-mono">
+                  ${c.establishmentNumber} • ${c.facilityLocation.city}, ${c.facilityLocation.state}
+                </div>
+              </div>
+            </div>
+          </td>
+          <td class="px-4 py-3">${renderSectorBadge(c.sector)}</td>
+          <td class="px-4 py-3">${renderStageBadge(c.stage)}</td>
+          <td class="px-4 py-3">
+            <div class="font-medium text-slate-800">${c.primaryContact.name}</div>
+            <div class="text-[11px] text-slate-400">${c.primaryContact.email}</div>
+          </td>
+          <td class="px-4 py-3 font-semibold text-slate-800">${c.monthlyVolumeMetricTons.toLocaleString()} MT</td>
+          <td class="px-4 py-3 font-semibold text-slate-900">$${c.annualContractValue.toLocaleString()}</td>
+          <td class="px-4 py-3 text-right">
+            <div class="flex items-center justify-end gap-1">
+              <button onclick="openDetail('${c.id}')" class="p-1.5 text-slate-400 hover:text-slate-800 hover:bg-slate-100 rounded" title="View 360"><i data-lucide="eye" class="w-4 h-4"></i></button>
+              <button onclick="editCustomer('${c.id}')" class="p-1.5 text-slate-400 hover:text-[#ff7a59] hover:bg-orange-50 rounded" title="Edit"><i data-lucide="edit-3" class="w-4 h-4"></i></button>
+              <button onclick="deleteCustomer('${c.id}')" class="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded" title="Delete"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+            </div>
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    function renderBoard() {
+      const list = getFilteredCustomers();
+      const boardContainer = document.getElementById('container-board');
+
+      boardContainer.innerHTML = PIPELINE_STAGES.map((col, idx) => {
+        const colCustomers = list.filter(c => c.stage === col.id);
+        const colVolume = colCustomers.reduce((acc, c) => acc + c.monthlyVolumeMetricTons, 0);
+
+        return `
+          <div class="bg-slate-100/90 border border-slate-200 rounded-xl p-2.5 flex flex-col min-h-[500px]">
+            <div class="p-2 border-b border-slate-200 mb-2">
+              <div class="flex items-center justify-between">
+                <span class="font-bold text-xs text-slate-800">${col.label}</span>
+                <span class="w-5 h-5 rounded-full bg-white text-slate-700 font-bold text-[10px] flex items-center justify-center shadow-xs">
+                  ${colCustomers.length}
+                </span>
+              </div>
+              <div class="text-[11px] text-slate-500 mt-1 font-medium">
+                ${colVolume.toLocaleString()} MT / mo
+              </div>
+            </div>
+
+            <div class="space-y-2.5 flex-1">
+              ${colCustomers.map(c => `
+                <div class="bg-white border border-slate-200 rounded-lg p-3 shadow-xs space-y-2">
+                  <div class="flex items-start justify-between">
+                    <div>
+                      <button onclick="openDetail('${c.id}')" class="font-semibold text-xs text-slate-900 hover:text-[#ff7a59] text-left">
+                        ${c.companyName}
+                      </button>
+                      <div class="text-[10px] font-mono text-slate-400">${c.establishmentNumber}</div>
+                    </div>
+                  </div>
+                  <div>${renderSectorBadge(c.sector)}</div>
+                  <div class="text-[11px] text-slate-600 flex items-center justify-between pt-1 border-t border-slate-100">
+                    <span>${c.monthlyVolumeMetricTons} MT</span>
+                    <span class="font-bold text-slate-900">$${(c.annualContractValue / 1000).toFixed(0)}k</span>
+                  </div>
+                  <div class="flex items-center justify-between pt-1 text-[10px] text-slate-400">
+                    ${idx > 0 ? `<button onclick="advanceStage('${c.id}', -1)" class="hover:text-slate-700">← Back</button>` : '<span></span>'}
+                    ${idx < PIPELINE_STAGES.length - 1 ? `<button onclick="advanceStage('${c.id}', 1)" class="hover:text-[#ff7a59] font-semibold text-slate-600">Next →</button>` : '<span class="text-emerald-600 font-semibold">✓ Active</span>'}
+                  </div>
+                </div>
+              `).join('')}
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function render() {
+      renderMetrics();
+      if (currentView === 'table') {
+        renderTable();
+        document.getElementById('container-table').classList.remove('hidden');
+        document.getElementById('container-board').classList.add('hidden');
+      } else {
+        renderBoard();
+        document.getElementById('container-table').classList.add('hidden');
+        document.getElementById('container-board').classList.remove('hidden');
+      }
+      lucide.createIcons();
+    }
+
+    // View Switching
+    function switchView(mode) {
+      currentView = mode;
+      const btnList = document.getElementById('btn-view-list');
+      const btnBoard = document.getElementById('btn-view-board');
+      if (mode === 'table') {
+        btnList.className = 'flex items-center gap-1.5 px-3 py-1 text-xs font-semibold rounded-md bg-white text-slate-900 shadow-xs';
+        btnBoard.className = 'flex items-center gap-1.5 px-3 py-1 text-xs font-semibold rounded-md text-slate-500 hover:text-slate-900';
+      } else {
+        btnBoard.className = 'flex items-center gap-1.5 px-3 py-1 text-xs font-semibold rounded-md bg-white text-slate-900 shadow-xs';
+        btnList.className = 'flex items-center gap-1.5 px-3 py-1 text-xs font-semibold rounded-md text-slate-500 hover:text-slate-900';
+      }
+      render();
+    }
+
+    function setTabFilter(tab) {
+      currentTab = tab;
+      document.querySelectorAll('.tab-btn').forEach(btn => {
+        if (btn.getAttribute('data-tab') === tab) {
+          btn.className = 'tab-btn px-3 py-1.5 rounded-md whitespace-nowrap bg-slate-100 text-slate-900 font-semibold';
+        } else {
+          btn.className = 'tab-btn px-3 py-1.5 rounded-md whitespace-nowrap text-slate-600 hover:text-slate-900 hover:bg-slate-50';
+        }
+      });
+      render();
+    }
+
+    function handleSearch(val) {
+      searchQuery = val;
+      render();
+    }
+
+    function handleSortChange(val) {
+      const [f, d] = val.split('-');
+      sortField = f;
+      sortDirection = d;
+      render();
+    }
+
+    function advanceStage(id, delta) {
+      const cust = customers.find(c => c.id === id);
+      if (!cust) return;
+      const curIdx = PIPELINE_STAGES.findIndex(s => s.id === cust.stage);
+      const nextIdx = curIdx + delta;
+      if (nextIdx >= 0 && nextIdx < PIPELINE_STAGES.length) {
+        cust.stage = PIPELINE_STAGES[nextIdx].id;
+        saveStorage();
+        showToast(`${cust.companyName} moved to ${cust.stage}`);
+        render();
+      }
+    }
+
+    // CRUD: Modal Open / Close
+    function openCreateModal() {
+      document.getElementById('modal-title').innerText = 'Create company';
+      document.getElementById('form-id').value = '';
+      document.getElementById('form-name').value = '';
+      document.getElementById('form-est').value = 'USDA-EST-' + Math.floor(1000 + Math.random() * 9000);
+      document.getElementById('form-sector').value = 'Meat & Beef Processing';
+      document.getElementById('form-stage').value = 'Lead / Inbound';
+      document.getElementById('form-contact-name').value = '';
+      document.getElementById('form-contact-title').value = 'VP Procurement & QA';
+      document.getElementById('form-contact-email').value = '';
+      document.getElementById('form-contact-phone').value = '';
+      document.getElementById('form-city').value = '';
+      document.getElementById('form-state').value = '';
+      document.getElementById('form-volume').value = 350;
+      document.getElementById('form-contract').value = 600000;
+      document.getElementById('company-modal').classList.remove('hidden');
+      lucide.createIcons();
+    }
+
+    function editCustomer(id) {
+      const c = customers.find(item => item.id === id);
+      if (!c) return;
+      document.getElementById('modal-title').innerText = 'Edit company';
+      document.getElementById('form-id').value = c.id;
+      document.getElementById('form-name').value = c.companyName;
+      document.getElementById('form-est').value = c.establishmentNumber;
+      document.getElementById('form-sector').value = c.sector;
+      document.getElementById('form-stage').value = c.stage;
+      document.getElementById('form-contact-name').value = c.primaryContact.name;
+      document.getElementById('form-contact-title').value = c.primaryContact.title;
+      document.getElementById('form-contact-email').value = c.primaryContact.email;
+      document.getElementById('form-contact-phone').value = c.primaryContact.phone;
+      document.getElementById('form-city').value = c.facilityLocation.city;
+      document.getElementById('form-state').value = c.facilityLocation.state;
+      document.getElementById('form-coldchain').value = c.coldChainSpec;
+      document.getElementById('form-volume').value = c.monthlyVolumeMetricTons;
+      document.getElementById('form-contract').value = c.annualContractValue;
+
+      // check certs
+      document.querySelectorAll('#cert-checkboxes input').forEach(input => {
+        input.checked = c.certifications.includes(input.value);
+      });
+
+      document.getElementById('company-modal').classList.remove('hidden');
+      lucide.createIcons();
+    }
+
+    function closeModal() {
+      document.getElementById('company-modal').classList.add('hidden');
+    }
+
+    function handleFormSubmit(e) {
+      e.preventDefault();
+      const id = document.getElementById('form-id').value;
+      const certs = [];
+      document.querySelectorAll('#cert-checkboxes input:checked').forEach(input => certs.push(input.value));
+
+      const payload = {
+        companyName: document.getElementById('form-name').value.trim(),
+        establishmentNumber: document.getElementById('form-est').value.trim(),
+        sector: document.getElementById('form-sector').value,
+        stage: document.getElementById('form-stage').value,
+        primaryContact: {
+          name: document.getElementById('form-contact-name').value.trim(),
+          title: document.getElementById('form-contact-title').value.trim(),
+          email: document.getElementById('form-contact-email').value.trim(),
+          phone: document.getElementById('form-contact-phone').value.trim()
+        },
+        facilityLocation: {
+          city: document.getElementById('form-city').value.trim(),
+          state: document.getElementById('form-state').value.trim()
+        },
+        coldChainSpec: document.getElementById('form-coldchain').value,
+        monthlyVolumeMetricTons: Number(document.getElementById('form-volume').value) || 0,
+        annualContractValue: Number(document.getElementById('form-contract').value) || 0,
+        certifications: certs,
+        notes: []
+      };
+
+      if (id) {
+        // Update (U)
+        const idx = customers.findIndex(c => c.id === id);
+        if (idx !== -1) {
+          customers[idx] = { ...customers[idx], ...payload };
+          showToast(`Updated: ${payload.companyName}`);
+        }
+      } else {
+        // Create (C)
+        const newCust = {
+          ...payload,
+          id: 'cust-' + Date.now(),
+          notes: [{ author: 'Current User', date: new Date().toISOString().slice(0, 10), content: 'Account initialized.' }]
+        };
+        customers.unshift(newCust);
+        showToast(`Created: ${newCust.companyName}`);
+      }
+
+      saveStorage();
+      closeModal();
+      render();
+    }
+
+    function deleteCustomer(id) {
+      const c = customers.find(item => item.id === id);
+      if (!c) return;
+      if (confirm(`Are you sure you want to delete "${c.companyName}" (${c.establishmentNumber})?`)) {
+        customers = customers.filter(item => item.id !== id);
+        saveStorage();
+        showToast(`Removed: ${c.companyName}`);
+        if (currentDetailCustomer && currentDetailCustomer.id === id) {
+          closeDetailDrawer();
+        }
+        render();
+      }
+    }
+
+    // Customer 360 Detail Drawer
+    function openDetail(id) {
+      const c = customers.find(item => item.id === id);
+      if (!c) return;
+      currentDetailCustomer = c;
+
+      document.getElementById('drawer-avatar').innerText = c.companyName.substring(0, 2).toUpperCase();
+      document.getElementById('drawer-name').innerText = c.companyName;
+      document.getElementById('drawer-sub').innerText = `${c.establishmentNumber} • ${c.facilityLocation.city}, ${c.facilityLocation.state}`;
+      document.getElementById('drawer-stage-select').value = c.stage;
+      document.getElementById('drawer-volume').innerText = `${c.monthlyVolumeMetricTons.toLocaleString()} MT`;
+      document.getElementById('drawer-contract').innerText = `$${c.annualContractValue.toLocaleString()}`;
+      document.getElementById('drawer-coldchain').innerText = c.coldChainSpec;
+      document.getElementById('drawer-contact-name').innerText = c.primaryContact.name;
+      document.getElementById('drawer-contact-title').innerText = c.primaryContact.title;
+      document.getElementById('drawer-contact-email').innerText = c.primaryContact.email;
+      document.getElementById('drawer-contact-phone').innerText = c.primaryContact.phone;
+
+      // Certs
+      document.getElementById('drawer-certs').innerHTML = c.certifications.map(cert => 
+        `<span class="px-2 py-0.5 rounded bg-emerald-50 text-emerald-700 border border-emerald-200 text-[10px] font-semibold">${cert}</span>`
+      ).join('');
+
+      // Timeline
+      renderActivityTimeline(c);
+
+      document.getElementById('detail-drawer').classList.remove('hidden');
+      lucide.createIcons();
+    }
+
+    function closeDetailDrawer() {
+      document.getElementById('detail-drawer').classList.add('hidden');
+      currentDetailCustomer = null;
+    }
+
+    function editCurrentDetail() {
+      if (currentDetailCustomer) {
+        editCustomer(currentDetailCustomer.id);
+      }
+    }
+
+    function handleDrawerStageChange(newStage) {
+      if (!currentDetailCustomer) return;
+      currentDetailCustomer.stage = newStage;
+      saveStorage();
+      showToast(`${currentDetailCustomer.companyName} set to ${newStage}`);
+      render();
+    }
+
+    function renderActivityTimeline(c) {
+      const timeline = document.getElementById('activity-timeline');
+      if (!c.notes || c.notes.length === 0) {
+        timeline.innerHTML = '<p class="text-slate-400 italic">No activity logged yet.</p>';
+        return;
+      }
+      timeline.innerHTML = c.notes.map(n => `
+        <div class="p-2.5 bg-slate-50 rounded-lg border border-slate-200 text-xs">
+          <div class="flex items-center justify-between text-[11px] text-slate-400 mb-1">
+            <strong class="text-slate-700">${n.author}</strong>
+            <span>${n.date}</span>
+          </div>
+          <p class="text-slate-600">${n.content}</p>
+        </div>
+      `).join('');
+    }
+
+    function logActivity() {
+      const input = document.getElementById('new-activity-input');
+      const val = input.value.trim();
+      if (!val || !currentDetailCustomer) return;
+      if (!currentDetailCustomer.notes) currentDetailCustomer.notes = [];
+      currentDetailCustomer.notes.unshift({
+        author: 'Current User',
+        date: new Date().toISOString().slice(0, 10),
+        content: val
+      });
+      input.value = '';
+      saveStorage();
+      renderActivityTimeline(currentDetailCustomer);
+      showToast('Activity logged');
+    }
+
+    function resetDemoData() {
+      if (confirm('Reset CRM to default demo food processor accounts?')) {
+        customers = JSON.parse(JSON.stringify(DEMO_CUSTOMERS));
+        saveStorage();
+        showToast('Demo data reset successfully');
+        render();
+      }
+    }
+
+    function exportCSV() {
+      const list = getFilteredCustomers();
+      const headers = ['Est #', 'Company', 'Sector', 'Stage', 'Contact', 'Email', 'City', 'State', 'Volume (MT)', 'Contract ($)'];
+      const rows = list.map(c => [
+        `"${c.establishmentNumber}"`,
+        `"${c.companyName}"`,
+        `"${c.sector}"`,
+        `"${c.stage}"`,
+        `"${c.primaryContact.name}"`,
+        `"${c.primaryContact.email}"`,
+        `"${c.facilityLocation.city}"`,
+        `"${c.facilityLocation.state}"`,
+        c.monthlyVolumeMetricTons,
+        c.annualContractValue
+      ]);
+      const csv = 'data:text/csv;charset=utf-8,' + [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
+      const link = document.createElement('a');
+      link.setAttribute('href', encodeURI(csv));
+      link.setAttribute('download', `food_processor_crm_${new Date().toISOString().slice(0, 10)}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      showToast('CSV downloaded');
+    }
+
+    // Run on startup
+    window.onload = init;
+  </script>
+</body>
+</html>
