@@ -1,6 +1,0 @@
-{
-  "name": "Food Processor Customer Management System",
-  "description": "HubSpot-inspired CRM for food processors featuring dedicated 3-column contact and company record detail pages, Breeze AI summaries, activity timelines, pipeline board, and single-file HTML export.",
-  "requestFramePermissions": [],
-  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
-}
