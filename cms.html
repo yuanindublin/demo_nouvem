@@ -2002,23 +2002,23 @@
 
       <div id="recall-progress" class="space-y-3">
         <div class="flex items-center gap-3 p-2 rounded-lg bg-slate-50" id="recall-step-1">
-          <div class="w-6 h-6 rounded-full bg-slate-300 text-white flex items-center justify-center text-xs font-bold">1</div>
+          <div class="recall-step-dot w-6 h-6 rounded-full bg-slate-300 text-white flex items-center justify-center text-xs font-bold">1</div>
           <span class="text-xs font-semibold text-slate-700">Identify affected lots &amp; customers</span>
         </div>
         <div class="flex items-center gap-3 p-2 rounded-lg bg-slate-50" id="recall-step-2">
-          <div class="w-6 h-6 rounded-full bg-slate-300 text-white flex items-center justify-center text-xs font-bold">2</div>
+          <div class="recall-step-dot w-6 h-6 rounded-full bg-slate-300 text-white flex items-center justify-center text-xs font-bold">2</div>
           <span class="text-xs font-semibold text-slate-700">Notify Bord Bia / DAFM / FSAI within 4 hours</span>
         </div>
         <div class="flex items-center gap-3 p-2 rounded-lg bg-slate-50" id="recall-step-3">
-          <div class="w-6 h-6 rounded-full bg-slate-300 text-white flex items-center justify-center text-xs font-bold">3</div>
+          <div class="recall-step-dot w-6 h-6 rounded-full bg-slate-300 text-white flex items-center justify-center text-xs font-bold">3</div>
           <span class="text-xs font-semibold text-slate-700">Quarantine distribution centre stock</span>
         </div>
         <div class="flex items-center gap-3 p-2 rounded-lg bg-slate-50" id="recall-step-4">
-          <div class="w-6 h-6 rounded-full bg-slate-300 text-white flex items-center justify-center text-xs font-bold">4</div>
+          <div class="recall-step-dot w-6 h-6 rounded-full bg-slate-300 text-white flex items-center justify-center text-xs font-bold">4</div>
           <span class="text-xs font-semibold text-slate-700">Issue recall notices to retail partners</span>
         </div>
         <div class="flex items-center gap-3 p-2 rounded-lg bg-slate-50" id="recall-step-5">
-          <div class="w-6 h-6 rounded-full bg-slate-300 text-white flex items-center justify-center text-xs font-bold">5</div>
+          <div class="recall-step-dot w-6 h-6 rounded-full bg-slate-300 text-white flex items-center justify-center text-xs font-bold">5</div>
           <span class="text-xs font-semibold text-slate-700">Log incident &amp; notify all stakeholders</span>
         </div>
       </div>
@@ -2464,6 +2464,11 @@ function saveStorage() {
   } catch(e) {}
 }
 function seedIfEmpty() {
+  // The seed currently only writes the legacy `customers` array (renderers read
+  // from it). The relational `companies`/`contacts` arrays are populated as a
+  // migration view from that same array, but the rest of the app still talks
+  // to `customers`. Keeping them in sync via `companies.length === 0` makes the
+  // migration idempotent across reloads.
   if (customers.length === 0) customers = JSON.parse(JSON.stringify(SEED_CUSTOMERS));
 
   // ---- NORMALIZE primaryContact on legacy records ----
@@ -2486,6 +2491,9 @@ function seedIfEmpty() {
   // ---- NORMALIZE legacy customer records → relational companies + contacts ----
   // legacy schema has primaryContact nested inside each customer;
   // new schema splits it into a separate `contacts` table with FK → companies.
+  // NOTE: We deliberately keep the legacy `customers` array populated for
+  // backwards-compat with the existing render functions (which read from it).
+  // The relational view is a read-only projection used by DB.* joins.
   if (companies.length === 0 && contacts.length === 0 && customers.length > 0) {
     customers.forEach(c => {
       // company row (everything except primaryContact + notesList)
@@ -3676,20 +3684,18 @@ function setCdTab(tab) {
 }
 
 function addContactNote(forcedType) {
-  const txt = document.getElementById('cd-note-input').value.trim();
   const type = forcedType || 'note';
+  // Use the existing textarea as the single source of input. If it's empty we
+  // focus it and nudge the user to type, instead of relying on a blocking prompt()
+  // (which freezes the UI and breaks the keyboard-driven design).
+  const input = document.getElementById('cd-note-input');
+  const txt = (input?.value || '').trim();
   if (!txt) {
-    if (forcedType) {
-      const v = prompt('Add a ' + type + ' for this contact:');
-      if (!v || !v.trim()) return;
-      insertContactNote(type, v.trim());
-    } else {
-      showToast('Please enter some text');
-    }
+    showToast(`Type a ${type} note in the box above, then click Add`);
+    input?.focus();
     return;
   }
   insertContactNote(type, txt);
-  document.getElementById('cd-note-input').value = '';
 }
 
 function createTicketForContact() {
@@ -3767,6 +3773,22 @@ function saveNewTicket() {
 function insertContactNote(type, text) {
   const c = customers.find(x => x.id === currentContactDetailId);
   if (!c) return;
+  // ─────────────────────────────────────────────────────────
+  // Notes go into the same `notesList` array as the Company Record Detail page,
+  // so the two views stay consistent and share one timeline per account.
+  // Each note is tagged with `scope: 'contact'` so future features (e.g. filtering
+  // contact-specific activity) can read it back without guesswork.
+  // ─────────────────────────────────────────────────────────
+  if (!c.notesList) c.notesList = [];
+  c.notesList.unshift({
+    id: 'n-' + Date.now(),
+    author: 'You',
+    date: new Date().toISOString().slice(0,10),
+    type,
+    content: text,
+    scope: 'contact'
+  });
+  // Back-compat: legacy code reads `contactNotes`; mirror it so old code paths still work
   if (!c.contactNotes) c.contactNotes = [];
   c.contactNotes.unshift({ type, text, timestamp: new Date().toISOString() });
   saveStorage();
@@ -3778,13 +3800,24 @@ function insertContactNote(type, text) {
 function renderContactNotes() {
   const c = customers.find(x => x.id === currentContactDetailId);
   if (!c) return;
-  const notes = c.contactNotes || [];
+  // Prefer the canonical `notesList`; fall back to legacy `contactNotes` for old localStorage payloads.
+  const allNotes = (c.notesList && c.notesList.length) ? c.notesList : (c.contactNotes || []);
+  const notes = allNotes.filter(n => {
+    if (!n.scope) return !!n.timestamp;   // legacy contactNotes have timestamp
+    return n.scope === 'contact';         // new notes are explicitly scoped
+  }).map(n => {
+    // Adapt to a common shape for rendering
+    if (!n.timestamp) {
+      return { type: n.type || 'note', text: n.content || n.text || '', ts: n.date || '' };
+    }
+    return { type: n.type || 'note', text: n.text || '', ts: n.timestamp };
+  });
   const html = notes.length === 0
     ? '<div class="text-xs text-slate-400 italic text-center py-6">No activity yet. Add a note, call log, or task above.</div>'
     : notes.map(n => {
         const icons = { note: 'file-text', call: 'phone', task: 'check-square', audit: 'shield-check' };
         const colors = { note: 'text-blue-500', call: 'text-emerald-500', task: 'text-amber-500', audit: 'text-purple-500' };
-        const ts = new Date(n.timestamp).toLocaleString('en-IE', { dateStyle: 'medium', timeStyle: 'short' });
+        const ts = new Date(n.ts).toLocaleString('en-IE', { dateStyle: 'medium', timeStyle: 'short' });
         return `<div class="flex gap-2 p-2.5 rounded-lg hover:bg-slate-50 border border-slate-100">
           <i data-lucide="${icons[n.type]||'file-text'}" class="w-4 h-4 ${colors[n.type]||'text-slate-400'} shrink-0 mt-0.5"></i>
           <div class="flex-1 min-w-0">
@@ -3896,8 +3929,10 @@ function renderContactDetail() {
       }).join('');
   }
 
-  // Render Tasks list
-  const companyTasks = (tasks||[]).filter(t => t.relatedTo === c.id && t.relatedType === 'company' && t.status !== 'completed');
+  // Render Tasks list — tasks always belong to a company (`companyId` FK).
+  // Schema is documented in the SEED_TASKS comment (see line ~2150): each task has
+  // `companyId` (always set) + optional `relatedToType`/`relatedToId` polymorphic FK.
+  const companyTasks = DB.tasksOfCompany(c.id).filter(t => t.status !== 'Done');
   const kList = document.getElementById('cd-tasks-list');
   if (kList) {
     kList.innerHTML = companyTasks.length === 0
@@ -3991,14 +4026,17 @@ function setDetailTab(tab) {
 function renderRecordDetail() {
   const c = customers.find(x => x.id === currentDetailId);
   if (!c) { navigateTo('companies'); return; }
+  // Defensive defaults — older records (or partially-restored data) may miss these sub-objects
+  if (!c.facilityLocation) c.facilityLocation = { address: '', city: '', state: '', country: 'Ireland' };
+  if (!c.primaryContact) c.primaryContact = { name: '', title: '', email: '', phone: '' };
 
   const locationParts = [c.facilityLocation.city, c.facilityLocation.state, c.facilityLocation.country].filter(Boolean).join(', ');
   document.getElementById('rd-avatar').textContent = initials(c.companyName);
   document.getElementById('rd-name').textContent = c.companyName;
   document.getElementById('rd-est').textContent = c.establishmentNumber;
   document.getElementById('rd-location').textContent = locationParts;
-  document.getElementById('rd-phone').textContent = c.primaryContact.phone;
-  document.getElementById('rd-email').textContent = c.primaryContact.email;
+  document.getElementById('rd-phone').textContent = c.primaryContact.phone || '—';
+  document.getElementById('rd-email').textContent = c.primaryContact.email || '—';
   const ccEl = document.getElementById('rd-contact-country');
   if (ccEl) ccEl.textContent = c.primaryContact.country || c.facilityLocation?.country || '—';
   document.getElementById('rd-stage').innerHTML = `<span class="text-[11px] font-semibold px-2 py-0.5 rounded ${stageClass(c.stage)}">${escapeHtml(c.stage)}</span>`;
@@ -4050,7 +4088,10 @@ function renderRecordDetail() {
   refreshIcons();
 }
 function renderNotes(c) {
-  const notesHtml = (c.notesList || []).map(n => {
+  // Company timeline shows company-scoped notes only.
+  // (contact-scoped notes still live on the same record but render on the Contact Detail page)
+  const companyNotes = (c.notesList || []).filter(n => n.scope !== 'contact');
+  const notesHtml = companyNotes.map(n => {
     const typeIcons = { note:'file-text', call:'phone', task:'check-square', audit:'shield-check' };
     const typeColors = { note:'text-blue-600', call:'text-emerald-600', task:'text-amber-600', audit:'text-purple-600' };
     return `<div class="note-card">
@@ -4094,7 +4135,7 @@ function openCreateModal() {
   document.getElementById('modal-title').textContent = 'Create company';
   document.getElementById('form-id').value = '';
   document.getElementById('form-name').value = '';
-  document.getElementById('form-est').value = 'USDA-EST-' + Math.floor(1000 + Math.random() * 9000);
+  document.getElementById('form-est').value = 'IE ' + Math.floor(100 + Math.random() * 900) + ' EC';
   document.getElementById('form-sector').value = 'Meat & Beef Processing';
   document.getElementById('form-stage').value = 'Lead / Inbound';
   document.getElementById('form-contact-name').value = '';
@@ -4110,12 +4151,17 @@ function openCreateModal() {
   document.getElementById('form-contract').value = 600000;
   document.getElementById('form-otif').value = 95;
   document.getElementById('form-credit').value = 100000;
+  // Default country to Ireland (matches project domain — Irish DAFM/Bord Bia CRM)
+  const countryEl = document.getElementById('form-country');
+  if (countryEl) countryEl.value = 'Ireland';
   openModal('company-modal');
   refreshIcons();
 }
 function openEditModal(id) {
   const c = customers.find(x => x.id === id);
   if (!c) return;
+  // Defensive: ensure primaryContact exists so reads below are always safe
+  if (!c.primaryContact) c.primaryContact = { name: '', title: '', email: '', phone: '' };
   editingCustomerId = id;
   document.getElementById('modal-title').textContent = 'Edit company';
   document.getElementById('form-id').value = c.id;
@@ -4123,14 +4169,15 @@ function openEditModal(id) {
   document.getElementById('form-est').value = c.establishmentNumber || '';
   document.getElementById('form-sector').value = c.sector || SECTORS[0];
   document.getElementById('form-stage').value = c.stage || STAGES[0];
-  document.getElementById('form-contact-name').value = c.primaryContact.name || '';
-  document.getElementById('form-contact-title').value = c.primaryContact.title || '';
-  document.getElementById('form-contact-email').value = c.primaryContact.email || '';
-  document.getElementById('form-contact-phone').value = c.primaryContact.phone || '';
-  document.getElementById('form-address').value = c.facilityLocation.address || '';
-  document.getElementById('form-city').value = c.facilityLocation.city || '';
-  document.getElementById('form-state').value = c.facilityLocation.state || '';
-  document.getElementById('form-country').value = c.facilityLocation.country || 'Ireland';
+  const pc = c.primaryContact;
+  document.getElementById('form-contact-name').value = pc.name || '';
+  document.getElementById('form-contact-title').value = pc.title || '';
+  document.getElementById('form-contact-email').value = pc.email || '';
+  document.getElementById('form-contact-phone').value = pc.phone || '';
+  document.getElementById('form-address').value = (c.facilityLocation && c.facilityLocation.address) || '';
+  document.getElementById('form-city').value = (c.facilityLocation && c.facilityLocation.city) || '';
+  document.getElementById('form-state').value = (c.facilityLocation && c.facilityLocation.state) || '';
+  document.getElementById('form-country').value = (c.facilityLocation && c.facilityLocation.country) || 'Ireland';
   document.getElementById('form-coldchain').value = c.coldChainSpec || COLD_CHAIN[0];
   document.getElementById('form-payment').value = c.paymentTerms || 'Net 30 Days';
   document.getElementById('form-volume').value = c.monthlyVolumeMetricTons || 0;
@@ -4244,7 +4291,7 @@ function saveContactEdit() {
   const idx = customers.findIndex(x => x.id === id);
   if (idx === -1) { closeModal('contact-edit-modal'); return; }
   const r = _readContactForm();
-  if (!r.ok) { alert(r.reason); return; }
+  if (!r.ok) { showToast(r.reason, 'warning'); return; }
   customers[idx].primaryContact = r.payload;
   saveStorage();
   closeModal('contact-edit-modal');
@@ -4259,7 +4306,7 @@ function saveContactEdit() {
 // Create-mode submit. `addAnother` keeps the modal open with cleared fields for fast data entry.
 function saveContactCreate(addAnother) {
   const r = _readContactForm();
-  if (!r.ok) { alert(r.reason); return; }
+  if (!r.ok) { showToast(r.reason, 'warning'); return; }
   const typedCompany = document.getElementById('contact-edit-company-input').value.trim();
   let targetIdx = -1;
   if (typedCompany) {
@@ -4369,7 +4416,10 @@ function saveCustomer() {
   };
 
   if (!data.companyName || !data.primaryContact.name) {
-    alert('Company name and primary contact are required.');
+    showToast('Company name and primary contact are required.', 'warning');
+    // Focus the first empty required field so the user can fix it immediately
+    if (!data.companyName) document.getElementById('form-name')?.focus();
+    else document.getElementById('form-contact-name')?.focus();
     return;
   }
 
@@ -4685,8 +4735,11 @@ function openMockRecallModal() {
   document.getElementById('recall-run-btn').innerHTML = '<i data-lucide="play" class="w-3.5 h-3.5"></i> Run Recall Drill';
   for (let i=1; i<=5; i++) {
     document.getElementById('recall-step-' + i).classList.remove('bg-emerald-50');
-    const dot = document.getElementById('recall-step-' + i).querySelector('div');
-    dot.className = 'w-6 h-6 rounded-full bg-slate-300 text-white flex items-center justify-center text-xs font-bold';
+    // Use a dedicated class selector (.recall-step-dot) — `querySelector('div')` would
+    // grab the step's outer wrapper div and animate the wrong element.
+    const dot = document.getElementById('recall-step-' + i).querySelector('.recall-step-dot');
+    if (!dot) continue;
+    dot.className = 'recall-step-dot w-6 h-6 rounded-full bg-slate-300 text-white flex items-center justify-center text-xs font-bold';
     dot.textContent = i;
   }
   document.getElementById('recall-status').textContent = '';
@@ -4702,9 +4755,11 @@ function runMockRecall() {
     step++;
     const el = document.getElementById('recall-step-' + step);
     el.classList.add('bg-emerald-50');
-    const dot = el.querySelector('div');
-    dot.className = 'w-6 h-6 rounded-full bg-emerald-500 text-white flex items-center justify-center text-xs font-bold';
-    dot.innerHTML = '<i data-lucide="check" class="w-3 h-3"></i>';
+    const dot = el.querySelector('.recall-step-dot');
+    if (dot) {
+      dot.className = 'recall-step-dot w-6 h-6 rounded-full bg-emerald-500 text-white flex items-center justify-center text-xs font-bold';
+      dot.innerHTML = '<i data-lucide="check" class="w-3 h-3"></i>';
+    }
     document.getElementById('recall-status').textContent = `Step ${step} of ${steps} completed. Affected lots traced.`;
     if (step >= steps) {
       clearInterval(interval);
