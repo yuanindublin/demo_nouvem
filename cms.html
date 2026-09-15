@@ -205,6 +205,16 @@
   .stage-contract { background: #ede9fe; color: #5b21b6; }
   .stage-active { background: #d1fae5; color: #065f46; }
 
+  /* ─── Keyboard row navigation ───────────────────────── */
+  /* Highlight a focused table row / list item, without conflicting with the
+     existing hover styles. The element gets tabindex="0" + .is-focused via JS. */
+  [data-row-index] { outline: none; }
+  [data-row-index].is-focused {
+    background: #fff8f5 !important;
+    box-shadow: inset 3px 0 0 var(--hs-orange);
+  }
+  [data-row-index].is-focused:focus { outline: none; }
+
   /* Toast */
   #toast { transition: all 0.3s; }
 
@@ -478,10 +488,10 @@
   .workspace-container {
     max-width: 1400px;
     margin: 0 auto;
-    padding: 16px 24px 32px 80px;
+    padding: 16px 24px 48px 80px;   /* extra 16px bottom padding for the kbd status bar */
   }
   @media (max-width: 768px) {
-    .workspace-container { padding: 16px; }
+    .workspace-container { padding: 16px 16px 48px 16px; }
     .floating-rail { left: 0; }
     .detail-grid { grid-template-columns: 1fr !important; }
   }
@@ -1673,6 +1683,38 @@
     </div>
   </div>
 </section>
+
+<!-- ============================== KEYBOARD STATUS BAR ============================== -->
+<!-- Slim bottom bar that echoes the currently focused row + a hint to press ? for help. -->
+<footer class="fixed bottom-0 left-0 right-0 z-30 bg-white/95 border-t border-slate-200 backdrop-blur-sm">
+  <div class="flex items-center justify-between gap-3 px-4 py-1.5 text-[11px] text-slate-600">
+    <div class="flex items-center gap-2 min-w-0 flex-1">
+      <i data-lucide="keyboard" class="w-3.5 h-3.5 text-slate-400 shrink-0"></i>
+      <span id="kbd-status-label" class="truncate">Ready — press <kbd class="kbd-mini">?</kbd> for shortcuts</span>
+    </div>
+    <div class="flex items-center gap-3 shrink-0">
+      <span id="kbd-status-msg" class="text-slate-400 italic"></span>
+      <button onclick="toggleKbdHelp()" class="text-[10px] font-semibold text-slate-500 hover:text-[#ff7a59] flex items-center gap-1">
+        <span>Shortcuts</span>
+        <kbd class="kbd-mini">?</kbd>
+      </button>
+    </div>
+  </div>
+</footer>
+<style>
+  .kbd-mini {
+    display: inline-block;
+    padding: 0 5px;
+    border-radius: 3px;
+    background: #f1f5f9;
+    border: 1px solid #cbd5e1;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    font-weight: 700;
+    color: #475569;
+    line-height: 14px;
+  }
+</style>
 
 </main>
 
@@ -3065,7 +3107,21 @@ function jumpToKpi(type) {
 }
 
 // ============= NAVIGATION =============
+// Page navigation history (used by Esc / browser-style "back" navigation).
+// Pushed on every navigateTo() call; navigateBack() pops and replays the
+// previous entry. Capped at 32 entries so memory stays bounded.
+const NAV_HISTORY_MAX = 32;
+let navigationHistory = [];
+
 function navigateTo(section, opts={}) {
+  // Skip duplicate consecutive pushes (e.g. clicking the same nav item twice
+  // would otherwise clog the back stack with no-ops).
+  const top = navigationHistory[navigationHistory.length - 1];
+  const isDup = top && top.section === section && JSON.stringify(top.opts) === JSON.stringify(opts);
+  if (!isDup) {
+    navigationHistory.push({ section, opts });
+    if (navigationHistory.length > NAV_HISTORY_MAX) navigationHistory.shift();
+  }
   currentSection = section;
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   const pageId = 'page-' + section;
@@ -3095,8 +3151,28 @@ function navigateTo(section, opts={}) {
   else if (section === 'orders') renderOrders();
   else if (section === 'contacts') renderContacts();
 
+  // Reset row focus whenever we change pages so the keyboard cursor lands on
+  // a sane place. Users can then press ↓ to move into the table.
+  resetRowFocus();
+
+  // After the page is rendered, tag rows for ↑/↓ navigation. Rows must
+  // already carry data-row-target="section:rowId" (renderXxx functions set
+  // this for known list pages). Rows without it are still focusable but
+  // Enter won't navigate them.
+  wireKeyboardNavForTable();
+
   window.scrollTo(0, 0);
   refreshIcons();
+}
+
+// Pop one entry off the history and replay it. The initial 'dashboard' push
+// is preserved — going back past it is a no-op (we just stay on dashboard).
+function navigateBack() {
+  if (navigationHistory.length <= 1) return false;  // already at root
+  navigationHistory.pop(); // current page
+  const prev = navigationHistory[navigationHistory.length - 1];
+  navigateTo(prev.section, prev.opts);
+  return true;
 }
 
 // ============= DASHBOARD =============
@@ -3342,7 +3418,7 @@ function renderCompanies() {
     document.getElementById('table-body').innerHTML = filtered.length === 0
       ? `<tr><td colspan="7" class="text-center py-12 text-slate-400 text-xs">No companies match the current filters.</td></tr>`
       : filtered.map(c => `
-        <tr class="hover:bg-slate-50/60 cursor-pointer" onclick="navigateTo('record-detail',{customerId:'${c.id}'})">
+        <tr data-row-target="record-detail:${c.id}" data-row-label="${escapeHtml(c.companyName)}" class="hover:bg-slate-50/60 cursor-pointer" onclick="navigateTo('record-detail',{customerId:'${c.id}'})">
           <td class="px-4 py-3">
             <div class="flex items-center gap-2.5">
               <div class="w-9 h-9 rounded-lg ${getInitialsBg(c.companyName)} text-white flex items-center justify-center text-[11px] font-bold shrink-0">${initials(c.companyName)}</div>
@@ -4536,7 +4612,7 @@ function renderDeals() {
   });
 
   document.getElementById('deals-table').innerHTML = deals.map(d => `
-    <tr class="hover:bg-slate-50">
+    <tr data-row-target="record-detail:${d.companyId}" data-row-label="${escapeHtml(d.title)}" class="hover:bg-slate-50">
       <td class="px-3 py-2 font-semibold text-slate-900">${escapeHtml(d.title)}</td>
       <td class="px-3 py-2"><button onclick="navigateTo('record-detail',{customerId:'${d.companyId}'})" class="text-blue-600 hover:underline font-semibold">${escapeHtml(DB.company(d.companyId)?.companyName || '—')}</button></td>
       <td class="px-3 py-2"><span class="text-slate-700">${escapeHtml(DB.contact(d.contactId)?.name || '—')}</span></td>
@@ -4598,7 +4674,7 @@ function renderTickets() {
     return;
   }
   tbody.innerHTML = visible.map(t => `
-    <tr class="hover:bg-slate-50">
+    <tr data-row-target="record-detail:${t.companyId}" data-row-label="${escapeHtml(t.ticketNumber + ' · ' + t.title)}" class="hover:bg-slate-50">
       <td class="px-3 py-2 font-mono font-bold text-slate-700">${escapeHtml(t.ticketNumber)}</td>
       <td class="px-3 py-2 max-w-xs"><div class="font-semibold text-slate-900 truncate">${escapeHtml(t.title)}</div></td>
       <td class="px-3 py-2"><button onclick="navigateTo('record-detail',{customerId:'${t.companyId}'})" class="text-blue-600 hover:underline font-semibold text-[11px]">${escapeHtml(DB.company(t.companyId)?.companyName || '—')}</button></td>
@@ -4625,7 +4701,7 @@ function renderTickets() {
 // ============= TASKS / ORDERS / CONTACTS =============
 function renderTasks() {
   document.getElementById('tasks-list').innerHTML = tasks.map(t => `
-    <div class="p-3 hover:bg-slate-50 flex items-start gap-3">
+    <div data-row-target="record-detail:${t.companyId}" data-row-label="${escapeHtml(t.title)}" class="p-3 hover:bg-slate-50 flex items-start gap-3">
       <input type="checkbox" class="mt-1 w-4 h-4 rounded border-slate-300 text-[#ff7a59] focus:ring-[#ff7a59]" />
       <div class="flex-1 min-w-0">
         <div class="text-xs font-semibold text-slate-900 ${t.status==='Done' ? 'line-through text-slate-400' : ''}">${escapeHtml(t.title)}</div>
@@ -4656,7 +4732,7 @@ function renderTasks() {
 }
 function renderOrders() {
   document.getElementById('orders-list').innerHTML = orders.map(o => `
-    <div class="p-3 hover:bg-slate-50 flex items-center gap-3">
+    <div data-row-target="record-detail:${o.companyId}" data-row-label="${escapeHtml(o.orderNumber)}" class="p-3 hover:bg-slate-50 flex items-center gap-3">
       <div class="w-10 h-10 rounded-lg ${o.status==='Delivered' ? 'bg-emerald-100 text-emerald-600' : o.status==='In Transit' ? 'bg-blue-100 text-blue-600' : 'bg-amber-100 text-amber-600'} flex items-center justify-center">
         <i data-lucide="truck" class="w-4 h-4"></i>
       </div>
@@ -4675,7 +4751,7 @@ function renderOrders() {
 }
 function renderContacts() {
   document.getElementById('contacts-tbody').innerHTML = customers.map(c => `
-    <tr data-email="${escapeHtml(c.primaryContact.email)}" class="hover:bg-slate-50 cursor-pointer" onclick="openContactRecordPage('${c.id}')">
+    <tr data-row-target="contact-detail:${c.id}" data-row-label="${escapeHtml(c.primaryContact.name + ' · ' + c.companyName)}" data-email="${escapeHtml(c.primaryContact.email)}" class="hover:bg-slate-50 cursor-pointer" onclick="openContactRecordPage('${c.id}')">
       <td class="px-3 py-2">
         <div class="flex items-center gap-2">
           <div class="w-7 h-7 rounded-full ${getInitialsBg(c.primaryContact.name)} text-white flex items-center justify-center text-[10px] font-bold">${initials(c.primaryContact.name)}</div>
@@ -4795,12 +4871,288 @@ function updateDublinTime() {
 }
 
 // ============= KEYBOARD SHORTCUTS =============
+//
+// Standard "power-user" layer for the CRM. Cheat sheet:
+//
+//   ⌘0-6  switch workspaces (existing)        Esc    go back one page
+//   ⌘/     focus the Companies search bar     ?      show / hide cheat sheet
+//   ↑ ↓    move highlight through table rows  Home   first row
+//   Enter  open the highlighted row's detail  End    last row
+//
+// Global state lives in `focusedRowIndex` and is reset by `resetRowFocus()`.
+// Rows are tagged at render time by `wireKeyboardNavForTable()` with
+// `data-row-index` and `data-row-section` (so ↑↓ knows which page it belongs to).
+//
+// The cheat sheet is a single hidden DOM node (#kbd-help-panel) that's toggled
+// by ? — no extra dependencies, all vanilla.
+
+// Returns the table/list element of the currently active page, or null.
+// We explicitly map sections → known list containers so we don't accidentally
+// try to navigate inside a card-only page (Dashboard, Detail, Tasks cards).
+function getFocusedTable() {
+  const map = {
+    'companies':  '#container-table tbody tr',
+    'contacts':   '#contacts-tbody tr',
+    'deals':      '#deals-table tr',
+    'tickets':    '#tickets-tbody tr',
+    'tasks':      '#tasks-list > div',
+    'orders':     '#orders-list > div'
+  };
+  const sel = map[currentSection];
+  if (!sel) return { rows: [], selector: null };
+  const rows = Array.from(document.querySelectorAll(sel)).filter(el => el.dataset.rowIndex !== undefined || el.getAttribute('data-row-index') !== null);
+  return { rows, selector: sel };
+}
+
+// Re-tag the rows in the current page with sequential indices so ↑↓ can walk
+// them. Called by every renderXxx() at the bottom.
+function wireKeyboardNavForTable() {
+  const { rows } = getFocusedTable();
+  rows.forEach((r, i) => {
+    r.setAttribute('data-row-index', i);
+    r.setAttribute('tabindex', '0');
+    r.setAttribute('role', 'row');
+  });
+  // Only auto-place the cursor at index 0 if there's no current focus, so
+  // that returning to a page preserves where you were.
+  if (rows.length && (focusedRowIndex === null || focusedRowIndex >= rows.length)) {
+    focusedRowIndex = 0;
+    updateRowFocus();
+  }
+}
+
+let focusedRowIndex = null;
+
+function updateRowFocus() {
+  const { rows } = getFocusedTable();
+  if (!rows.length) { focusedRowIndex = null; return; }
+  if (focusedRowIndex < 0) focusedRowIndex = 0;
+  if (focusedRowIndex >= rows.length) focusedRowIndex = rows.length - 1;
+  rows.forEach((r, i) => r.classList.toggle('is-focused', i === focusedRowIndex));
+  // Scroll the focused row into view (vertical centering for tall lists)
+  const focused = rows[focusedRowIndex];
+  if (focused && focused.scrollIntoView) {
+    focused.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+  }
+  // Read the row's label so the bottom status bar can echo what is selected
+  const labelEl = document.getElementById('kbd-status-label');
+  if (labelEl) {
+    labelEl.textContent = focused ? (focused.getAttribute('data-row-label') || `Row ${focusedRowIndex + 1} of ${rows.length}`) : '—';
+  }
+}
+
+function resetRowFocus() {
+  focusedRowIndex = null;
+  document.querySelectorAll('[data-row-index].is-focused').forEach(el => el.classList.remove('is-focused'));
+}
+
+// Returns the detail section + opts implied by the currently focused row.
+// Mappings are explicit so we don't accidentally navigate to the wrong place.
+function rowToNavigate(rowEl) {
+  if (!rowEl) return null;
+  const target = rowEl.getAttribute('data-row-target');
+  if (!target) return null;
+  // Format: "section:customerId" or just "section" (e.g. deals/tickets list rows)
+  const [section, id] = target.split(':');
+  return id ? { section, opts: { customerId: id } } : { section };
+}
+
+// ============= CHEAT SHEET PANEL =============
+function ensureKbdHelpPanel() {
+  if (document.getElementById('kbd-help-panel')) return;
+  const panel = document.createElement('div');
+  panel.id = 'kbd-help-panel';
+  panel.className = 'hidden fixed inset-0 z-[300] flex items-center justify-center bg-slate-900/40 backdrop-blur-sm';
+  panel.innerHTML = `
+    <div class="bg-white rounded-2xl border border-slate-200 shadow-2xl max-w-md w-full mx-4 p-5 modal-enter">
+      <div class="flex items-center justify-between mb-3">
+        <h3 class="text-base font-bold text-slate-900 flex items-center gap-2">
+          <i data-lucide="keyboard" class="w-4 h-4 text-[#ff7a59]"></i>
+          Keyboard shortcuts
+        </h3>
+        <button onclick="toggleKbdHelp()" class="w-7 h-7 rounded-full hover:bg-slate-100 flex items-center justify-center text-slate-500" aria-label="Close">
+          <i data-lucide="x" class="w-4 h-4"></i>
+        </button>
+      </div>
+      <div class="space-y-2 text-xs text-slate-700">
+        <div class="flex items-center justify-between border-b border-slate-100 pb-2">
+          <span><kbd class="kbd">⌘ 0</kbd> — <kbd class="kbd">⌘ 6</kbd></span><span class="text-slate-500">Switch workspace</span>
+        </div>
+        <div class="flex items-center justify-between border-b border-slate-100 pb-2">
+          <span><kbd class="kbd">Esc</kbd></span><span class="text-slate-500">Back to previous page</span>
+        </div>
+        <div class="flex items-center justify-between border-b border-slate-100 pb-2">
+          <span><kbd class="kbd">↑</kbd> <kbd class="kbd">↓</kbd></span><span class="text-slate-500">Move through list rows</span>
+        </div>
+        <div class="flex items-center justify-between border-b border-slate-100 pb-2">
+          <span><kbd class="kbd">Home</kbd> / <kbd class="kbd">End</kbd></span><span class="text-slate-500">Jump to first / last row</span>
+        </div>
+        <div class="flex items-center justify-between border-b border-slate-100 pb-2">
+          <span><kbd class="kbd">⏎</kbd></span><span class="text-slate-500">Open highlighted row</span>
+        </div>
+        <div class="flex items-center justify-between border-b border-slate-100 pb-2">
+          <span><kbd class="kbd">⌘ /</kbd></span><span class="text-slate-500">Focus search bar</span>
+        </div>
+        <div class="flex items-center justify-between">
+          <span><kbd class="kbd">?</kbd></span><span class="text-slate-500">Show / hide this panel</span>
+        </div>
+      </div>
+      <p class="text-[10px] text-slate-400 mt-3 italic">Press <kbd class="kbd">?</kbd> or <kbd class="kbd">Esc</kbd> to close.</p>
+    </div>`;
+  document.body.appendChild(panel);
+  // Style for <kbd> elements inside the panel
+  const style = document.createElement('style');
+  style.textContent = `
+    .kbd {
+      display: inline-block;
+      padding: 1px 6px;
+      border-radius: 4px;
+      background: #f1f5f9;
+      border: 1px solid #cbd5e1;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px;
+      font-weight: 600;
+      color: #334155;
+      min-width: 18px;
+      text-align: center;
+    }
+  `;
+  document.head.appendChild(style);
+  panel.addEventListener('click', e => { if (e.target === panel) toggleKbdHelp(); });
+}
+
+function toggleKbdHelp() {
+  ensureKbdHelpPanel();
+  const panel = document.getElementById('kbd-help-panel');
+  if (panel) panel.classList.toggle('hidden');
+  refreshIcons();
+}
+
+// Update the bottom status-bar label to show navigation context
+function updateKbdStatus(msg) {
+  const el = document.getElementById('kbd-status-msg');
+  if (el) el.textContent = msg || '';
+}
+
+// Returns true when a modal is currently active — used to suppress global
+// shortcuts so we don't accidentally navigate while typing into a form.
+function isModalOpen() {
+  return !!document.querySelector('.modal-overlay.active:not(.hidden)');
+}
+
+// True when an input/textarea/contenteditable has focus — we should let
+// normal text-editing keys (arrows, etc.) work without interference.
+function isEditingText() {
+  const el = document.activeElement;
+  if (!el) return false;
+  const tag = (el.tagName || '').toUpperCase();
+  return tag === 'INPUT' || tag === 'TEXTAREA' || el.isContentEditable;
+}
+
+// Single, centralized key handler. All global shortcuts go through here so
+// they're easy to find and easy to suppress (e.g. inside a modal or textbox).
 window.addEventListener('keydown', (e) => {
+  // Always allow ?  to toggle the cheat sheet, even while editing — that's
+  // the canonical "how do I do X again?" key.
+  if (e.key === '?' && !e.metaKey && !e.ctrlKey && !e.altKey) {
+    e.preventDefault();
+    toggleKbdHelp();
+    return;
+  }
+  // Esc closes the cheat sheet first if open
+  const helpPanel = document.getElementById('kbd-help-panel');
+  if (e.key === 'Escape' && helpPanel && !helpPanel.classList.contains('hidden')) {
+    e.preventDefault();
+    toggleKbdHelp();
+    return;
+  }
+
+  // ⌘0-6 workspace switch (existing behaviour, preserved)
   if (e.metaKey || e.ctrlKey) {
     const map = {'0':'dashboard','1':'companies','2':'contacts','3':'deals','4':'orders','5':'tickets','6':'tasks'};
-    if (map[e.key]) { e.preventDefault(); navigateTo(map[e.key]); }
+    if (map[e.key]) { e.preventDefault(); navigateTo(map[e.key]); return; }
+    // ⌘/ focuses the search bar (or whichever search input is visible)
+    if (e.key === '/') {
+      e.preventDefault();
+      focusActiveSearch();
+      return;
+    }
+    return;
+  }
+
+  // Below this point we only handle non-modifier keys
+  if (e.metaKey || e.ctrlKey || e.altKey) return;
+
+  // Don't fight the user when they're typing in a form
+  if (isEditingText()) return;
+  // Don't fight the user when a modal is open (modal Escape handling lives
+  // in their own keydown handlers — none here yet)
+  if (isModalOpen()) return;
+
+  // ── Esc = go back ─────────────────────────────────
+  if (e.key === 'Escape') {
+    if (navigateBack()) {
+      e.preventDefault();
+      updateKbdStatus('← went back');
+    }
+    return;
+  }
+  // ── ↑ / ↓ / Home / End / Enter = row navigation ──
+  const { rows } = getFocusedTable();
+  if (!rows.length) return;
+
+  if (e.key === 'ArrowDown') {
+    e.preventDefault();
+    if (focusedRowIndex === null) focusedRowIndex = 0;
+    else focusedRowIndex = Math.min(rows.length - 1, focusedRowIndex + 1);
+    updateRowFocus();
+  } else if (e.key === 'ArrowUp') {
+    e.preventDefault();
+    if (focusedRowIndex === null) focusedRowIndex = 0;
+    else focusedRowIndex = Math.max(0, focusedRowIndex - 1);
+    updateRowFocus();
+  } else if (e.key === 'Home') {
+    e.preventDefault();
+    focusedRowIndex = 0;
+    updateRowFocus();
+  } else if (e.key === 'End') {
+    e.preventDefault();
+    focusedRowIndex = rows.length - 1;
+    updateRowFocus();
+  } else if (e.key === 'Enter') {
+    if (focusedRowIndex !== null) {
+      const target = rowToNavigate(rows[focusedRowIndex]);
+      if (target) {
+        e.preventDefault();
+        navigateTo(target.section, target.opts);
+      }
+    }
   }
 });
+
+// Focus the search input on whichever page is currently active. Falls back
+// to the Companies search bar if the page has none (so ⌘/ always does
+// *something* useful for a keyboard user).
+function focusActiveSearch() {
+  const candidates = [
+    { section: 'companies', id: 'search-input' },
+    { section: 'contacts',  id: 'search-input' },     // share input id; only one is in DOM at a time
+  ];
+  const input = document.getElementById('search-input');
+  if (input) {
+    input.focus();
+    input.select?.();
+    updateKbdStatus('Search focused — type to filter');
+    return;
+  }
+  // Pages without a search bar → fall back to navigating to Companies so
+  // the user lands somewhere useful.
+  navigateTo('companies');
+  setTimeout(() => {
+    const i = document.getElementById('search-input');
+    if (i) { i.focus(); i.select?.(); }
+  }, 50);
+}
 
 // ============= INIT =============
 window.addEventListener('load', () => {
