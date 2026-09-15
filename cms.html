@@ -218,6 +218,42 @@
   /* Tab buttons */
   .tab-btn { transition: all 0.15s; }
 
+  /* Dropdown menu item (used in Filter / Sort / Edit Columns menus) */
+  .filter-menu-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    width: 100%;
+    text-align: left;
+    padding: 0.4rem 0.6rem;
+    font-size: 11px;
+    color: #334155;
+    border-radius: 0.375rem;
+    transition: background 0.12s;
+  }
+  .filter-menu-item:hover { background: #f1f5f9; }
+  .filter-menu-item.col-toggle { gap: 0.5rem; }
+  .filter-menu-item .col-check {
+    width: 14px; height: 14px;
+    border-radius: 3px;
+    border: 1.5px solid #cbd5e1;
+    display: inline-flex; align-items: center; justify-content: center;
+    background: #fff;
+    transition: all 0.12s;
+    flex-shrink: 0;
+  }
+  .filter-menu-item .col-check.on {
+    background: #ff7a59;
+    border-color: #ff7a59;
+  }
+  .filter-menu-item .col-check.on::after {
+    content: '';
+    width: 7px; height: 4px;
+    border-left: 2px solid #fff;
+    border-bottom: 2px solid #fff;
+    transform: rotate(-45deg) translate(0px, -1px);
+  }
+
   /* Pipeline column */
   .pipeline-col {
     min-width: 260px;
@@ -292,6 +328,10 @@
     margin-bottom: 4px;
   }
 
+  /* Scrollbar hide utility */
+  .scrollbar-hide::-webkit-scrollbar { display: none; }
+  .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+
   /* Buttons */
   .btn-hs {
     display: inline-flex; align-items: center; gap: 6px;
@@ -341,6 +381,19 @@
     background: white;
     border: 1px solid #e2e8f0;
     border-radius: 10px;
+    cursor: pointer;
+    transition: border-color .12s ease, box-shadow .12s ease, transform .12s ease;
+    user-select: none;
+  }
+  .stat-mini:hover {
+    border-color: #cbd5e1;
+    box-shadow: 0 2px 6px rgba(15,23,42,0.05);
+  }
+  .stat-mini:active { transform: scale(0.99); }
+  .stat-mini.active {
+    border-color: #ff7a59;
+    box-shadow: 0 0 0 3px rgba(255,122,89,0.15);
+    background: #fff8f5;
   }
 
   /* Certification tag */
@@ -520,8 +573,8 @@
           <div class="text-[9px] text-slate-400">Tickets</div>
         </div>
         <div class="bg-slate-50 rounded-lg p-2.5 text-center">
-          <div id="q360-tasks-count" class="text-sm font-bold text-slate-800">0</div>
-          <div class="text-[9px] text-slate-400">Tasks</div>
+          <div id="q360-orders-count" class="text-sm font-bold text-slate-800">0</div>
+          <div class="text-[9px] text-slate-400">Orders</div>
         </div>
       </div>
     </div>
@@ -759,39 +812,51 @@
       </div>
     </div>
 
-    <!-- KPI Cards -->
+    <!-- KPI Cards (each one is a deep-link to the relevant list page) -->
     <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-4">
-      <div class="stat-mini">
+      <div class="stat-mini" id="kpi-card-total" onclick="jumpToKpi('customers')" title="View all customers (Companies page)">
         <div class="flex items-center justify-between mb-1">
           <span class="text-[10px] font-semibold uppercase tracking-wide text-slate-500">Total Customers</span>
           <i data-lucide="building-2" class="w-3.5 h-3.5 text-slate-400"></i>
         </div>
         <div class="text-2xl font-bold text-slate-900" id="kpi-total">0</div>
-        <div class="text-[11px] text-emerald-600 font-semibold mt-1">↑ 12% MoM</div>
+        <div class="flex items-center justify-between mt-1">
+          <div class="text-[11px] text-emerald-600 font-semibold">↑ 12% MoM</div>
+          <div class="text-[10px] font-semibold text-slate-400 inline-flex items-center gap-0.5">View <i data-lucide="arrow-right" class="w-3 h-3"></i></div>
+        </div>
       </div>
-      <div class="stat-mini">
+      <div class="stat-mini" id="kpi-card-active" onclick="jumpToKpi('active-partners')" title="View active partner companies">
         <div class="flex items-center justify-between mb-1">
           <span class="text-[10px] font-semibold uppercase tracking-wide text-slate-500">Active Partners</span>
           <i data-lucide="check-circle-2" class="w-3.5 h-3.5 text-emerald-500"></i>
         </div>
         <div class="text-2xl font-bold text-slate-900" id="kpi-active">0</div>
-        <div class="text-[11px] text-emerald-600 font-semibold mt-1">↑ 8% MoM</div>
+        <div class="flex items-center justify-between mt-1">
+          <div class="text-[11px] text-emerald-600 font-semibold">↑ 8% MoM</div>
+          <div class="text-[10px] font-semibold text-slate-400 inline-flex items-center gap-0.5">View <i data-lucide="arrow-right" class="w-3 h-3"></i></div>
+        </div>
       </div>
-      <div class="stat-mini">
+      <div class="stat-mini" id="kpi-card-volume" onclick="jumpToKpi('orders')" title="View order throughput (Orders page)">
         <div class="flex items-center justify-between mb-1">
           <span class="text-[10px] font-semibold uppercase tracking-wide text-slate-500">Monthly Throughput (MT)</span>
           <i data-lucide="scale" class="w-3.5 h-3.5 text-blue-500"></i>
         </div>
         <div class="text-2xl font-bold text-slate-900" id="kpi-volume">0</div>
-        <div class="text-[11px] text-blue-600 font-semibold mt-1">Metric Tons/month</div>
+        <div class="flex items-center justify-between mt-1">
+          <div class="text-[11px] text-blue-600 font-semibold">Metric Tons/month</div>
+          <div class="text-[10px] font-semibold text-slate-400 inline-flex items-center gap-0.5">View <i data-lucide="arrow-right" class="w-3 h-3"></i></div>
+        </div>
       </div>
-      <div class="stat-mini">
+      <div class="stat-mini" id="kpi-card-value" onclick="jumpToKpi('deals')" title="View annual contract value (Deals page)">
         <div class="flex items-center justify-between mb-1">
           <span class="text-[10px] font-semibold uppercase tracking-wide text-slate-500">Contract Value</span>
           <i data-lucide="dollar-sign" class="w-3.5 h-3.5 text-amber-500"></i>
         </div>
         <div class="text-2xl font-bold text-slate-900" id="kpi-value">€0</div>
-        <div class="text-[11px] text-amber-600 font-semibold mt-1">Annual EUR</div>
+        <div class="flex items-center justify-between mt-1">
+          <div class="text-[11px] text-amber-600 font-semibold">Annual EUR</div>
+          <div class="text-[10px] font-semibold text-slate-400 inline-flex items-center gap-0.5">View <i data-lucide="arrow-right" class="w-3 h-3"></i></div>
+        </div>
       </div>
     </div>
 
@@ -961,45 +1026,161 @@
             <span class="text-slate-500 block text-[10px] uppercase font-semibold">Pipeline Value</span>
             <span id="metric-value" class="font-bold text-slate-900 text-sm text-blue-600">€0.00M</span>
           </div>
+          <button onclick="openCreateModal()" class="inline-flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-semibold text-white bg-[#ff7a59] hover:bg-[#e06545] active:bg-[#c95335] rounded shadow-sm transition-all">
+            <i data-lucide="plus" class="w-4 h-4"></i>
+            <span>Create company</span>
+          </button>
         </div>
       </div>
     </div>
 
-    <!-- Tabs & View toggle -->
-    <div class="bg-white border border-slate-200 rounded-xl p-3 shadow-sm space-y-3 mb-3">
-      <div class="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 pb-3">
-        <div class="flex items-center gap-1 overflow-x-auto text-xs font-medium" id="quick-tabs">
-          <button onclick="setTabFilter('all')" class="tab-btn px-3 py-1.5 rounded-md whitespace-nowrap bg-slate-100 text-slate-900 font-semibold" data-tab="all">All Companies</button>
-          <button onclick="setTabFilter('meat')" class="tab-btn px-3 py-1.5 rounded-md whitespace-nowrap text-slate-600 hover:text-slate-900 hover:bg-slate-50" data-tab="meat">🥩 Meat &amp; Beef</button>
-          <button onclick="setTabFilter('poultry')" class="tab-btn px-3 py-1.5 rounded-md whitespace-nowrap text-slate-600 hover:text-slate-900 hover:bg-slate-50" data-tab="poultry">🍗 Poultry</button>
-          <button onclick="setTabFilter('seafood')" class="tab-btn px-3 py-1.5 rounded-md whitespace-nowrap text-slate-600 hover:text-slate-900 hover:bg-slate-50" data-tab="seafood">🐟 Seafood</button>
-          <button onclick="setTabFilter('prepared')" class="tab-btn px-3 py-1.5 rounded-md whitespace-nowrap text-slate-600 hover:text-slate-900 hover:bg-slate-50" data-tab="prepared">🏭 Prepared Foods</button>
-          <button onclick="setTabFilter('high_volume')" class="tab-btn px-3 py-1.5 rounded-md whitespace-nowrap text-slate-600 hover:text-slate-900 hover:bg-slate-50" data-tab="high_volume">⚡ High Volume</button>
-        </div>
-        <div class="flex items-center bg-slate-100 p-0.5 rounded-lg border border-slate-200">
-          <button id="btn-view-list" onclick="switchView('table')" class="flex items-center gap-1.5 px-3 py-1 text-xs font-semibold rounded-md bg-white text-slate-900 shadow-xs">
-            <i data-lucide="table-2" class="w-3.5 h-3.5"></i><span>List</span>
+    <!-- Toolbar: single row with Search + Filter + Sort + Edit Columns + List/Board + Export + Save -->
+    <div class="bg-white border border-slate-200 rounded-xl px-3 py-2 shadow-sm flex flex-wrap items-center gap-2 mb-3 text-xs">
+      <!-- Search -->
+      <div class="relative flex-1 min-w-[200px]">
+        <i data-lucide="search" class="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400"></i>
+        <input id="search-input" type="text" placeholder="Search by company, contact, Est #, city..." oninput="handleSearch(this.value)" class="w-full pl-8 pr-3 py-1.5 bg-slate-50 border border-slate-200 rounded-md text-xs text-slate-900 placeholder-slate-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#ff7a59]/30 focus:border-[#ff7a59] transition-all" />
+      </div>
+
+      <!-- Filter -->
+      <div class="relative">
+        <button id="filter-btn" onclick="toggleFilterMenu(event)" class="flex items-center gap-1.5 px-2.5 py-1.5 bg-slate-50 border border-slate-200 hover:bg-white hover:border-slate-300 rounded-md font-semibold text-slate-700">
+          <i data-lucide="sliders-horizontal" class="w-3.5 h-3.5"></i><span>Filter</span>
+          <span id="filter-active-dot" class="hidden w-1.5 h-1.5 rounded-full bg-[#ff7a59]"></span>
+        </button>
+        <div id="filter-menu" class="hidden absolute left-0 top-full mt-1 z-40 bg-white border border-slate-200 rounded-lg shadow-lg w-64 p-2 max-h-[80vh] overflow-y-auto">
+          <!-- 1. Quick Views -->
+          <div class="text-[9px] font-bold text-slate-400 uppercase tracking-wider px-2 py-1">Quick Views</div>
+          <button onclick="setTabFilter('all');closeAllMenus()" class="filter-menu-item">
+            <i data-lucide="layers" class="w-3.5 h-3.5 text-slate-400"></i>All Companies
           </button>
-          <button id="btn-view-board" onclick="switchView('board')" class="flex items-center gap-1.5 px-3 py-1 text-xs font-semibold rounded-md text-slate-500 hover:text-slate-900">
-            <i data-lucide="kanban-square" class="w-3.5 h-3.5"></i><span>Board</span>
+          <button onclick="setTabFilter('high_volume');closeAllMenus()" class="filter-menu-item">
+            <i data-lucide="zap" class="w-3.5 h-3.5 text-amber-500"></i>High Volume (≥500 MT)
+          </button>
+
+          <!-- 2. Industry Sector -->
+          <div class="border-t border-slate-100 my-1"></div>
+          <div class="text-[9px] font-bold text-slate-400 uppercase tracking-wider px-2 py-1">Industry Sector</div>
+          <button onclick="setTabFilter('meat');closeAllMenus()" class="filter-menu-item">
+            <span class="w-3.5 text-center">🥩</span>Meat &amp; Beef
+          </button>
+          <button onclick="setTabFilter('poultry');closeAllMenus()" class="filter-menu-item">
+            <span class="w-3.5 text-center">🍗</span>Poultry
+          </button>
+          <button onclick="setTabFilter('seafood');closeAllMenus()" class="filter-menu-item">
+            <span class="w-3.5 text-center">🐟</span>Seafood
+          </button>
+          <button onclick="setTabFilter('prepared');closeAllMenus()" class="filter-menu-item">
+            <span class="w-3.5 text-center">🏭</span>Prepared Foods
+          </button>
+
+          <!-- 3. Pipeline Stage -->
+          <div class="border-t border-slate-100 my-1"></div>
+          <div class="text-[9px] font-bold text-slate-400 uppercase tracking-wider px-2 py-1">Pipeline Stage</div>
+          <button onclick="setTabFilter('stage_active_partner');closeAllMenus()" class="filter-menu-item">
+            <i data-lucide="handshake" class="w-3.5 h-3.5 text-emerald-600"></i>Active Supply Partner
+          </button>
+          <button onclick="setTabFilter('stage_contract_negotiation');closeAllMenus()" class="filter-menu-item">
+            <i data-lucide="file-text" class="w-3.5 h-3.5 text-blue-600"></i>Contract Negotiation
+          </button>
+          <button onclick="setTabFilter('stage_plant_audit');closeAllMenus()" class="filter-menu-item">
+            <i data-lucide="clipboard-check" class="w-3.5 h-3.5 text-violet-600"></i>Plant &amp; HACCP Audit
+          </button>
+          <button onclick="setTabFilter('stage_sample_review');closeAllMenus()" class="filter-menu-item">
+            <i data-lucide="flask-conical" class="w-3.5 h-3.5 text-cyan-600"></i>Sample &amp; Spec Review
+          </button>
+          <button onclick="setTabFilter('stage_lead');closeAllMenus()" class="filter-menu-item">
+            <i data-lucide="user-plus" class="w-3.5 h-3.5 text-slate-500"></i>Lead / Inbound
+          </button>
+
+          <!-- 4. Deals Pipeline -->
+          <div class="border-t border-slate-100 my-1"></div>
+          <div class="text-[9px] font-bold text-slate-400 uppercase tracking-wider px-2 py-1">Deals Pipeline</div>
+          <button onclick="setTabFilter('deals_open');closeAllMenus()" class="filter-menu-item">
+            <i data-lucide="trending-up" class="w-3.5 h-3.5 text-blue-500"></i>Has Open Deals
+          </button>
+          <button onclick="setTabFilter('deals_won');closeAllMenus()" class="filter-menu-item">
+            <i data-lucide="trophy" class="w-3.5 h-3.5 text-amber-500"></i>Won Deals
+          </button>
+          <button onclick="setTabFilter('deals_no_active');closeAllMenus()" class="filter-menu-item">
+            <i data-lucide="circle-dashed" class="w-3.5 h-3.5 text-slate-400"></i>No Active Deals
+          </button>
+          <button onclick="setTabFilter('deals_qualified_to_buy');closeAllMenus()" class="filter-menu-item">
+            <span class="w-3.5 h-3.5 rounded-full bg-sky-200 inline-block"></span>Qualified To Buy
+          </button>
+          <button onclick="setTabFilter('deals_decision_maker');closeAllMenus()" class="filter-menu-item">
+            <span class="w-3.5 h-3.5 rounded-full bg-violet-200 inline-block"></span>Decision Maker Bought-In
+          </button>
+          <button onclick="setTabFilter('deals_contract_sent');closeAllMenus()" class="filter-menu-item">
+            <span class="w-3.5 h-3.5 rounded-full bg-emerald-200 inline-block"></span>Contract Sent
+          </button>
+          <button onclick="setTabFilter('deals_appointment_scheduled');closeAllMenus()" class="filter-menu-item">
+            <span class="w-3.5 h-3.5 rounded-full bg-orange-200 inline-block"></span>Appointment Scheduled
+          </button>
+
+          <!-- 5. Status -->
+          <div class="border-t border-slate-100 my-1"></div>
+          <div class="text-[9px] font-bold text-slate-400 uppercase tracking-wider px-2 py-1">Status</div>
+          <button onclick="setTabFilter('status_active');closeAllMenus()" class="filter-menu-item">
+            <span class="w-2 h-2 rounded-full bg-emerald-500 inline-block"></span>Active
+          </button>
+          <button onclick="setTabFilter('status_negotiation');closeAllMenus()" class="filter-menu-item">
+            <span class="w-2 h-2 rounded-full bg-blue-500 inline-block"></span>In Negotiation
+          </button>
+          <button onclick="setTabFilter('status_auditing');closeAllMenus()" class="filter-menu-item">
+            <span class="w-2 h-2 rounded-full bg-violet-500 inline-block"></span>Auditing
+          </button>
+          <button onclick="setTabFilter('status_lead');closeAllMenus()" class="filter-menu-item">
+            <span class="w-2 h-2 rounded-full bg-slate-400 inline-block"></span>Lead
           </button>
         </div>
       </div>
-      <div class="flex flex-col sm:flex-row items-center justify-between gap-3">
-        <div class="relative w-full sm:w-80">
-          <i data-lucide="search" class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400"></i>
-          <input id="search-input" type="text" placeholder="Search by company, contact, Est #, city..." oninput="handleSearch(this.value)" class="w-full pl-9 pr-8 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-xs text-slate-900 placeholder-slate-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#ff7a59]/30 focus:border-[#ff7a59] transition-all" />
-        </div>
-        <div class="flex items-center gap-2 w-full sm:w-auto justify-end text-xs text-slate-500">
-          <span>Sort:</span>
-          <select id="sort-select" onchange="handleSortChange(this.value)" class="bg-slate-50 border border-slate-200 text-slate-800 text-xs rounded-lg px-2.5 py-1.5 focus:outline-none focus:ring-1 focus:ring-[#ff7a59]">
-            <option value="companyName-asc">Company name (A-Z)</option>
-            <option value="companyName-desc">Company name (Z-A)</option>
-            <option value="monthlyVolumeMetricTons-desc">Monthly volume (High to Low)</option>
-            <option value="annualContractValue-desc">Contract value (High to Low)</option>
-          </select>
+
+      <!-- Sort -->
+      <div class="relative">
+        <button id="sort-btn" onclick="toggleSortMenu(event)" class="flex items-center gap-1.5 px-2.5 py-1.5 bg-slate-50 border border-slate-200 hover:bg-white hover:border-slate-300 rounded-md font-semibold text-slate-700">
+          <i data-lucide="arrow-up-down" class="w-3.5 h-3.5"></i><span>Sort</span>
+        </button>
+        <div id="sort-menu" class="hidden absolute left-0 top-full mt-1 z-40 bg-white border border-slate-200 rounded-lg shadow-lg w-56 p-2">
+          <button onclick="handleSortChange('companyName-asc');closeAllMenus()" class="filter-menu-item">Company name (A-Z)</button>
+          <button onclick="handleSortChange('companyName-desc');closeAllMenus()" class="filter-menu-item">Company name (Z-A)</button>
+          <button onclick="handleSortChange('monthlyVolumeMetricTons-desc');closeAllMenus()" class="filter-menu-item">Monthly volume (High to Low)</button>
+          <button onclick="handleSortChange('annualContractValue-desc');closeAllMenus()" class="filter-menu-item">Contract value (High to Low)</button>
         </div>
       </div>
+
+      <!-- Edit Columns -->
+      <div class="relative">
+        <button id="cols-btn" onclick="toggleColsMenu(event)" class="flex items-center gap-1.5 px-2.5 py-1.5 bg-slate-50 border border-slate-200 hover:bg-white hover:border-slate-300 rounded-md font-semibold text-slate-700">
+          <i data-lucide="columns-3" class="w-3.5 h-3.5"></i><span>Edit Columns</span>
+        </button>
+        <div id="cols-menu" class="hidden absolute left-0 top-full mt-1 z-40 bg-white border border-slate-200 rounded-lg shadow-lg w-56 p-2">
+          <div id="cols-list" class="space-y-1"></div>
+        </div>
+      </div>
+
+      <!-- Spacer -->
+      <div class="flex-1"></div>
+
+      <!-- List / Board -->
+      <div class="flex items-center bg-slate-100 p-0.5 rounded-md border border-slate-200">
+        <button id="btn-view-list" onclick="switchView('table')" class="flex items-center gap-1.5 px-2.5 py-1 text-[11px] font-semibold rounded-md bg-white text-slate-900 shadow-xs">
+          <i data-lucide="table-2" class="w-3.5 h-3.5"></i><span>List</span>
+        </button>
+        <button id="btn-view-board" onclick="switchView('board')" class="flex items-center gap-1.5 px-2.5 py-1 text-[11px] font-semibold rounded-md text-slate-500 hover:text-slate-900">
+          <i data-lucide="kanban-square" class="w-3.5 h-3.5"></i><span>Board</span>
+        </button>
+      </div>
+
+      <!-- Export -->
+      <button onclick="exportCompaniesCSV()" class="flex items-center gap-1.5 px-2.5 py-1.5 bg-slate-50 border border-slate-200 hover:bg-white hover:border-slate-300 rounded-md font-semibold text-slate-700">
+        <i data-lucide="download" class="w-3.5 h-3.5"></i><span>Export</span>
+      </button>
+
+      <!-- Save -->
+      <button onclick="saveCompaniesView()" class="flex items-center gap-1.5 px-3 py-1.5 bg-[#ff7a59] hover:bg-[#e8694a] rounded-md font-semibold text-white shadow-xs">
+        <i data-lucide="save" class="w-3.5 h-3.5"></i><span>Save</span>
+      </button>
     </div>
 
     <!-- Table View -->
@@ -1012,8 +1193,8 @@
               <th class="px-4 py-3">Industry Sector</th>
               <th class="px-4 py-3">Pipeline Stage</th>
               <th class="px-4 py-3">Primary Contact</th>
-              <th class="px-4 py-3">Throughput (MT)</th>
-              <th class="px-4 py-3">Contract (€)</th>
+              <th class="px-4 py-3">Deals Pipeline</th>
+              <th class="px-4 py-3">Status</th>
               <th class="px-4 py-3 text-right">Actions</th>
             </tr>
           </thead>
@@ -1062,6 +1243,10 @@
               <i data-lucide="mail" class="w-3.5 h-3.5"></i>
               <span id="rd-email">contact@example.ie</span>
             </div>
+            <div class="flex items-center gap-1.5 text-slate-600">
+              <i data-lucide="globe" class="w-3.5 h-3.5"></i>
+              <span id="rd-contact-country">—</span>
+            </div>
           </div>
         </div>
 
@@ -1096,36 +1281,44 @@
         </div>
       </div>
 
-      <!-- Center: Tabs (Activity / Notes / Properties) -->
+      <!-- Center: Tabs (Activity / Audit / Properties) -->
       <div class="bg-white rounded-2xl border border-slate-200 shadow-xs overflow-hidden">
-        <div class="border-b border-slate-200 px-4 pt-3 flex items-center gap-1 bg-slate-50/60">
-          <button onclick="setDetailTab('activity')" id="tab-activity" class="px-3 py-2 text-xs font-bold text-slate-900 border-b-2 border-[#ff7a59]">Activity</button>
-          <button onclick="setDetailTab('notes')" id="tab-notes" class="px-3 py-2 text-xs font-semibold text-slate-500 hover:text-slate-900 border-b-2 border-transparent">Notes</button>
-          <button onclick="setDetailTab('properties')" id="tab-properties" class="px-3 py-2 text-xs font-semibold text-slate-500 hover:text-slate-900 border-b-2 border-transparent">Properties</button>
+        <div class="border-b border-slate-200 px-2 pt-3 flex items-center gap-0 bg-slate-50/60 relative">
+          <div class="flex items-center gap-0 w-full" id="rd-tab-scroll">
+            <button onclick="setDetailTab('activity')" id="tab-activity-btn" class="cd-tab-btn px-3 py-2 text-xs font-bold text-slate-900 border-b-2 border-[#ff7a59] whitespace-nowrap flex items-center gap-1.5">
+              <i data-lucide="activity" class="w-3 h-3"></i>Activity
+            </button>
+            <button onclick="setDetailTab('audit')" id="tab-audit-btn" class="cd-tab-btn px-3 py-2 text-xs font-semibold text-slate-500 hover:text-slate-900 border-b-2 border-transparent whitespace-nowrap flex items-center gap-1.5">
+              <i data-lucide="shield-check" class="w-3 h-3"></i>Audit
+            </button>
+            <button onclick="setDetailTab('properties')" id="tab-properties-btn" class="cd-tab-btn px-3 py-2 text-xs font-semibold text-slate-500 hover:text-slate-900 border-b-2 border-transparent whitespace-nowrap flex items-center gap-1.5 ml-auto">
+              <i data-lucide="sliders" class="w-3 h-3"></i>Properties
+            </button>
+          </div>
         </div>
 
-        <div id="rd-tab-activity" class="p-4 space-y-2">
-          <div class="flex items-center gap-2 mb-3">
-            <select id="rd-note-type" class="text-xs px-2 py-1 border border-slate-200 rounded-md bg-white">
-              <option value="note">📝 Note</option>
-              <option value="call">📞 Call</option>
-              <option value="task">✅ Task</option>
-              <option value="audit">🔍 Audit</option>
-            </select>
-            <button onclick="addNote()" class="btn-hs btn-orange text-xs ml-auto">
+        <!-- Activity tab: textarea + notes list (Notes merged here) -->
+        <div id="rd-tab-activity-content" class="p-4 space-y-2">
+          <textarea id="rd-note-input" class="form-input text-xs" rows="3" placeholder="Log a note, call summary, or task update..."></textarea>
+          <div class="flex justify-end">
+            <button onclick="addNote()" class="btn-hs btn-orange text-xs">
               <i data-lucide="plus" class="w-3.5 h-3.5"></i> Add
             </button>
           </div>
-          <textarea id="rd-note-input" class="form-input text-xs" rows="3" placeholder="Log a note, call summary, or task update..."></textarea>
           <div id="rd-notes-list" class="space-y-2 mt-3"></div>
         </div>
 
-        <div id="rd-tab-notes" class="p-4 hidden">
-          <p class="text-xs text-slate-500 mb-3">All notes &amp; activity tied to this record</p>
-          <div id="rd-notes-list-tab" class="space-y-2"></div>
+        <!-- Audit tab -->
+        <div id="rd-tab-audit-content" class="p-4 hidden">
+          <div class="flex flex-col items-center justify-center py-10 text-slate-400">
+            <i data-lucide="shield-check" class="w-10 h-10 mb-3 opacity-40"></i>
+            <p class="text-xs font-medium text-slate-500">No audit records</p>
+            <p class="text-xs text-slate-400 mt-1">Audit trail for this company will appear here.</p>
+          </div>
         </div>
 
-        <div id="rd-tab-properties" class="p-4 hidden">
+        <!-- Properties tab -->
+        <div id="rd-tab-properties-content" class="p-4 hidden">
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-3" id="rd-properties-grid"></div>
         </div>
       </div>
@@ -1239,36 +1432,45 @@
         </div>
       </div>
 
-      <!-- Center: Tabs (Activity / Notes / Properties) -->
+      <!-- Center: Tabs (Activity / Audit / Properties) -->
       <div class="bg-white rounded-2xl border border-slate-200 shadow-xs overflow-hidden">
-        <div class="border-b border-slate-200 px-4 pt-3 flex items-center gap-1 bg-slate-50/60">
-          <button onclick="setCdTab('activity')" id="cd-tab-activity" class="px-3 py-2 text-xs font-bold text-slate-900 border-b-2 border-[#ff7a59]">Activity</button>
-          <button onclick="setCdTab('notes')" id="cd-tab-notes" class="px-3 py-2 text-xs font-semibold text-slate-500 hover:text-slate-900 border-b-2 border-transparent">Notes</button>
-          <button onclick="setCdTab('properties')" id="cd-tab-properties" class="px-3 py-2 text-xs font-semibold text-slate-500 hover:text-slate-900 border-b-2 border-transparent">Properties</button>
+        <div class="border-b border-slate-200 px-2 pt-3 flex items-center gap-0 bg-slate-50/60 relative">
+          <!-- Scrollable tab row -->
+          <div class="flex items-center gap-0 w-full" id="cd-tab-scroll">
+            <button onclick="setCdTab('activity')" id="cd-tab-activity-btn" class="cd-tab-btn px-3 py-2 text-xs font-bold text-slate-900 border-b-2 border-[#ff7a59] whitespace-nowrap flex items-center gap-1.5">
+              <i data-lucide="activity" class="w-3 h-3"></i>Activity
+            </button>
+            <button onclick="setCdTab('audit')" id="cd-tab-audit-btn" class="cd-tab-btn px-3 py-2 text-xs font-semibold text-slate-500 hover:text-slate-900 border-b-2 border-transparent whitespace-nowrap flex items-center gap-1.5">
+              <i data-lucide="shield-check" class="w-3 h-3"></i>Audit
+            </button>
+            <button onclick="setCdTab('properties')" id="cd-tab-properties-btn" class="cd-tab-btn px-3 py-2 text-xs font-semibold text-slate-500 hover:text-slate-900 border-b-2 border-transparent whitespace-nowrap flex items-center gap-1.5 ml-auto">
+              <i data-lucide="sliders" class="w-3 h-3"></i>Properties
+            </button>
+          </div>
         </div>
 
-        <div id="cd-tab-activity" class="p-4 space-y-2">
-          <div class="flex items-center gap-2 mb-3">
-            <select id="cd-note-type" class="text-xs px-2 py-1 border border-slate-200 rounded-md bg-white">
-              <option value="note">📝 Note</option>
-              <option value="call">📞 Call</option>
-              <option value="task">✅ Task</option>
-              <option value="audit">🔍 Audit</option>
-            </select>
-            <button onclick="addContactNote()" class="btn-hs btn-orange text-xs ml-auto">
+        <!-- Activity tab: shows textarea + notes list (Notes merged here) -->
+        <div id="cd-tab-activity-content" class="p-4 space-y-2">
+          <textarea id="cd-note-input" class="form-input text-xs" rows="3" placeholder="Log a note, call summary, or task update..."></textarea>
+          <div class="flex justify-end">
+            <button onclick="addContactNote()" class="btn-hs btn-orange text-xs">
               <i data-lucide="plus" class="w-3.5 h-3.5"></i> Add
             </button>
           </div>
-          <textarea id="cd-note-input" class="form-input text-xs" rows="3" placeholder="Log a note, call summary, or task update..."></textarea>
           <div id="cd-notes-list" class="space-y-2 mt-3"></div>
         </div>
 
-        <div id="cd-tab-notes" class="p-4 hidden">
-          <p class="text-xs text-slate-500 mb-3">All notes &amp; activity tied to this contact</p>
-          <div id="cd-notes-list-tab" class="space-y-2"></div>
+        <!-- Audit tab -->
+        <div id="cd-tab-audit-content" class="p-4 hidden">
+          <div class="flex flex-col items-center justify-center py-10 text-slate-400">
+            <i data-lucide="shield-check" class="w-10 h-10 mb-3 opacity-40"></i>
+            <p class="text-xs font-medium text-slate-500">No audit records</p>
+            <p class="text-xs text-slate-400 mt-1">Audit trail for this contact will appear here.</p>
+          </div>
         </div>
 
-        <div id="cd-tab-properties" class="p-4 hidden">
+        <!-- Properties tab -->
+        <div id="cd-tab-properties-content" class="p-4 hidden">
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-3" id="cd-properties-grid"></div>
         </div>
       </div>
@@ -1353,14 +1555,47 @@
 <!-- ============================ TICKETS PAGE ============================ -->
 <section class="page" id="page-tickets">
   <div class="workspace-container">
-    <h1 class="text-2xl font-bold text-slate-900 mb-1">Support Tickets</h1>
-    <p class="text-xs text-slate-500 mb-4">Cold chain, compliance, SLA, packaging &amp; barcode issues.</p>
+    <div class="flex items-center justify-between mb-3">
+      <div>
+        <h1 class="text-2xl font-bold text-slate-900 mb-1">Support Tickets</h1>
+        <p class="text-xs text-slate-500">Cold chain, compliance, SLA, packaging &amp; barcode issues.</p>
+      </div>
+      <button onclick="openTicketCreateModal()" class="btn-hs btn-orange">
+        <i data-lucide="plus-circle" class="w-3.5 h-3.5 inline -mt-0.5 mr-1"></i>New ticket
+      </button>
+    </div>
 
     <div class="grid grid-cols-1 lg:grid-cols-4 gap-3 mb-4">
-      <div class="stat-mini"><span class="text-[10px] font-semibold uppercase text-slate-500">Total</span><div class="text-2xl font-bold text-slate-900" id="tk-total">0</div></div>
-      <div class="stat-mini"><span class="text-[10px] font-semibold uppercase text-rose-600">Urgent</span><div class="text-2xl font-bold text-rose-600" id="tk-urgent">0</div></div>
-      <div class="stat-mini"><span class="text-[10px] font-semibold uppercase text-amber-600">Open</span><div class="text-2xl font-bold text-amber-600" id="tk-open">0</div></div>
-      <div class="stat-mini"><span class="text-[10px] font-semibold uppercase text-emerald-600">Resolved</span><div class="text-2xl font-bold text-emerald-600" id="tk-resolved">0</div></div>
+      <div class="stat-mini active" id="tk-filter-all" onclick="setTicketFilter('all')" title="Show all tickets">
+        <div class="flex items-center justify-between mb-1">
+          <span class="text-[10px] font-semibold uppercase text-slate-500">Total</span>
+        </div>
+        <div class="text-2xl font-bold text-slate-900" id="tk-total">0</div>
+      </div>
+      <div class="stat-mini" id="tk-filter-urgent" onclick="setTicketFilter('urgent')" title="Show urgent tickets only">
+        <div class="flex items-center justify-between mb-1">
+          <span class="text-[10px] font-semibold uppercase text-rose-600">Urgent</span>
+        </div>
+        <div class="text-2xl font-bold text-rose-600" id="tk-urgent">0</div>
+      </div>
+      <div class="stat-mini" id="tk-filter-open" onclick="setTicketFilter('open')" title="Show open (unresolved) tickets">
+        <div class="flex items-center justify-between mb-1">
+          <span class="text-[10px] font-semibold uppercase text-amber-600">Open</span>
+        </div>
+        <div class="text-2xl font-bold text-amber-600" id="tk-open">0</div>
+      </div>
+      <div class="stat-mini" id="tk-filter-resolved" onclick="setTicketFilter('resolved')" title="Show resolved tickets only">
+        <div class="flex items-center justify-between mb-1">
+          <span class="text-[10px] font-semibold uppercase text-emerald-600">Resolved</span>
+        </div>
+        <div class="text-2xl font-bold text-emerald-600" id="tk-resolved">0</div>
+      </div>
+    </div>
+    <!-- Clear filter chip — only visible when a non-default filter is active -->
+    <div class="flex items-center justify-end mb-3 -mt-2 h-5">
+      <button id="tk-filter-reset" onclick="setTicketFilter('all')" class="hidden text-[11px] text-slate-500 hover:text-rose-600 font-semibold inline-flex items-center gap-1 px-2 py-1 rounded hover:bg-rose-50">
+        <i data-lucide="x" class="w-3 h-3"></i> Clear filter
+      </button>
     </div>
 
     <div class="bg-white border border-slate-200 rounded-xl shadow-xs overflow-hidden">
@@ -1410,8 +1645,15 @@
 
 <section class="page" id="page-contacts">
   <div class="workspace-container">
-    <h1 class="text-2xl font-bold text-slate-900 mb-1">Contacts</h1>
-    <p class="text-xs text-slate-500 mb-4">All primary &amp; secondary contacts.</p>
+    <div class="flex items-center justify-between mb-3">
+      <div>
+        <h1 class="text-2xl font-bold text-slate-900 mb-1">Contacts</h1>
+        <p class="text-xs text-slate-500">All primary &amp; secondary contacts.</p>
+      </div>
+      <button onclick="openContactCreateModal()" class="btn-hs btn-orange">
+        <i data-lucide="user-plus" class="w-3.5 h-3.5 inline -mt-0.5 mr-1"></i>New contact
+      </button>
+    </div>
     <div class="bg-white border border-slate-200 rounded-xl shadow-xs overflow-hidden">
       <div class="overflow-x-auto">
         <table class="w-full text-xs">
@@ -1577,6 +1819,158 @@
     <div class="px-6 py-3 border-t border-slate-200 flex items-center justify-end gap-2 sticky bottom-0 bg-white">
       <button onclick="closeModal('company-modal')" class="btn-hs btn-outline">Cancel</button>
       <button onclick="saveCustomer()" class="btn-hs btn-orange">Save company</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============================ CONTACT EDIT MODAL (CRUD) ============================ -->
+<div class="modal-overlay" id="contact-edit-modal">
+  <div class="modal-content max-w-xl">
+    <div class="px-6 py-4 border-b border-slate-200 flex items-center justify-between sticky top-0 bg-white z-10">
+      <div class="flex items-center gap-2">
+        <i data-lucide="user-round" class="w-5 h-5 text-[#ff7a59]"></i>
+        <h2 class="text-base font-bold text-slate-900">Edit contact</h2>
+      </div>
+      <button onclick="closeModal('contact-edit-modal')" class="w-8 h-8 rounded-full hover:bg-slate-100 flex items-center justify-center">
+        <i data-lucide="x" class="w-4 h-4 text-slate-500"></i>
+      </button>
+    </div>
+
+    <div class="p-6 space-y-4">
+      <input type="hidden" id="contact-edit-id" />
+      <div class="contact-context-strip bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs text-slate-600 flex items-center gap-2">
+        <i data-lucide="building-2" class="w-3.5 h-3.5 text-slate-400"></i>
+        <span>Editing primary contact for <strong id="contact-edit-company" class="text-slate-900 font-semibold">—</strong></span>
+      </div>
+
+      <!-- Name row: First + Last -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <div>
+          <label class="form-label">First name <span class="text-rose-500">*</span></label>
+          <input id="contact-edit-first-name" class="form-input" placeholder="e.g. Eileen" />
+        </div>
+        <div>
+          <label class="form-label">Last name</label>
+          <input id="contact-edit-last-name" class="form-input" placeholder="e.g. Kelly" />
+        </div>
+      </div>
+
+      <!-- Company + Country row -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <div>
+          <label class="form-label">Company</label>
+          <input id="contact-edit-company-input" class="form-input" placeholder="e.g. Dunnes Stores" />
+        </div>
+        <div>
+          <label class="form-label">Country / Region</label>
+          <select id="contact-edit-country" class="form-select">
+            <option value="">— Select —</option>
+            <option>Ireland</option>
+            <option>United Kingdom</option>
+            <option>France</option>
+            <option>Germany</option>
+            <option>Netherlands</option>
+            <option>Spain</option>
+            <option>Italy</option>
+            <option>Poland</option>
+            <option>USA</option>
+            <option>Canada</option>
+            <option>Other (EU)</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Job Title (full width) -->
+      <div>
+        <label class="form-label">Job title</label>
+        <input id="contact-edit-title" class="form-input" placeholder="e.g. Head of Procurement" />
+      </div>
+
+      <!-- Email + Phone row -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <div>
+          <label class="form-label">Email</label>
+          <input id="contact-edit-email" type="email" class="form-input" placeholder="name@company.ie" />
+        </div>
+        <div>
+          <label class="form-label">Phone</label>
+          <input id="contact-edit-phone" class="form-input font-mono" placeholder="+353 (1) 475-1111" />
+        </div>
+      </div>
+    </div>
+
+    <div class="px-6 py-3 border-t border-slate-200 flex items-center justify-end gap-2 sticky bottom-0 bg-white">
+      <button onclick="closeModal('contact-edit-modal')" class="btn-hs btn-outline">Cancel</button>
+      <button id="contact-btn-create-another" onclick="saveContactCreate(true)" class="btn-hs btn-outline hidden">
+        <i data-lucide="user-plus" class="w-3.5 h-3.5 inline -mt-0.5 mr-1"></i>Create and add another
+      </button>
+      <button id="contact-btn-save" onclick="saveContactSubmit()" class="btn-hs btn-orange">Save contact</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============================ TICKET CREATE MODAL ============================ -->
+<div class="modal-overlay" id="ticket-create-modal">
+  <div class="modal-content max-w-xl">
+    <div class="px-6 py-4 border-b border-slate-200 flex items-center justify-between sticky top-0 bg-white z-10">
+      <div class="flex items-center gap-2">
+        <i data-lucide="ticket" class="w-5 h-5 text-[#ff7a59]"></i>
+        <h2 class="text-base font-bold text-slate-900">New support ticket</h2>
+      </div>
+      <button onclick="closeModal('ticket-create-modal')" class="w-8 h-8 rounded-full hover:bg-slate-100 flex items-center justify-center">
+        <i data-lucide="x" class="w-4 h-4 text-slate-500"></i>
+      </button>
+    </div>
+
+    <div class="p-6 space-y-4">
+      <!-- Title -->
+      <div>
+        <label class="form-label">Title <span class="text-rose-500">*</span></label>
+        <input id="ticket-create-title" class="form-input" placeholder="e.g. Reefer temp excursion on Lot #9021B" />
+      </div>
+
+      <!-- Company -->
+      <div>
+        <label class="form-label">Company <span class="text-rose-500">*</span></label>
+        <select id="ticket-create-company" class="form-select"></select>
+      </div>
+
+      <!-- Category + Priority row -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <div>
+          <label class="form-label">Category</label>
+          <select id="ticket-create-category" class="form-select">
+            <option>Cold Chain Excursion</option>
+            <option>Bord Bia / Compliance</option>
+            <option>SLA / Delivery</option>
+            <option>Packaging &amp; Barcode</option>
+            <option>Order / Invoice</option>
+            <option>General</option>
+          </select>
+        </div>
+        <div>
+          <label class="form-label">Priority</label>
+          <select id="ticket-create-priority" class="form-select">
+            <option>Urgent</option>
+            <option>High</option>
+            <option selected>Medium</option>
+            <option>Low</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Description -->
+      <div>
+        <label class="form-label">Description</label>
+        <textarea id="ticket-create-description" class="form-input" rows="4" placeholder="Add context — lot numbers, telemetry, photos, etc."></textarea>
+      </div>
+    </div>
+
+    <div class="px-6 py-3 border-t border-slate-200 flex items-center justify-end gap-2 sticky bottom-0 bg-white">
+      <button onclick="closeModal('ticket-create-modal')" class="btn-hs btn-outline">Cancel</button>
+      <button onclick="saveNewTicket()" class="btn-hs btn-orange">
+        <i data-lucide="plus" class="w-3.5 h-3.5 inline -mt-0.5 mr-1"></i>Create ticket
+      </button>
     </div>
   </div>
 </div>
@@ -1790,6 +2184,7 @@ let orders = SEED_ORDERS;
 
 let currentView = 'table';
 let currentTab = 'all';
+let currentTicketFilter = 'all';   // 'all' | 'urgent' | 'open' | 'resolved'
 let searchQuery = '';
 let sortField = 'companyName';
 let sortDirection = 'asc';
@@ -2070,6 +2465,23 @@ function saveStorage() {
 }
 function seedIfEmpty() {
   if (customers.length === 0) customers = JSON.parse(JSON.stringify(SEED_CUSTOMERS));
+
+  // ---- NORMALIZE primaryContact on legacy records ----
+  // New contact schema carries firstName / lastName / country. Older records and
+  // older localStorage payloads only have `name`, so we derive the split here.
+  customers.forEach(c => {
+    if (!c.primaryContact) return;
+    const pc = c.primaryContact;
+    const needsSplit = !pc.firstName && !pc.lastName && pc.name;
+    if (needsSplit) {
+      const parts = pc.name.trim().split(/\s+/).filter(Boolean);
+      pc.lastName = parts.pop() || '';
+      pc.firstName = parts.join(' ');
+    }
+    if (!pc.country) {
+      pc.country = (c.facilityLocation && c.facilityLocation.country) || 'Ireland';
+    }
+  });
 
   // ---- NORMALIZE legacy customer records → relational companies + contacts ----
   // legacy schema has primaryContact nested inside each customer;
@@ -2625,6 +3037,25 @@ function renderRiskBanner(companyId) {
 
 function refreshIcons() { if (window.lucide) lucide.createIcons(); }
 
+// ============= KPI CARD DRILL-DOWN =============
+// Deep-link from a dashboard KPI card into the relevant list page.
+// Keeps the filter active so the user immediately sees the filtered set,
+// and shows a contextual toast. The state is session-only (no localStorage persistence).
+function jumpToKpi(type) {
+  // Lookup table — keeps the dispatch flat & avoids dead variables
+  const routes = {
+    'customers':       { section: 'companies', tab: 'all',           msg: 'Viewing all companies · click "All Companies" tab to clear' },
+    'active-partners': { section: 'companies', tab: 'status_active', msg: 'Active Supply Partners only · click "All Companies" tab to reset' },
+    'orders':          { section: 'orders',     tab: null,            msg: 'Order throughput & details' },
+    'deals':           { section: 'deals',      tab: null,            msg: 'Deal pipeline & contract values' },
+  };
+  const route = routes[type];
+  if (!route) return; // unknown KPI type — no-op
+  if (route.tab !== null) currentTab = route.tab;
+  navigateTo(route.section);
+  if (route.msg) showToast(route.msg);
+}
+
 // ============= NAVIGATION =============
 function navigateTo(section, opts={}) {
   currentSection = section;
@@ -2779,16 +3210,77 @@ function renderDashboard() {
 }
 
 // ============= COMPANIES =============
+// Cycle through Operational Status pill: Prospect → Active → Credit Hold → Prospect.
+// Persists on the customer object so the badge survives reload.
+function cycleOperationalStatus(customerId, e) {
+  if (e && e.stopPropagation) e.stopPropagation();
+  const c = customers.find(x => x.id === customerId);
+  if (!c) return;
+  const order = ['Prospect', 'Active', 'CreditHold'];
+  const derived = (c.outstandingAr||0) > (c.creditLimit||0) ? 'CreditHold' : (c.stage === 'Active Supply Partner' ? 'Active' : 'Prospect');
+  const current = c.operationalStatus || derived;
+  const next = order[(order.indexOf(current) + 1) % order.length];
+  c.operationalStatus = next;
+  saveStorage();
+  showToast(`${c.companyName} → ${next === 'CreditHold' ? 'Credit Hold' : next}`);
+  renderCompanies();
+}
+
 function getFilteredSortedCustomers() {
   let result = customers.filter(c => {
     const q = (searchQuery||'').toLowerCase().trim();
     const matchesQ = !q || c.companyName.toLowerCase().includes(q) || c.establishmentNumber.toLowerCase().includes(q) || c.primaryContact.name.toLowerCase().includes(q) || c.primaryContact.email.toLowerCase().includes(q) || c.facilityLocation.city.toLowerCase().includes(q);
     let matchesT = true;
+    // Quick Views
     if (currentTab === 'meat') matchesT = c.sector === 'Meat & Beef Processing';
     else if (currentTab === 'poultry') matchesT = c.sector === 'Poultry Integration';
     else if (currentTab === 'seafood') matchesT = c.sector === 'Seafood & Aquaculture';
     else if (currentTab === 'prepared') matchesT = c.sector === 'Further Food Processing';
     else if (currentTab === 'high_volume') matchesT = (c.monthlyVolumeMetricTons||0) >= 500;
+    // Pipeline Stage (exact match)
+    else if (currentTab === 'stage_active_partner')  matchesT = c.stage === 'Active Supply Partner';
+    else if (currentTab === 'stage_contract_negotiation') matchesT = c.stage === 'Contract Negotiation';
+    else if (currentTab === 'stage_plant_audit')     matchesT = c.stage === 'Plant & HACCP Audit';
+    else if (currentTab === 'stage_sample_review')   matchesT = c.stage === 'Sample & Spec Review';
+    else if (currentTab === 'stage_lead')            matchesT = c.stage === 'Lead / Inbound';
+    // Deals Pipeline (cross-reference deals[] by companyId)
+    else if (currentTab === 'deals_open') {
+      const companyDeals = deals.filter(d => d.companyId === c.id);
+      matchesT = companyDeals.length > 0 && companyDeals.some(d => d.stageId !== 'closed-won');
+    }
+    else if (currentTab === 'deals_won') {
+      const companyDeals = deals.filter(d => d.companyId === c.id);
+      matchesT = companyDeals.some(d => d.stageId === 'closed-won');
+    }
+    else if (currentTab === 'deals_no_active') {
+      const companyDeals = deals.filter(d => d.companyId === c.id);
+      matchesT = companyDeals.length === 0 || companyDeals.every(d => d.stageId === 'closed-won');
+    }
+    else if (currentTab === 'deals_qualified_to_buy') {
+      matchesT = deals.some(d => d.companyId === c.id && d.stageId === 'qualified-to-buy');
+    }
+    else if (currentTab === 'deals_decision_maker') {
+      matchesT = deals.some(d => d.companyId === c.id && d.stageId === 'decision-maker-bought-in');
+    }
+    else if (currentTab === 'deals_contract_sent') {
+      matchesT = deals.some(d => d.companyId === c.id && d.stageId === 'contract-sent');
+    }
+    else if (currentTab === 'deals_appointment_scheduled') {
+      matchesT = deals.some(d => d.companyId === c.id && d.stageId === 'appointment-scheduled');
+    }
+    // Status (logical groupings of stages)
+    else if (currentTab === 'status_active') {
+      matchesT = c.stage === 'Active Supply Partner';
+    }
+    else if (currentTab === 'status_negotiation') {
+      matchesT = c.stage === 'Contract Negotiation';
+    }
+    else if (currentTab === 'status_auditing') {
+      matchesT = c.stage === 'Plant & HACCP Audit' || c.stage === 'Sample & Spec Review';
+    }
+    else if (currentTab === 'status_lead') {
+      matchesT = c.stage === 'Lead / Inbound';
+    }
     return matchesQ && matchesT;
   });
   result.sort((a,b) => {
@@ -2801,6 +3293,10 @@ function getFilteredSortedCustomers() {
 }
 
 function renderCompanies() {
+  // Sync filter-active-dot to reflect whether a non-default filter is applied
+  const dot = document.getElementById('filter-active-dot');
+  if (dot) dot.classList.toggle('hidden', currentTab === 'all');
+
   // Metrics
   const total = customers.length;
   const active = customers.filter(c => c.stage === 'Active Supply Partner').length;
@@ -2814,6 +3310,19 @@ function renderCompanies() {
   document.getElementById('metric-volume').textContent = fmtNum(totVol) + ' MT / mo';
   document.getElementById('metric-value').textContent = fmtMoney(totVal);
   document.getElementById('haccp-badge').textContent = `HACCP Coverage: ${haccpRate}%`;
+
+  // Sync List/Board buttons to the current view (covers restored-from-save state)
+  const btnList = document.getElementById('btn-view-list');
+  const btnBoard = document.getElementById('btn-view-board');
+  if (btnList && btnBoard) {
+    if (currentView === 'table') {
+      btnList.className = 'flex items-center gap-1.5 px-2.5 py-1 text-[11px] font-semibold rounded-md bg-white text-slate-900 shadow-xs';
+      btnBoard.className = 'flex items-center gap-1.5 px-2.5 py-1 text-[11px] font-semibold rounded-md text-slate-500 hover:text-slate-900';
+    } else {
+      btnBoard.className = 'flex items-center gap-1.5 px-2.5 py-1 text-[11px] font-semibold rounded-md bg-white text-slate-900 shadow-xs';
+      btnList.className = 'flex items-center gap-1.5 px-2.5 py-1 text-[11px] font-semibold rounded-md text-slate-500 hover:text-slate-900';
+    }
+  }
 
   const filtered = getFilteredSortedCustomers();
   document.getElementById('filter-count').textContent = filtered.length;
@@ -2837,12 +3346,20 @@ function renderCompanies() {
           </td>
           <td class="px-4 py-3"><span class="text-[11px] font-semibold bg-slate-100 text-slate-700 px-2 py-0.5 rounded">${escapeHtml(c.sector)}</span></td>
           <td class="px-4 py-3"><span class="text-[11px] font-semibold px-2 py-0.5 rounded ${stageClass(c.stage)}">${escapeHtml(c.stage)}</span></td>
-          <td class="px-4 py-3">
-            <div class="text-slate-900 font-medium">${escapeHtml(c.primaryContact.name)}</div>
-            <div class="text-[11px] text-slate-500">${escapeHtml(c.primaryContact.email)}</div>
+          <td class="px-4 py-3 relative group cursor-pointer" onclick="openContactRecordPage('${c.id}')">
+            <div class="font-medium text-slate-900">${escapeHtml(c.primaryContact.name)}</div>
+            <div class="text-[11px] text-slate-500">${escapeHtml(c.primaryContact.title || '—')}</div>
+            <div class="absolute left-0 top-full mt-1 z-30 hidden group-hover:block bg-white border border-slate-200 rounded-lg shadow-lg p-2.5 w-56 pointer-events-none">
+              <div class="text-[9px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">Contact Details</div>
+              <div class="flex items-center gap-1.5 text-[11px] text-slate-700 mb-1"><i data-lucide="mail" class="w-3 h-3 text-slate-400"></i><span class="font-mono truncate">${escapeHtml(c.primaryContact.email || '—')}</span></div>
+              <div class="flex items-center gap-1.5 text-[11px] text-slate-700"><i data-lucide="phone" class="w-3 h-3 text-slate-400"></i><span class="font-mono">${escapeHtml(c.primaryContact.phone || '—')}</span></div>
+            </div>
           </td>
-          <td class="px-4 py-3 font-bold text-slate-900">${fmtNum(c.monthlyVolumeMetricTons)} MT</td>
-          <td class="px-4 py-3 font-bold text-blue-600">${fmtMoney(c.annualContractValue)}</td>
+          <td class="px-4 py-3 font-bold text-slate-900" data-col="pipeline">
+            <div class="text-[12px] text-blue-600">${(()=>{ const ds=DB.dealsOfCompany(c.id).filter(d=>d.stageId!=='closed-won' && d.stageId!=='closed-lost'); return ds.reduce((s,d)=>s+(d.amount||0),0).toLocaleString('en-IE',{maximumFractionDigits:0}); })()}</div>
+            <div class="text-[10px] text-slate-500 mt-0.5">${(()=>{ const ds=DB.dealsOfCompany(c.id).filter(d=>d.stageId!=='closed-won' && d.stageId!=='closed-lost'); const blocked=tickets.some(t=>t.companyId===c.id && t.priority==='Urgent' && t.status!=='Resolved' && t.status!=='Closed'); const warn = ds.length===0 ? '—' : (ds.length===1 ? '1 Deal' : ds.length + ' Deals'); return blocked ? `<span class='text-amber-600 font-semibold'>${warn} <i data-lucide="alert-triangle" class="w-3 h-3 inline"></i></span>` : warn; })()}</div>
+          </td>
+          <td class="px-4 py-3" data-col="status">${(()=>{ const raw = c.operationalStatus || ((c.outstandingAr||0)>(c.creditLimit||0) ? 'CreditHold' : (c.stage==='Active Supply Partner' ? 'Active' : 'Prospect')); const map = { Active:    { dot:'bg-emerald-500', bg:'bg-emerald-50',  text:'text-emerald-700',  border:'border-emerald-200',  label:'Active' }, CreditHold:{ dot:'bg-rose-500',    bg:'bg-rose-50',     text:'text-rose-700',     border:'border-rose-200',     label:'Credit Hold' }, Prospect:  { dot:'bg-amber-500',   bg:'bg-amber-50',    text:'text-amber-700',    border:'border-amber-200',    label:'Prospect' } }; const s = map[raw] || map.Prospect; return `<button onclick="cycleOperationalStatus('${c.id}', event)" class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-bold border ${s.bg} ${s.text} ${s.border} hover:shadow-sm" title="Click to change status"><span class="w-1.5 h-1.5 rounded-full ${s.dot}"></span>${s.label}</button>`; })()}</td>
           <td class="px-4 py-3 text-right">
             <div class="inline-flex items-center gap-0.5" onclick="event.stopPropagation()">
               <button onclick="openContactRecordPage('${c.id}')" title="Open Contact Record Page" class="w-7 h-7 rounded-md hover:bg-blue-50 flex items-center justify-center text-slate-500 hover:text-blue-600"><i data-lucide="user" class="w-3.5 h-3.5"></i></button>
@@ -2888,18 +3405,14 @@ function renderCompanies() {
     }).join('');
     document.getElementById('container-board').innerHTML = cols;
   }
+  refreshIcons();
+  applyColumnVisibility();
 }
 
-// Tab filter
+// Tab filter — wired through the Filter dropdown menu
 function setTabFilter(tab) {
   currentTab = tab;
-  document.querySelectorAll('.tab-btn').forEach(btn => {
-    if (btn.getAttribute('data-tab') === tab) {
-      btn.className = 'tab-btn px-3 py-1.5 rounded-md whitespace-nowrap bg-slate-100 text-slate-900 font-semibold';
-    } else {
-      btn.className = 'tab-btn px-3 py-1.5 rounded-md whitespace-nowrap text-slate-600 hover:text-slate-900 hover:bg-slate-50';
-    }
-  });
+  // Dot is now synced by renderCompanies() itself, so no manual toggle needed here
   renderCompanies();
 }
 function handleSearch(v) { searchQuery = v; renderCompanies(); }
@@ -2909,13 +3422,163 @@ function switchView(mode) {
   const btnList = document.getElementById('btn-view-list');
   const btnBoard = document.getElementById('btn-view-board');
   if (mode === 'table') {
-    btnList.className = 'flex items-center gap-1.5 px-3 py-1 text-xs font-semibold rounded-md bg-white text-slate-900 shadow-xs';
-    btnBoard.className = 'flex items-center gap-1.5 px-3 py-1 text-xs font-semibold rounded-md text-slate-500 hover:text-slate-900';
+    btnList.className = 'flex items-center gap-1.5 px-2.5 py-1 text-[11px] font-semibold rounded-md bg-white text-slate-900 shadow-xs';
+    btnBoard.className = 'flex items-center gap-1.5 px-2.5 py-1 text-[11px] font-semibold rounded-md text-slate-500 hover:text-slate-900';
   } else {
-    btnBoard.className = 'flex items-center gap-1.5 px-3 py-1 text-xs font-semibold rounded-md bg-white text-slate-900 shadow-xs';
-    btnList.className = 'flex items-center gap-1.5 px-3 py-1 text-xs font-semibold rounded-md text-slate-500 hover:text-slate-900';
+    btnBoard.className = 'flex items-center gap-1.5 px-2.5 py-1 text-[11px] font-semibold rounded-md bg-white text-slate-900 shadow-xs';
+    btnList.className = 'flex items-center gap-1.5 px-2.5 py-1 text-[11px] font-semibold rounded-md text-slate-500 hover:text-slate-900';
   }
   renderCompanies();
+}
+
+// ============= TOOLBAR MENUS =============
+// Column definitions (id → label). Order matches the thead.
+const COLUMNS_DEF = [
+  { id: 'company',   label: 'Company Name' },
+  { id: 'sector',    label: 'Industry Sector' },
+  { id: 'stage',     label: 'Pipeline Stage' },
+  { id: 'contact',   label: 'Primary Contact' },
+  { id: 'pipeline',  label: 'Deals Pipeline' },
+  { id: 'status',    label: 'Status' },
+  { id: 'actions',   label: 'Actions' }
+];
+// Persisted visibility map (true = visible)
+function loadColumns() {
+  try {
+    const raw = localStorage.getItem('companies_columns_v1');
+    if (raw) return JSON.parse(raw);
+  } catch (e) {}
+  return Object.fromEntries(COLUMNS_DEF.map(c => [c.id, true]));
+}
+let visibleColumns = loadColumns();
+
+function saveColumns() {
+  try { localStorage.setItem('companies_columns_v1', JSON.stringify(visibleColumns)); } catch (e) {}
+}
+
+function isColVisible(id) { return visibleColumns[id] !== false; }
+
+function setColumnVisible(id, vis) {
+  visibleColumns[id] = !!vis;
+  saveColumns();
+  applyColumnVisibility();
+  renderColsMenu();
+}
+
+function applyColumnVisibility() {
+  // Hide / show thead th and tbody td:nth-child(N) cells
+  const idx = {};
+  COLUMNS_DEF.forEach((c, i) => { idx[c.id] = i + 1; });
+  document.querySelectorAll('#container-table thead th').forEach((th, i) => {
+    const def = COLUMNS_DEF[i];
+    if (def) th.style.display = isColVisible(def.id) ? '' : 'none';
+  });
+  document.querySelectorAll('#container-table tbody tr').forEach(tr => {
+    Array.from(tr.children).forEach((td, i) => {
+      const def = COLUMNS_DEF[i];
+      if (def) td.style.display = isColVisible(def.id) ? '' : 'none';
+    });
+  });
+}
+
+function renderColsMenu() {
+  const list = document.getElementById('cols-list');
+  if (!list) return;
+  list.innerHTML = COLUMNS_DEF.map(c => {
+    const on = isColVisible(c.id);
+    return `<button onclick="setColumnVisible('${c.id}', ${!on})" class="filter-menu-item col-toggle">
+      <span class="col-check ${on ? 'on' : ''}"></span>
+      <span class="${on ? 'text-slate-800 font-semibold' : 'text-slate-500'}">${c.label}</span>
+    </button>`;
+  }).join('');
+}
+
+function toggleFilterMenu(e) {
+  if (e) e.stopPropagation();
+  closeAllMenus();
+  document.getElementById('filter-menu').classList.toggle('hidden');
+}
+function toggleSortMenu(e) {
+  if (e) e.stopPropagation();
+  closeAllMenus();
+  document.getElementById('sort-menu').classList.toggle('hidden');
+  document.getElementById('sort-btn');
+}
+function toggleColsMenu(e) {
+  if (e) e.stopPropagation();
+  closeAllMenus();
+  renderColsMenu();
+  document.getElementById('cols-menu').classList.toggle('hidden');
+}
+function closeAllMenus() {
+  ['filter-menu','sort-menu','cols-menu'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.classList.add('hidden');
+  });
+}
+
+// Close menus when clicking outside
+document.addEventListener('click', () => closeAllMenus());
+
+// ============= EXPORT & SAVE VIEW =============
+// Export the currently-filtered Companies table as CSV
+function exportCompaniesCSV() {
+  const filtered = getFilteredSortedCustomers();
+  const headers = ['Establishment #','Company','Sector','Stage','Contact','Email','Phone','City','Country','Cold Chain','Volume (MT)','Contract (€)','OTIF (%)','Payment Terms','Last Audit'];
+  const rows = filtered.map(c => [
+    c.establishmentNumber, c.companyName, c.sector, c.stage,
+    c.primaryContact.name, c.primaryContact.email, c.primaryContact.phone,
+    c.facilityLocation.city, c.facilityLocation.country, c.coldChainSpec,
+    c.monthlyVolumeMetricTons, c.annualContractValue, c.otifRate, c.paymentTerms, c.lastAuditDate
+  ]);
+  const csv = [headers, ...rows].map(r => r.map(x => '"' + String(x||'').replace(/"/g,'""') + '"').join(',')).join('\n');
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `companies-${new Date().toISOString().slice(0,10)}.csv`;
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+  showToast(`Exported ${filtered.length} companies`);
+}
+
+// Save current view: search, filter, sort, columns, view mode → localStorage
+function saveCompaniesView() {
+  const view = {
+    searchQuery,
+    currentTab,
+    sortField,
+    sortDirection,
+    currentView,
+    visibleColumns,
+    savedAt: new Date().toISOString()
+  };
+  try {
+    localStorage.setItem('companies_view_v1', JSON.stringify(view));
+    showToast('View saved ✓');
+  } catch (e) {
+    showToast('Save failed');
+  }
+}
+
+// Apply saved view on load (overrides the default of "all + alphabetical")
+function applySavedView() {
+  try {
+    const raw = localStorage.getItem('companies_view_v1');
+    if (!raw) return;
+    const v = JSON.parse(raw);
+    if (typeof v.searchQuery === 'string') { searchQuery = v.searchQuery; const si = document.getElementById('search-input'); if (si) si.value = v.searchQuery; }
+    if (typeof v.currentTab === 'string') currentTab = v.currentTab;
+    if (typeof v.sortField === 'string') sortField = v.sortField;
+    if (typeof v.sortDirection === 'string') sortDirection = v.sortDirection;
+    if (typeof v.currentView === 'string') currentView = v.currentView;
+    if (v.visibleColumns && typeof v.visibleColumns === 'object') visibleColumns = v.visibleColumns;
+    // Sync the Filter active-dot indicator (do NOT switch view or render here — render runs when user navigates to Companies)
+    const dot = document.getElementById('filter-active-dot');
+    if (dot) dot.classList.toggle('hidden', currentTab === 'all');
+    const si = document.getElementById('search-input');
+    if (si && typeof v.searchQuery === 'string') si.value = v.searchQuery;
+  } catch (e) {}
 }
 function advanceStage(id, delta) {
   const c = customers.find(x => x.id === id);
@@ -2958,11 +3621,11 @@ function openQuick360Drawer(customerId) {
   const contactCount = DB.contactsOfCompany(customerId).length;
   const dealCount = deals.filter(d => d.companyId === customerId).length;
   const ticketCount = tickets.filter(t => t.companyId === customerId).length;
-  const taskCount = tasks.filter(t => t.relatedTo === customerId && t.relatedType === 'company').length;
+  const orderCount = orders.filter(o => o.companyId === customerId).length;
   document.getElementById('q360-contacts-count').textContent = contactCount;
   document.getElementById('q360-deals-count').textContent = dealCount;
   document.getElementById('q360-tickets-count').textContent = ticketCount;
-  document.getElementById('q360-tasks-count').textContent = taskCount;
+  document.getElementById('q360-orders-count').textContent = orderCount;
   // Show drawer + overlay
   drawer.classList.remove('translate-x-full');
   drawer.classList.add('translate-x-0');
@@ -2986,41 +3649,38 @@ function closeQuick360Drawer() {
 let currentDrawerId = null;
 
 // ============= CONTACT RECORD DETAIL PAGE =============
+const CD_TABS = ['activity','audit','properties'];
+
 function setCdTab(tab) {
   activeContactDetailTab = tab;
-  ['activity','notes','properties'].forEach(t => {
-    const content = document.getElementById('cd-tab-' + t);
-    const btn = document.getElementById('cd-tab-' + t);
+  CD_TABS.forEach(t => {
+    const content = document.getElementById('cd-tab-' + t + '-content');
+    const btn     = document.getElementById('cd-tab-' + t + '-btn');
     if (content) {
       if (t === tab) content.classList.remove('hidden');
       else content.classList.add('hidden');
     }
-    if (btn && content && btn !== content) {
-      btn.classList.toggle('text-slate-900', t === tab);
-      btn.classList.toggle('font-bold', t === tab);
-      btn.classList.toggle('border-[#ff7a59]', t === tab);
-      btn.classList.toggle('text-slate-500', t !== tab);
-      btn.classList.toggle('font-semibold', t !== tab);
-      btn.classList.toggle('border-transparent', t !== tab);
+    if (btn) {
+      const active = (t === tab);
+      btn.classList.toggle('text-slate-900',  active);
+      btn.classList.toggle('font-bold',       active);
+      btn.classList.toggle('border-[#ff7a59]', active);
+      btn.classList.toggle('text-slate-500',  !active);
+      btn.classList.toggle('font-semibold',   !active);
+      btn.classList.toggle('border-transparent', !active);
     }
   });
   if (tab === 'activity') {
     renderContactNotes();
-  } else if (tab === 'notes') {
-    const list = document.getElementById('cd-notes-list-tab');
-    if (list) {
-      list.innerHTML = document.getElementById('cd-notes-list').innerHTML;
-    }
   }
 }
 
 function addContactNote(forcedType) {
   const txt = document.getElementById('cd-note-input').value.trim();
-  const type = forcedType || document.getElementById('cd-note-type').value;
+  const type = forcedType || 'note';
   if (!txt) {
-    // Quick-action from left rail: prompt for text
     if (forcedType) {
-      const v = prompt(`Add a ${type} note for this contact:`);
+      const v = prompt('Add a ' + type + ' for this contact:');
       if (!v || !v.trim()) return;
       insertContactNote(type, v.trim());
     } else {
@@ -3029,6 +3689,7 @@ function addContactNote(forcedType) {
     return;
   }
   insertContactNote(type, txt);
+  document.getElementById('cd-note-input').value = '';
 }
 
 function createTicketForContact() {
@@ -3053,6 +3714,54 @@ function createTicketForContact() {
   saveStorage();
   showToast('Ticket created — opening Tickets page');
   navigateTo('tickets');
+}
+
+// Open the New Ticket modal; populate the company dropdown with all known customers.
+function openTicketCreateModal(prefillCompanyId) {
+  const select = document.getElementById('ticket-create-company');
+  if (!select) return;
+  select.innerHTML = '<option value="">— Select company —</option>' +
+    customers.map(c => `<option value="${c.id}">${escapeHtml(c.companyName)}</option>`).join('');
+  select.value = prefillCompanyId || (customers[0] ? customers[0].id : '');
+  document.getElementById('ticket-create-title').value = '';
+  document.getElementById('ticket-create-description').value = '';
+  document.getElementById('ticket-create-priority').value = 'Medium';
+  openModal('ticket-create-modal');
+  // Focus the title input for fast keyboard entry
+  setTimeout(() => document.getElementById('ticket-create-title').focus(), 50);
+  refreshIcons();
+}
+
+// Validate + save the new ticket from the modal form.
+function saveNewTicket() {
+  const title = document.getElementById('ticket-create-title').value.trim();
+  const companyId = document.getElementById('ticket-create-company').value;
+  if (!title) { showToast('Title is required'); document.getElementById('ticket-create-title').focus(); return; }
+  if (!companyId) { showToast('Please select a company'); return; }
+  const category = document.getElementById('ticket-create-category').value;
+  const priority = document.getElementById('ticket-create-priority').value;
+  const description = document.getElementById('ticket-create-description').value.trim();
+  const newTicket = {
+    id: 'tck-' + Date.now(),
+    ticketNumber: 'TCK-' + Math.floor(8000 + Math.random() * 1000),
+    title,
+    companyId,
+    contactId: customers.find(c => c.id === companyId)?.primaryContact?.id || null,
+    category,
+    priority,
+    status: 'Open',
+    assignee: 'Unassigned',
+    createdDate: new Date().toLocaleString('en-IE', { dateStyle: 'medium', timeStyle: 'short' }),
+    description: description || '—'
+  };
+  tickets.unshift(newTicket);
+  saveStorage();
+  closeModal('ticket-create-modal');
+  showToast('Ticket created');
+  if (currentView === 'tickets-board' || document.getElementById('page-tickets')?.classList.contains('active')) {
+    renderTickets();
+  }
+  refreshIcons();
 }
 
 function insertContactNote(type, text) {
@@ -3257,18 +3966,27 @@ function resolveTicket(id) {
 // ============= RECORD DETAIL =============
 function setDetailTab(tab) {
   activeDetailTab = tab;
-  ['activity','notes','properties'].forEach(t => {
-    const btn = document.getElementById('tab-' + t);
-    const panel = document.getElementById('rd-tab-' + t);
-    if (t === tab) {
-      btn.className = 'px-3 py-2 text-xs font-bold text-slate-900 border-b-2 border-[#ff7a59]';
-      panel.classList.remove('hidden');
-    } else {
-      btn.className = 'px-3 py-2 text-xs font-semibold text-slate-500 hover:text-slate-900 border-b-2 border-transparent';
-      panel.classList.add('hidden');
+  const TABS = ['activity','audit','properties'];
+  TABS.forEach(t => {
+    const btn    = document.getElementById('tab-' + t + '-btn');
+    const panel = document.getElementById('rd-tab-' + t + '-content');
+    if (panel) {
+      if (t === tab) panel.classList.remove('hidden');
+      else panel.classList.add('hidden');
+    }
+    if (btn) {
+      const active = (t === tab);
+      btn.classList.toggle('text-slate-900',   active);
+      btn.classList.toggle('font-bold',        active);
+      btn.classList.toggle('border-[#ff7a59]', active);
+      btn.classList.toggle('text-slate-500',   !active);
+      btn.classList.toggle('font-semibold',    !active);
+      btn.classList.toggle('border-transparent', !active);
     }
   });
-  refreshIcons();
+  if (tab === 'activity') {
+    renderNotes(customers.find(x => x.id === currentDetailId));
+  }
 }
 function renderRecordDetail() {
   const c = customers.find(x => x.id === currentDetailId);
@@ -3281,6 +3999,8 @@ function renderRecordDetail() {
   document.getElementById('rd-location').textContent = locationParts;
   document.getElementById('rd-phone').textContent = c.primaryContact.phone;
   document.getElementById('rd-email').textContent = c.primaryContact.email;
+  const ccEl = document.getElementById('rd-contact-country');
+  if (ccEl) ccEl.textContent = c.primaryContact.country || c.facilityLocation?.country || '—';
   document.getElementById('rd-stage').innerHTML = `<span class="text-[11px] font-semibold px-2 py-0.5 rounded ${stageClass(c.stage)}">${escapeHtml(c.stage)}</span>`;
   document.getElementById('rd-coldchain').textContent = c.coldChainSpec;
   document.getElementById('rd-payment').textContent = c.paymentTerms;
@@ -3346,14 +4066,13 @@ function renderNotes(c) {
     </div>`;
   }).join('') || '<div class="text-xs text-slate-400 text-center py-6">No activity yet</div>';
   document.getElementById('rd-notes-list').innerHTML = notesHtml;
-  document.getElementById('rd-notes-list-tab').innerHTML = notesHtml;
 }
 function addNote() {
   const c = customers.find(x => x.id === currentDetailId);
   if (!c) return;
   const text = document.getElementById('rd-note-input').value.trim();
   if (!text) return;
-  const type = document.getElementById('rd-note-type').value;
+  const type = 'note';
   if (!c.notesList) c.notesList = [];
   c.notesList.unshift({
     id: 'n-' + Date.now(),
@@ -3419,6 +4138,191 @@ function openEditModal(id) {
   document.getElementById('form-otif').value = c.otifRate || 95;
   document.getElementById('form-credit').value = c.creditLimit || 0;
   openModal('company-modal');
+  refreshIcons();
+}
+
+// ============= CONTACT MODAL (Create + Edit, used from Contacts page) =============
+// Mode is held in a global so the submit handler can branch
+let _contactModalMode = 'edit';   // 'edit' | 'create'
+
+function openContactEditModal(id) {
+  const c = customers.find(x => x.id === id);
+  if (!c) return;
+  _contactModalMode = 'edit';
+  const pc = c.primaryContact || {};
+  // First / Last: prefer the new split fields, fall back to splitting legacy `name`
+  let firstName = pc.firstName || '';
+  let lastName  = pc.lastName  || '';
+  if (!firstName && !lastName && pc.name) {
+    const parts = pc.name.trim().split(/\s+/);
+    lastName = parts.pop() || '';
+    firstName = parts.join(' ');
+  }
+  document.getElementById('contact-edit-id').value = c.id;
+  document.getElementById('contact-edit-first-name').value  = firstName;
+  document.getElementById('contact-edit-last-name').value   = lastName;
+  document.getElementById('contact-edit-company-input').value = c.companyName || '';
+  document.getElementById('contact-edit-country').value = pc.country || c.facilityLocation?.country || '';
+  document.getElementById('contact-edit-title').value   = pc.title || '';
+  document.getElementById('contact-edit-email').value   = pc.email || '';
+  document.getElementById('contact-edit-phone').value   = pc.phone || '';
+  _applyContactModalChrome('edit', c.companyName);
+  // Update the context strip text + show it (edit mode only)
+  const stripText = document.getElementById('contact-edit-company');
+  if (stripText) stripText.textContent = c.companyName || '—';
+  const strip = document.querySelector('#contact-edit-modal .contact-context-strip');
+  if (strip) strip.style.display = '';
+  openModal('contact-edit-modal');
+  refreshIcons();
+}
+
+// Open the same modal in Create mode — fields default to a blank slate.
+// `prefillCompany` lets a caller seed the Company field (e.g. "+ New contact for Dunnes Stores").
+function openContactCreateModal(prefillCompany) {
+  _contactModalMode = 'create';
+  document.getElementById('contact-edit-id').value = '';
+  document.getElementById('contact-edit-first-name').value  = '';
+  document.getElementById('contact-edit-last-name').value   = '';
+  document.getElementById('contact-edit-company-input').value = prefillCompany || '';
+  document.getElementById('contact-edit-country').value = '';
+  document.getElementById('contact-edit-title').value   = '';
+  document.getElementById('contact-edit-email').value   = '';
+  document.getElementById('contact-edit-phone').value   = '';
+  // Hide the context strip in create mode (no existing company to refer to)
+  const strip = document.querySelector('#contact-edit-modal .contact-context-strip');
+  if (strip) strip.style.display = 'none';
+  _applyContactModalChrome('create', prefillCompany || '');
+  openModal('contact-edit-modal');
+  // Focus the first required field for fast data entry
+  setTimeout(() => document.getElementById('contact-edit-first-name')?.focus(), 50);
+  refreshIcons();
+}
+
+// Toggle modal title + footer buttons based on mode
+function _applyContactModalChrome(mode, _companyName) {
+  const titleEl = document.querySelector('#contact-edit-modal h2');
+  if (titleEl) titleEl.textContent = mode === 'create' ? 'Create contact' : 'Edit contact';
+  const btnSave      = document.getElementById('contact-btn-save');
+  const btnCreateAn  = document.getElementById('contact-btn-create-another');
+  if (mode === 'create') {
+    btnSave.textContent = 'Create';
+    btnCreateAn.classList.remove('hidden');
+  } else {
+    btnSave.textContent = 'Save contact';
+    btnCreateAn.classList.add('hidden');
+  }
+}
+
+// Read the form once. Returns either {ok:true, payload} or {ok:false, reason}.
+function _readContactForm() {
+  const firstName = document.getElementById('contact-edit-first-name').value.trim();
+  const lastName  = document.getElementById('contact-edit-last-name').value.trim();
+  if (!firstName) return { ok: false, reason: 'First name is required.' };
+  const composedName = [firstName, lastName].filter(Boolean).join(' ');
+  return {
+    ok: true,
+    payload: {
+      firstName,
+      lastName,
+      name: composedName,
+      country: document.getElementById('contact-edit-country').value,
+      title:   document.getElementById('contact-edit-title').value.trim(),
+      email:   document.getElementById('contact-edit-email').value.trim(),
+      phone:   document.getElementById('contact-edit-phone').value.trim()
+    }
+  };
+}
+
+// Unified submit: routes to the right handler based on current mode
+function saveContactSubmit() {
+  if (_contactModalMode === 'create') return saveContactCreate(false);
+  return saveContactEdit();
+}
+
+function saveContactEdit() {
+  const id = document.getElementById('contact-edit-id').value;
+  const idx = customers.findIndex(x => x.id === id);
+  if (idx === -1) { closeModal('contact-edit-modal'); return; }
+  const r = _readContactForm();
+  if (!r.ok) { alert(r.reason); return; }
+  customers[idx].primaryContact = r.payload;
+  saveStorage();
+  closeModal('contact-edit-modal');
+  showToast(`Contact updated · ${r.payload.name}`);
+  if (currentSection === 'contacts') renderContacts();
+  else if (currentSection === 'companies') renderCompanies();
+  else if (currentSection === 'dashboard') renderDashboard();
+  if (currentDetailId === id) navigateTo('record-detail', { customerId: id });
+  refreshIcons();
+}
+
+// Create-mode submit. `addAnother` keeps the modal open with cleared fields for fast data entry.
+function saveContactCreate(addAnother) {
+  const r = _readContactForm();
+  if (!r.ok) { alert(r.reason); return; }
+  const typedCompany = document.getElementById('contact-edit-company-input').value.trim();
+  let targetIdx = -1;
+  if (typedCompany) {
+    targetIdx = customers.findIndex(c => c.companyName.toLowerCase() === typedCompany.toLowerCase());
+  }
+  if (targetIdx === -1) {
+    // No matching company — create a stub so the contact isn't orphaned. Auto-fill establishment #.
+    const newId = 'cust-' + Date.now();
+    const stub = {
+      id: newId,
+      establishmentNumber: 'IE ' + Math.floor(100 + Math.random() * 900) + ' EC',
+      companyName: typedCompany || (r.payload.firstName + "'s Company"),
+      tradingName: (typedCompany || (r.payload.firstName + "'s Company")) + ' Division',
+      sector: 'Further Food Processing',
+      stage: 'Lead / Inbound',
+      primaryContact: r.payload,
+      facilityLocation: { address: '', city: '', state: '', country: r.payload.country || 'Ireland' },
+      coldChainSpec: 'Chilled Storage (0°C to 4°C)',
+      monthlyVolumeMetricTons: 0,
+      paymentTerms: 'Net 30 Days',
+      certifications: ['HACCP Certified'],
+      lastAuditDate: new Date().toISOString().slice(0,10),
+      nextAuditDate: new Date(Date.now() + 365*24*60*60*1000).toISOString().slice(0,10),
+      annualContractValue: 0,
+      hasBordBiaMark: false,
+      slaCutOffTime: '06:00 AM',
+      otifRate: 95,
+      outstandingAr: 0,
+      overdueDays: 0,
+      creditLimit: 0,
+      notesList: [{
+        id: 'n-' + Date.now(),
+        author: 'System',
+        date: new Date().toISOString().slice(0,10),
+        type: 'note',
+        content: 'Account created via Contacts → Create contact.'
+      }],
+      createdAt: new Date().toISOString().slice(0,10).replace(/-/g,'/')
+    };
+    customers.unshift(stub);
+    targetIdx = 0;
+  } else {
+    // Existing company — overwrite its primaryContact
+    customers[targetIdx].primaryContact = r.payload;
+  }
+  saveStorage();
+  if (addAnother) {
+    // Reset form, keep Company field, refocus first input
+    document.getElementById('contact-edit-first-name').value = '';
+    document.getElementById('contact-edit-last-name').value  = '';
+    document.getElementById('contact-edit-title').value      = '';
+    document.getElementById('contact-edit-email').value      = '';
+    document.getElementById('contact-edit-phone').value      = '';
+    document.getElementById('contact-edit-first-name').focus();
+    showToast(r.payload.name + ' added · +1 more?');
+  } else {
+    closeModal('contact-edit-modal');
+    showToast('Contact created · ' + r.payload.name);
+  }
+  // Re-render whichever view is currently showing the data
+  if (currentSection === 'contacts') renderContacts();
+  else if (currentSection === 'companies') renderCompanies();
+  else if (currentSection === 'dashboard') renderDashboard();
   refreshIcons();
 }
 function saveCustomer() {
@@ -3597,6 +4501,23 @@ function renderDeals() {
 }
 
 // ============= TICKETS =============
+// Activate one of the four quick-filter stat cards above the table.
+//   'all'      → show every ticket
+//   'urgent'   → priority === 'Urgent'
+//   'open'     → status !== 'Resolved'  (i.e. anything still being worked on)
+//   'resolved' → status === 'Resolved'
+function setTicketFilter(filter) {
+  currentTicketFilter = filter;
+  // Toggle .active class on the four stat-mini cards + show/hide the "Clear filter" chip
+  ['all','urgent','open','resolved'].forEach(k => {
+    const el = document.getElementById('tk-filter-' + k);
+    if (el) el.classList.toggle('active', k === filter);
+  });
+  const reset = document.getElementById('tk-filter-reset');
+  if (reset) reset.classList.toggle('hidden', filter === 'all');
+  renderTickets();
+}
+
 function renderTickets() {
   const total = tickets.length;
   const urgent = tickets.filter(t => t.priority === 'Urgent').length;
@@ -3608,7 +4529,25 @@ function renderTickets() {
   document.getElementById('tk-resolved').textContent = resolved;
   document.getElementById('badge-tickets').textContent = open;
 
-  document.getElementById('tickets-tbody').innerHTML = tickets.map(t => `
+  // Apply the active quick-filter to the dataset before rendering rows.
+  // Lookup-table dispatch keeps the rule list adjacent to the empty-state labels,
+  // so adding a new filter is a one-line change in both spots.
+  const filters = {
+    all:      { predicate: () => true,                       emptyLabel: 'tickets' },
+    urgent:   { predicate: t => t.priority === 'Urgent',     emptyLabel: 'urgent tickets' },
+    open:     { predicate: t => t.status !== 'Resolved',     emptyLabel: 'open tickets' },
+    resolved: { predicate: t => t.status === 'Resolved',     emptyLabel: 'resolved tickets' },
+  };
+  const filter = filters[currentTicketFilter] || filters.all;
+  const visible = tickets.filter(filter.predicate);
+
+  const tbody = document.getElementById('tickets-tbody');
+  if (visible.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="10" class="px-3 py-8 text-center text-[12px] text-slate-400">No ${filter.emptyLabel} match this filter.</td></tr>`;
+    refreshIcons();
+    return;
+  }
+  tbody.innerHTML = visible.map(t => `
     <tr class="hover:bg-slate-50">
       <td class="px-3 py-2 font-mono font-bold text-slate-700">${escapeHtml(t.ticketNumber)}</td>
       <td class="px-3 py-2 max-w-xs"><div class="font-semibold text-slate-900 truncate">${escapeHtml(t.title)}</div></td>
@@ -3686,7 +4625,7 @@ function renderOrders() {
 }
 function renderContacts() {
   document.getElementById('contacts-tbody').innerHTML = customers.map(c => `
-    <tr data-email="${escapeHtml(c.primaryContact.email)}" class="hover:bg-slate-50">
+    <tr data-email="${escapeHtml(c.primaryContact.email)}" class="hover:bg-slate-50 cursor-pointer" onclick="openContactRecordPage('${c.id}')">
       <td class="px-3 py-2">
         <div class="flex items-center gap-2">
           <div class="w-7 h-7 rounded-full ${getInitialsBg(c.primaryContact.name)} text-white flex items-center justify-center text-[10px] font-bold">${initials(c.primaryContact.name)}</div>
@@ -3694,16 +4633,16 @@ function renderContacts() {
         </div>
       </td>
       <td class="px-3 py-2 text-[11px] text-slate-600">${escapeHtml(c.primaryContact.title)}</td>
-      <td class="px-3 py-2"><button onclick="navigateTo('record-detail',{customerId:'${c.id}'})" class="text-blue-600 hover:underline font-semibold text-[11px]">${escapeHtml(c.companyName)}</button></td>
+      <td class="px-3 py-2"><button onclick="event.stopPropagation(); navigateTo('record-detail',{customerId:'${c.id}'})" class="text-blue-600 hover:underline font-semibold text-[11px]">${escapeHtml(c.companyName)}</button></td>
       <td class="px-3 py-2 font-mono text-[11px] text-slate-600">${escapeHtml(c.primaryContact.email)}</td>
       <td class="px-3 py-2 font-mono text-[11px] text-slate-600">${escapeHtml(c.primaryContact.phone)}</td>
       <td class="px-3 py-2 text-right">
         <div class="inline-flex items-center gap-0.5">
-          <button onclick="openContactRecordPage('${c.id}')" title="Open Contact Record Page" class="w-7 h-7 rounded-md hover:bg-blue-50 flex items-center justify-center text-blue-500"><i data-lucide="user" class="w-3.5 h-3.5"></i></button>
-          <button onclick="navigateTo('record-detail',{customerId:'${c.id}'})" title="Open Company Record Page" class="w-7 h-7 rounded-md hover:bg-blue-50 flex items-center justify-center text-blue-500"><i data-lucide="building-2" class="w-3.5 h-3.5"></i></button>
-          <button onclick="openQuick360Drawer('${c.id}')" title="Open Quick 360 Drawer" class="w-7 h-7 rounded-md hover:bg-blue-50 flex items-center justify-center text-blue-500"><i data-lucide="scan" class="w-3.5 h-3.5"></i></button>
-          <button onclick="openEditModal('${c.id}')" title="Edit Company" class="w-7 h-7 rounded-md hover:bg-slate-100 flex items-center justify-center text-slate-400 hover:text-slate-700"><i data-lucide="pencil" class="w-3.5 h-3.5"></i></button>
-          <button onclick="deleteCustomerConfirm('${c.id}')" title="Delete Company" class="w-7 h-7 rounded-md hover:bg-rose-50 flex items-center justify-center text-slate-300 hover:text-rose-500"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button>
+          <button onclick="event.stopPropagation(); openContactRecordPage('${c.id}')" title="Open Contact Record Page" class="w-7 h-7 rounded-md hover:bg-blue-50 flex items-center justify-center text-blue-500"><i data-lucide="user" class="w-3.5 h-3.5"></i></button>
+          <button onclick="event.stopPropagation(); navigateTo('record-detail',{customerId:'${c.id}'})" title="Open Company Record Page" class="w-7 h-7 rounded-md hover:bg-blue-50 flex items-center justify-center text-blue-500"><i data-lucide="building-2" class="w-3.5 h-3.5"></i></button>
+          <button onclick="event.stopPropagation(); openQuick360Drawer('${c.id}')" title="Open Quick 360 Drawer" class="w-7 h-7 rounded-md hover:bg-blue-50 flex items-center justify-center text-blue-500"><i data-lucide="scan" class="w-3.5 h-3.5"></i></button>
+          <button onclick="event.stopPropagation(); openContactEditModal('${c.id}')" title="Edit Contact" class="w-7 h-7 rounded-md hover:bg-slate-100 flex items-center justify-center text-slate-400 hover:text-slate-700"><i data-lucide="pencil" class="w-3.5 h-3.5"></i></button>
+          <button onclick="event.stopPropagation(); deleteCustomerConfirm('${c.id}')" title="Delete Related Company" class="w-7 h-7 rounded-md hover:bg-rose-50 flex items-center justify-center text-slate-300 hover:text-rose-500"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button>
         </div>
       </td>
     </tr>`).join('');
@@ -3812,6 +4751,7 @@ window.addEventListener('keydown', (e) => {
 window.addEventListener('load', () => {
   loadStorage();
   seedIfEmpty();
+  applySavedView();
   navigateTo('dashboard');
   refreshIcons();
 
