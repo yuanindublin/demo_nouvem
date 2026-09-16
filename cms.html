@@ -313,6 +313,54 @@
     box-shadow: 0 25px 60px rgba(15,23,42,0.4);
   }
 
+  /* About / Architecture README modal (Markdown-style, delivery-grade) */
+  .about-body { font-size: 13px; line-height: 1.65; color: #334155; }
+  .about-toc { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 14px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 10px 14px; margin-bottom: 18px; }
+  .about-toc-label { font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.8px; color: #94a3b8; margin-right: 2px; }
+  .about-toc a { font-size: 12px; font-weight: 600; color: #ea580c; text-decoration: none; }
+  .about-toc a:hover { text-decoration: underline; }
+  .about-sec { margin-bottom: 22px; scroll-margin-top: 12px; }
+  .about-sec:last-child { margin-bottom: 4px; }
+  .about-sec h3 { display: flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 800; color: #0f172a; margin: 0 0 8px; }
+  .about-num { width: 22px; height: 22px; border-radius: 7px; background: #fff5f1; color: var(--hs-orange); border: 1px solid #fed7aa; font-size: 11px; font-weight: 800; display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .about-sec p { margin: 0 0 10px; }
+  .about-sec code, .about-card code { font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 11.5px; background: #f1f5f9; border: 1px solid #e2e8f0; border-radius: 5px; padding: 1px 5px; color: #0f172a; white-space: nowrap; }
+  .about-list { margin: 0; padding-left: 18px; }
+  .about-list li { margin-bottom: 6px; }
+  .about-tree { border: 1px solid #e2e8f0; border-radius: 12px; overflow: hidden; margin: 10px 0 12px; }
+  .about-tree-root { display: flex; align-items: center; gap: 8px; background: #2e3f50; color: #fff; font-weight: 800; font-size: 13px; padding: 10px 14px; }
+  .about-tree-root svg { width: 16px; height: 16px; }
+  .about-tree-root span { margin-left: auto; font-size: 10px; font-weight: 600; color: #94a3b8; font-family: 'JetBrains Mono', monospace; }
+  .about-tree-branches { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; padding: 10px; background: #f8fafc; }
+  .about-tree-leaf { display: flex; align-items: flex-start; gap: 8px; background: #fff; border: 1px solid #e2e8f0; border-radius: 9px; padding: 8px 10px; font-size: 12px; }
+  .about-tree-leaf svg { width: 15px; height: 15px; color: var(--hs-orange); flex-shrink: 0; margin-top: 2px; }
+  .about-tree-leaf strong { display: block; color: #0f172a; }
+  .about-tree-leaf span { display: block; color: #64748b; font-size: 11px; font-family: 'JetBrains Mono', monospace; }
+  .about-tree-leaf:last-child { grid-column: 1 / -1; }
+  .about-flow { display: flex; align-items: stretch; gap: 6px; margin: 10px 0 12px; }
+  .about-flow-step { flex: 1; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 9px; padding: 8px 10px; text-align: center; }
+  .about-flow-step strong { display: block; font-size: 12px; color: #0f172a; }
+  .about-flow-step span { display: block; font-size: 11px; color: #64748b; margin-top: 2px; }
+  .about-flow-arrow { align-self: center; color: var(--hs-orange); font-weight: 800; font-size: 14px; }
+  .about-cards { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-top: 10px; }
+  .about-card { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 10px 12px; }
+  .about-card:last-child { grid-column: 1 / -1; }
+  .about-card-title { display: flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 800; color: #0f172a; margin-bottom: 4px; }
+  .about-card-title svg { width: 14px; height: 14px; color: var(--hs-orange); }
+  .about-card p { margin: 0; font-size: 12px; }
+  .about-table-wrap { overflow-x: auto; border: 1px solid #e2e8f0; border-radius: 10px; margin-top: 8px; }
+  .about-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  .about-table th { background: #f1f5f9; text-align: left; font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; color: #64748b; padding: 8px 10px; }
+  .about-table td { padding: 7px 10px; border-top: 1px solid #e2e8f0; color: #334155; }
+  .about-table td.font-mono, .about-foot .font-mono { font-family: 'JetBrains Mono', monospace; font-size: 11px; }
+  .about-foot { margin-top: 10px; font-size: 11px; color: #94a3b8; }
+  @media (max-width: 640px) {
+    .about-tree-branches { grid-template-columns: 1fr; }
+    .about-cards { grid-template-columns: 1fr; }
+    .about-flow { flex-direction: column; }
+    .about-flow-arrow { transform: rotate(90deg); align-self: center; }
+  }
+
   /* Form */
   .form-input, .form-select {
     width: 100%;
@@ -835,19 +883,36 @@
     <!-- Current user: avatar + name/role + menu (replaces the old header Create company button) -->
     <div class="relative">
       <button onclick="toggleUserMenu(event)" class="flex items-center gap-2 pl-1 pr-2 py-1 rounded-full hover:bg-slate-700/60 transition-colors" title="Account">
-        <span class="w-8 h-8 rounded-full bg-[#ff7a59] flex items-center justify-center font-bold text-white text-xs shadow-xs shrink-0">SL</span>
+        <span id="user-avatar" class="w-8 h-8 rounded-full bg-[#ff7a59] flex items-center justify-center font-bold text-white text-xs shadow-xs shrink-0">SL</span>
         <span class="hidden md:block text-left leading-tight">
-          <span class="block text-xs font-semibold text-white">Sarah Lin</span>
-          <span class="block text-[10px] text-slate-300">Key Account Manager</span>
+          <span id="user-name" class="block text-xs font-semibold text-white">Sarah Lin</span>
+          <span id="user-role" class="block text-[10px] text-slate-300">Key Account Manager</span>
         </span>
         <i data-lucide="chevron-down" class="w-3.5 h-3.5 text-slate-300 hidden md:block"></i>
       </button>
-      <div id="user-menu" class="hidden absolute right-0 top-full mt-2 z-50 w-56 bg-white border border-slate-200 rounded-xl shadow-xl p-2 text-slate-700">
+      <div id="user-menu" class="hidden fixed z-[200] w-60 bg-white border border-slate-200 rounded-xl shadow-xl p-2 text-slate-700">
         <div class="px-2.5 py-2 border-b border-slate-100 mb-1">
-          <div class="text-xs font-bold text-slate-900">Sarah Lin</div>
-          <div class="text-[11px] text-slate-500 break-all">sarah.lin@nouvem.ie</div>
-          <div class="text-[11px] text-slate-500">Key Account Manager</div>
+          <div id="user-menu-name" class="text-xs font-bold text-slate-900">Sarah Lin</div>
+          <div id="user-menu-email" class="text-[11px] text-slate-500 break-all">sarah.lin@nouvem.ie</div>
+          <div id="user-menu-role" class="text-[11px] text-slate-500">Key Account Manager</div>
         </div>
+        <div class="px-2.5 pt-1 pb-1 text-[9px] font-bold text-slate-400 uppercase tracking-wider">Switch identity (demo)</div>
+        <button id="role-btn-kam" onclick="switchPersona('kam')" class="filter-menu-item">
+          <i data-lucide="briefcase" class="w-3.5 h-3.5 text-[#ff7a59]"></i>
+          <span class="flex-1">Key Account Manager<span class="block text-[10px] font-normal text-slate-400">Deals · Orders · full CRM</span></span>
+          <i data-lucide="check" class="role-check w-3.5 h-3.5 text-emerald-600" id="role-check-kam"></i>
+        </button>
+        <button id="role-btn-qa" onclick="switchPersona('qa')" class="filter-menu-item">
+          <i data-lucide="shield-check" class="w-3.5 h-3.5 text-emerald-600"></i>
+          <span class="flex-1">QA Auditor<span class="block text-[10px] font-normal text-slate-400">Compliance-first · cold chain &amp; audits</span></span>
+          <i data-lucide="check" class="role-check w-3.5 h-3.5 text-emerald-600 hidden" id="role-check-qa"></i>
+        </button>
+        <button id="role-btn-fin" onclick="switchPersona('fin')" class="filter-menu-item">
+          <i data-lucide="banknote" class="w-3.5 h-3.5 text-blue-600"></i>
+          <span class="flex-1">Finance<span class="block text-[10px] font-normal text-slate-400">A/R · settlement &amp; credit</span></span>
+          <i data-lucide="check" class="role-check w-3.5 h-3.5 text-emerald-600 hidden" id="role-check-fin"></i>
+        </button>
+        <div class="border-t border-slate-100 my-1"></div>
         <button onclick="closeAllMenus();showToast('Profile settings are not part of this demo')" class="filter-menu-item"><i data-lucide="settings" class="w-3.5 h-3.5 text-slate-400"></i>Profile settings</button>
         <div class="border-t border-slate-100 my-1"></div>
         <button onclick="resetDemoData();closeAllMenus()" class="filter-menu-item"><i data-lucide="rotate-ccw" class="w-3.5 h-3.5 text-slate-400"></i>Reset demo data</button>
@@ -926,6 +991,15 @@
     <span class="rail-item-label">Tasks</span>
     <span class="badge" id="badge-tasks">3</span>
     <span class="rail-tooltip">Tasks</span>
+  </div>
+
+  <div class="rail-divider"></div>
+
+  <!-- About / Architecture (delivery-grade README) -->
+  <div class="rail-item" onclick="openAboutModal()" title="About / Architecture">
+    <i data-lucide="book-open" class="w-5 h-5 flex-shrink-0"></i>
+    <span class="rail-item-label">About</span>
+    <span class="rail-tooltip">About / Architecture</span>
   </div>
 </nav>
 
@@ -1780,9 +1854,6 @@
         <h1 class="text-2xl font-bold text-slate-900 mb-1">Support Tickets</h1>
         <p class="text-xs text-slate-500">Cold chain, compliance, SLA, packaging &amp; barcode issues.</p>
       </div>
-      <button onclick="openTicketCreateModal()" class="btn-hs btn-orange">
-        <i data-lucide="plus-circle" class="w-3.5 h-3.5 inline -mt-0.5 mr-1"></i>New ticket
-      </button>
     </div>
 
     <!-- Toolbar: Search + Filter + Sort + count + Clear + Export (mirrors Deals toolbar) -->
@@ -1845,6 +1916,9 @@
       <button id="ticket-clear-filters" onclick="clearTicketFilters()" class="hidden text-[11px] text-slate-500 hover:text-rose-600 font-semibold items-center gap-1 px-2 py-1.5 rounded hover:bg-rose-50"><i data-lucide="x" class="w-3 h-3"></i>Clear</button>
       <button onclick="exportTicketsCSV()" class="flex items-center gap-1.5 px-2.5 py-1.5 bg-slate-50 border border-slate-200 hover:bg-white hover:border-slate-300 rounded-md font-semibold text-slate-700">
         <i data-lucide="download" class="w-3.5 h-3.5"></i><span>Export</span>
+      </button>
+      <button onclick="openTicketCreateModal()" class="inline-flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-semibold text-white bg-[#ff7a59] hover:bg-[#e06545] active:bg-[#c95335] rounded-md shadow-sm transition-all">
+        <i data-lucide="plus" class="w-4 h-4"></i><span>New ticket</span>
       </button>
     </div>
 
@@ -1951,10 +2025,92 @@
 <!-- ============================ TASKS / ORDERS / CONTACTS ============================ -->
 <section class="page" id="page-tasks">
   <div class="workspace-container">
-    <h1 class="text-2xl font-bold text-slate-900 mb-1">Tasks</h1>
-    <p class="text-xs text-slate-500 mb-4">Today &amp; upcoming to-dos.</p>
-    <div class="bg-white border border-slate-200 rounded-xl shadow-xs overflow-hidden">
-      <div id="tasks-list" class="divide-y divide-slate-100"></div>
+    <div class="flex items-center justify-between mb-3">
+      <div>
+        <h1 class="text-2xl font-bold text-slate-900 mb-1">Tasks</h1>
+        <p class="text-xs text-slate-500">Today &amp; upcoming to-dos.</p>
+      </div>
+    </div>
+
+    <!-- Toolbar: single row with Search + Filter + Sort + List/Board + Export + New (mirrors Orders) -->
+    <div class="bg-white border border-slate-200 rounded-xl px-3 py-2 shadow-sm flex flex-wrap items-center gap-2 mb-3 text-xs">
+      <div class="relative flex-1 min-w-[200px]">
+        <i data-lucide="search" class="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400"></i>
+        <input id="task-search-input" type="text" placeholder="Search by title, company, priority..." oninput="handleTaskSearch(this.value)" class="w-full pl-8 pr-3 py-1.5 bg-slate-50 border border-slate-200 rounded-md text-xs text-slate-900 placeholder-slate-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#ff7a59]/30 focus:border-[#ff7a59] transition-all" />
+      </div>
+      <div class="relative">
+        <button id="task-filter-btn" onclick="toggleTaskFilterMenu(event)" class="flex items-center gap-1.5 px-2.5 py-1.5 bg-slate-50 border border-slate-200 hover:bg-white hover:border-slate-300 rounded-md font-semibold text-slate-700">
+          <i data-lucide="sliders-horizontal" class="w-3.5 h-3.5"></i><span>Filter</span>
+          <span id="task-filter-active-dot" class="hidden w-1.5 h-1.5 rounded-full bg-[#ff7a59]"></span>
+        </button>
+        <div id="task-filter-menu" class="hidden absolute left-0 top-full mt-1 z-40 bg-white border border-slate-200 rounded-lg shadow-lg w-64 p-2 max-h-[80vh] overflow-y-auto">
+          <div class="text-[9px] font-bold text-slate-400 uppercase tracking-wider px-2 py-1">Status</div>
+          <button onclick="setTaskFilter('all');closeAllMenus()" class="filter-menu-item"><i data-lucide="layers" class="w-3.5 h-3.5 text-slate-400"></i>All tasks</button>
+          <button onclick="setTaskFilter('open');closeAllMenus()" class="filter-menu-item"><i data-lucide="circle" class="w-3.5 h-3.5 text-blue-500"></i>Open</button>
+          <button onclick="setTaskFilter('in-progress');closeAllMenus()" class="filter-menu-item"><i data-lucide="loader" class="w-3.5 h-3.5 text-amber-500"></i>In Progress</button>
+          <button onclick="setTaskFilter('done');closeAllMenus()" class="filter-menu-item"><i data-lucide="check-circle-2" class="w-3.5 h-3.5 text-emerald-600"></i>Done</button>
+          <div class="border-t border-slate-100 my-1"></div>
+          <div class="text-[9px] font-bold text-slate-400 uppercase tracking-wider px-2 py-1">Priority</div>
+          <button onclick="setTaskFilter('urgent');closeAllMenus()" class="filter-menu-item"><i data-lucide="siren" class="w-3.5 h-3.5 text-rose-500"></i>Urgent</button>
+          <button onclick="setTaskFilter('high');closeAllMenus()" class="filter-menu-item"><i data-lucide="arrow-up" class="w-3.5 h-3.5 text-orange-500"></i>High</button>
+          <button onclick="setTaskFilter('medium');closeAllMenus()" class="filter-menu-item"><i data-lucide="minus" class="w-3.5 h-3.5 text-blue-500"></i>Medium</button>
+          <button onclick="setTaskFilter('low');closeAllMenus()" class="filter-menu-item"><i data-lucide="arrow-down" class="w-3.5 h-3.5 text-slate-400"></i>Low</button>
+          <div class="border-t border-slate-100 my-1"></div>
+          <div class="text-[9px] font-bold text-slate-400 uppercase tracking-wider px-2 py-1">Type</div>
+          <button onclick="setTaskFilter('ar-chase');closeAllMenus()" class="filter-menu-item"><i data-lucide="banknote" class="w-3.5 h-3.5 text-blue-600"></i>AR chase (payment terms)</button>
+          <button onclick="setTaskFilter('due-today');closeAllMenus()" class="filter-menu-item"><i data-lucide="alarm-clock" class="w-3.5 h-3.5 text-amber-600"></i>Due today / overdue</button>
+        </div>
+      </div>
+      <div class="relative">
+        <button id="task-sort-btn" onclick="toggleTaskSortMenu(event)" class="flex items-center gap-1.5 px-2.5 py-1.5 bg-slate-50 border border-slate-200 hover:bg-white hover:border-slate-300 rounded-md font-semibold text-slate-700">
+          <i data-lucide="arrow-up-down" class="w-3.5 h-3.5"></i><span>Sort</span>
+        </button>
+        <div id="task-sort-menu" class="hidden absolute left-0 top-full mt-1 z-40 bg-white border border-slate-200 rounded-lg shadow-lg w-56 p-2">
+          <button onclick="handleTaskSortChange('due-asc');closeAllMenus()" class="filter-menu-item">Due (Earliest first)</button>
+          <button onclick="handleTaskSortChange('due-desc');closeAllMenus()" class="filter-menu-item">Due (Latest first)</button>
+          <button onclick="handleTaskSortChange('priority-desc');closeAllMenus()" class="filter-menu-item">Priority (Urgent first)</button>
+          <button onclick="handleTaskSortChange('priority-asc');closeAllMenus()" class="filter-menu-item">Priority (Low first)</button>
+          <button onclick="handleTaskSortChange('title-asc');closeAllMenus()" class="filter-menu-item">Title (A-Z)</button>
+        </div>
+      </div>
+      <div class="flex-1"></div>
+      <span id="tasks-count-label" class="text-[11px] text-slate-500 font-semibold whitespace-nowrap"></span>
+      <button id="tasks-clear-filters" onclick="clearTaskFilters()" class="hidden text-[11px] text-slate-500 hover:text-rose-600 font-semibold items-center gap-1 px-2 py-1.5 rounded hover:bg-rose-50"><i data-lucide="x" class="w-3 h-3"></i>Clear</button>
+      <div class="flex items-center bg-slate-100 p-0.5 rounded-md border border-slate-200">
+        <button id="btn-task-view-list" onclick="switchTaskView('table')" class="flex items-center gap-1.5 px-2.5 py-1 text-[11px] font-semibold rounded-md bg-white text-slate-900 shadow-xs">
+          <i data-lucide="table-2" class="w-3.5 h-3.5"></i><span>List</span>
+        </button>
+        <button id="btn-task-view-board" onclick="switchTaskView('board')" class="flex items-center gap-1.5 px-2.5 py-1 text-[11px] font-semibold rounded-md text-slate-500 hover:text-slate-900">
+          <i data-lucide="kanban-square" class="w-3.5 h-3.5"></i><span>Board</span>
+        </button>
+      </div>
+      <button onclick="exportTasksCSV()" class="flex items-center gap-1.5 px-2.5 py-1.5 bg-slate-50 border border-slate-200 hover:bg-white hover:border-slate-300 rounded-md font-semibold text-slate-700">
+        <i data-lucide="download" class="w-3.5 h-3.5"></i><span>Export</span>
+      </button>
+      <button onclick="openTaskCreateModal()" class="inline-flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-semibold text-white bg-[#ff7a59] hover:bg-[#e06545] active:bg-[#c95335] rounded-md shadow-sm transition-all">
+        <i data-lucide="plus" class="w-4 h-4"></i><span>New task</span>
+      </button>
+    </div>
+    <div id="tasks-view-table" class="bg-white border border-slate-200 rounded-xl shadow-xs overflow-hidden">
+      <div class="overflow-x-auto">
+        <table class="w-full text-xs">
+          <thead class="bg-slate-50 text-slate-600 text-[11px] uppercase font-semibold">
+            <tr>
+              <th class="px-3 py-2 text-left" data-task-col="title">Task</th>
+              <th class="px-3 py-2 text-left" data-task-col="company">Company</th>
+              <th class="px-3 py-2 text-left" data-task-col="related">Related</th>
+              <th class="px-3 py-2 text-left" data-task-col="priority">Priority</th>
+              <th class="px-3 py-2 text-left" data-task-col="due">Due</th>
+              <th class="px-3 py-2 text-left" data-task-col="status">Status</th>
+              <th class="px-3 py-2 text-right">Actions</th>
+            </tr>
+          </thead>
+          <tbody id="tasks-tbody" class="divide-y divide-slate-100"></tbody>
+        </table>
+      </div>
+    </div>
+    <div id="tasks-view-board" class="hidden grid grid-cols-1 sm:grid-cols-3 gap-3 items-start">
+      <!-- Kanban columns are rendered by renderTasks(): Open / In Progress / Done -->
     </div>
   </div>
 </section>
@@ -2018,6 +2174,9 @@
       <button id="order-clear-filters" onclick="clearOrderFilters()" class="hidden text-[11px] text-slate-500 hover:text-rose-600 font-semibold items-center gap-1 px-2 py-1.5 rounded hover:bg-rose-50"><i data-lucide="x" class="w-3 h-3"></i>Clear</button>
       <button onclick="exportOrdersCSV()" class="flex items-center gap-1.5 px-2.5 py-1.5 bg-slate-50 border border-slate-200 hover:bg-white hover:border-slate-300 rounded-md font-semibold text-slate-700">
         <i data-lucide="download" class="w-3.5 h-3.5"></i><span>Export</span>
+      </button>
+      <button onclick="openOrderCreateModal()" class="inline-flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-semibold text-white bg-[#ff7a59] hover:bg-[#e06545] active:bg-[#c95335] rounded-md shadow-sm transition-all">
+        <i data-lucide="plus" class="w-4 h-4"></i><span>New order</span>
       </button>
     </div>
 
@@ -2415,6 +2574,55 @@
   </div>
 </div>
 
+<!-- ============================ ORDER CREATE MODAL ============================ -->
+<div class="modal-overlay" id="order-create-modal">
+  <div class="modal-content max-w-xl">
+    <div class="px-6 py-4 border-b border-slate-200 flex items-center justify-between sticky top-0 bg-white z-10">
+      <div class="flex items-center gap-2">
+        <i data-lucide="package" class="w-5 h-5 text-[#ff7a59]"></i>
+        <h2 class="text-base font-bold text-slate-900">New order</h2>
+      </div>
+      <button onclick="closeModal('order-create-modal')" class="w-8 h-8 rounded-full hover:bg-slate-100 flex items-center justify-center">
+        <i data-lucide="x" class="w-4 h-4 text-slate-500"></i>
+      </button>
+    </div>
+    <div class="p-6 space-y-4">
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <div>
+          <label class="form-label">Company <span class="text-rose-500">*</span></label>
+          <select id="order-create-company" class="form-select"></select>
+        </div>
+        <div>
+          <label class="form-label">Deal (optional — links ad-hoc scope)</label>
+          <select id="order-create-deal" class="form-select"></select>
+        </div>
+      </div>
+      <div>
+        <label class="form-label">Items / scope <span class="text-rose-500">*</span></label>
+        <input id="order-create-items" class="form-input" placeholder="e.g. 500 MT Chilled Irish Beef Primals" />
+      </div>
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <div>
+          <label class="form-label">Total (€) <span class="text-rose-500">*</span></label>
+          <input id="order-create-total" type="number" min="1" step="100" class="form-input" placeholder="e.g. 250000" />
+        </div>
+        <div>
+          <label class="form-label">ETA</label>
+          <input id="order-create-eta" class="form-input" placeholder="e.g. Next Fri 06:00" />
+        </div>
+      </div>
+      <p class="text-[11px] text-slate-500">New orders enter at <span class="font-bold text-slate-700">Pending</span> and advance one step at a time (Pending → In Production → In Transit → Delivered → Paid).</p>
+      <p id="order-create-hint" class="hidden text-[11px] font-semibold text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-2.5 py-1.5"></p>
+    </div>
+    <div class="px-6 py-3 border-t border-slate-200 flex items-center justify-end gap-2 sticky bottom-0 bg-white">
+      <button onclick="closeModal('order-create-modal')" class="btn-hs btn-outline">Cancel</button>
+      <button onclick="saveNewOrder()" class="btn-hs btn-orange">
+        <i data-lucide="plus" class="w-3.5 h-3.5 inline -mt-0.5 mr-1"></i>Create order
+      </button>
+    </div>
+  </div>
+</div>
+
 <!-- ============================ DEAL CREATE MODAL ============================ -->
 <div class="modal-overlay" id="deal-create-modal">
   <div class="modal-content max-w-xl">
@@ -2532,6 +2740,112 @@
       <button onclick="runMockRecall()" id="recall-run-btn" class="btn-hs bg-rose-600 hover:bg-rose-700 text-white">
         <i data-lucide="play" class="w-3.5 h-3.5"></i> Run Recall Drill
       </button>
+    </div>
+  </div>
+</div>
+
+<!-- ============================ ABOUT / ARCHITECTURE ============================ -->
+<div class="modal-overlay" id="about-modal">
+  <div class="modal-content" style="max-width:760px">
+    <div class="px-6 py-4 border-b border-slate-200 flex items-center justify-between sticky top-0 bg-white z-10">
+      <div class="flex items-center gap-2.5">
+        <div class="w-9 h-9 rounded-xl bg-[#ff7a59] flex items-center justify-center shrink-0">
+          <i data-lucide="book-open" class="w-4.5 h-4.5 text-white"></i>
+        </div>
+        <div>
+          <h2 class="text-base font-bold text-slate-900 leading-tight">Provisions CRM — About / Architecture</h2>
+          <p class="text-[11px] text-slate-500">Delivery-grade README · single-file build · Irish food-processor domain</p>
+        </div>
+      </div>
+      <button onclick="closeModal('about-modal')" class="w-8 h-8 rounded-full hover:bg-slate-100 flex items-center justify-center" aria-label="Close">
+        <i data-lucide="x" class="w-4 h-4 text-slate-500"></i>
+      </button>
+    </div>
+    <div class="about-body px-6 py-5">
+      <div class="about-toc">
+        <span class="about-toc-label">Contents</span>
+        <a href="#about-model" onclick="aboutScrollTo('about-model', event)">1 · Business model</a>
+        <a href="#about-flow" onclick="aboutScrollTo('about-flow', event)">2 · Event-driven pipeline</a>
+        <a href="#about-money" onclick="aboutScrollTo('about-money', event)">3 · Credit &amp; settlement</a>
+        <a href="#about-compliance" onclick="aboutScrollTo('about-compliance', event)">4 · Irish compliance (Bord Bia · DAFM · SLA)</a>
+        <a href="#about-tables" onclick="aboutScrollTo('about-tables', event)">5 · Table reference</a>
+      </div>
+      <section id="about-model" class="about-sec">
+        <h3><span class="about-num">1</span>Business model — one parent, five children</h3>
+        <p><strong>Companies</strong> is the single parent entity. Every other record carries a <code>companyId</code> foreign key back to it; deleting a company cascades through all five child tables (contacts, deals, orders, tickets, tasks).</p>
+        <div class="about-tree">
+          <div class="about-tree-root"><i data-lucide="briefcase"></i>companies <span>PK · id</span></div>
+          <div class="about-tree-branches">
+            <div class="about-tree-leaf"><i data-lucide="user"></i><div><strong>contacts</strong><span>FK companyId · exactly one primary</span></div></div>
+            <div class="about-tree-leaf"><i data-lucide="calculator"></i><div><strong>deals</strong><span>FK companyId + contactId (decision-maker)</span></div></div>
+            <div class="about-tree-leaf"><i data-lucide="package"></i><div><strong>orders</strong><span>FK companyId · optional dealId (null = ad-hoc)</span></div></div>
+            <div class="about-tree-leaf"><i data-lucide="ticket"></i><div><strong>tickets</strong><span>FK companyId · optional orderId + contactId</span></div></div>
+            <div class="about-tree-leaf"><i data-lucide="check-square"></i><div><strong>tasks</strong><span>FK companyId + polymorphic link to one of Deal / Ticket / Order</span></div></div>
+          </div>
+        </div>
+        <ul class="about-list">
+          <li><strong>One company → many contacts</strong>, exactly one flagged <code>isPrimary</code> — the decision-maker every deal must reference before it can advance.</li>
+          <li><strong>One company → many deals; one deal → many orders.</strong> Every Closed Won appends a fresh fulfillment order (repeat wins keep full history, never collapse to one row).</li>
+          <li><strong>Orders link back via <code>dealId</code></strong> (null = ad-hoc top-up outside any deal) and forward to tickets via <code>orderId</code> when fulfillment breaks.</li>
+          <li><strong>Tasks use a polymorphic FK</strong> (<code>relatedToType + relatedToId</code>) so one task relates to at most one of Deal / Ticket / Order — resolved in-app by <code>DB.resolveRelated()</code>, always through <code>DB.*</code> joins, never raw arrays.</li>
+        </ul>
+      </section>
+      <section id="about-flow" class="about-sec">
+        <h3><span class="about-num">2</span>Event-driven pipeline — status changes create work</h3>
+        <div class="about-flow">
+          <div class="about-flow-step"><strong>Deal → Closed Won</strong><span>auto-creates fulfillment order (Pending)</span></div>
+          <div class="about-flow-arrow">→</div>
+          <div class="about-flow-step"><strong>Order → Delivered</strong><span>dock-signed · dispatches AR chase task (Net +N days)</span></div>
+          <div class="about-flow-arrow">→</div>
+          <div class="about-flow-step"><strong>Task → Done</strong><span>cash received · settles order to Paid</span></div>
+        </div>
+        <ul class="about-list">
+          <li><strong>Orders</strong> advance one step at a time: <code>Pending → In Production → In Transit → Delivered → Paid</code> (+ <code>Delayed</code> side-state, <code>Cancelled</code> terminal). A <code>Delayed</code> order auto-opens an Urgent ticket.</li>
+          <li><strong>Deals</strong> are guarded by blockers: amount &gt; €0, linked primary contact, zero active P1 tickets, score ≥ 60 to close, and no credit-hold breach.</li>
+          <li><strong>Tickets</strong> gate deals too — an active Urgent ticket freezes every open deal for that company until Resolved / Closed.</li>
+        </ul>
+      </section>
+      <section id="about-money" class="about-sec">
+        <h3><span class="about-num">3</span>Credit exposure &amp; settlement — money has one choke point</h3>
+        <p>Completing a payment-chase task runs <code>settlePaymentTask()</code> — a single guarded transition that stamps <code>paidAt</code> on both task and order, flips the order to <code>Paid</code>, releases <code>outstandingAr</code> immediately, and unfreezes <code>CreditHold → Active</code> when exposure drops back inside the limit. Settled chase tasks are terminal receipts: locked, never reopened, never deleted.</p>
+      </section>
+      <section id="about-compliance" class="about-sec">
+        <h3><span class="about-num">4</span>Irish compliance — Bord Bia · DAFM · cold-chain SLA</h3>
+        <div class="about-cards">
+          <div class="about-card">
+            <div class="about-card-title"><i data-lucide="shield-check"></i>Bord Bia traceability</div>
+            <p>Missing Quality Mark sets a compliance blocker: dispatch is held, won-deal closure warns, and the audit trail (mock recall drill, lot <span class="font-mono">LOT-IE-2026-BEEF-9941</span>) proves farm-to-fork traceability.</p>
+          </div>
+          <div class="about-card">
+            <div class="about-card-title"><i data-lucide="stamp"></i>DAFM establishment numbers</div>
+            <p>Every company carries a validated approval code (<span class="font-mono">IE 542 EC</span> format, country-aware hints). Duplicates are rejected at the form gate — no two plants share one number.</p>
+          </div>
+          <div class="about-card">
+            <div class="about-card-title"><i data-lucide="alarm-clock"></i>06:00 CDC cut-off SLA</div>
+            <p>Each account stores its DC cut-off (<span class="font-mono">05:30 Donabate</span>, <span class="font-mono">06:00 Newbridge</span>…). A live countdown in the header tracks the next breach; missed cut-offs surface as SLA tickets that block deal progression.</p>
+          </div>
+        </div>
+      </section>
+      <section id="about-tables" class="about-sec">
+        <h3><span class="about-num">5</span>Table reference</h3>
+        <div class="about-table-wrap">
+          <table class="about-table">
+            <thead><tr><th>Table</th><th>Key</th><th>Foreign keys</th><th>Notes</th></tr></thead>
+            <tbody>
+              <tr><td><strong>companies</strong></td><td class="font-mono">id</td><td>— (parent)</td><td>Stage, credit limit, A/R, OTIF, SLA cut-off</td></tr>
+              <tr><td><strong>contacts</strong></td><td class="font-mono">id</td><td class="font-mono">companyId</td><td>One primary per company</td></tr>
+              <tr><td><strong>deals</strong></td><td class="font-mono">id</td><td class="font-mono">companyId · contactId</td><td>Linear stage flow, Closed Won → order</td></tr>
+              <tr><td><strong>orders</strong></td><td class="font-mono">orderNumber</td><td class="font-mono">companyId · dealId?</td><td>5-stage fulfillment + Delayed</td></tr>
+              <tr><td><strong>tickets</strong></td><td class="font-mono">ticketNumber</td><td class="font-mono">companyId · orderId? · contactId</td><td>P1 blocks deals</td></tr>
+              <tr><td><strong>tasks</strong></td><td class="font-mono">id</td><td class="font-mono">companyId · relatedTo?</td><td>Polymorphic Deal / Ticket / Order</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="about-foot">All amounts in EUR · dates ISO <span class="font-mono">YYYY-MM-DD</span> · storage key <span class="font-mono">provisions_crm_v1</span> (localStorage) · icons Lucide · brand marks Google S2 favicons with initials fallback.</p>
+      </section>
+    </div>
+    <div class="px-6 py-3 border-t border-slate-200 flex items-center justify-end gap-2 sticky bottom-0 bg-white">
+      <button onclick="closeModal('about-modal')" class="btn-hs btn-orange">Got it</button>
     </div>
   </div>
 </div>
@@ -2707,6 +3021,11 @@ let orderSearchQuery = '';
 let orderFilter = 'all';             // all | pending | in-production | in-transit | delivered | paid | delayed | from-deal | adhoc | open-only | high-value | ticket-risk
 let orderSortField = 'total';
 let orderSortDirection = 'desc';
+let taskSearchQuery = '';
+let taskFilter = 'all';              // all | open | in-progress | done | urgent | high | medium | low | ar-chase | due-today
+let taskSortField = 'due';
+let taskSortDirection = 'asc';
+let taskView = 'table';              // 'table' | 'board' (per-page mode, mirrors Companies List/Board)
 let dealSearchQuery = '';
 let dealFilter = 'all';            // 'all' | 'open' | 'won' | 'lost' | 'blocked' | 'warnings' | 'low_score' | 'high_value' (+ funnel stageId)
 let dealSortField = 'amount';
@@ -3555,7 +3874,7 @@ document.addEventListener('DOMContentLoaded', () => {
 // Deal state machine: linear forward flow + lost side-exit + reopen.
 //   next stage   → guarded advance (only the immediate next stage; blockers
 //                 must pass, otherwise the confirm button stays disabled)
-//   Closed Lost  → requires a loss reason (防呆: no reason = no close)
+//   Closed Lost  → requires a loss reason (guard: no reason = no close)
 //   Closed Won   → terminal; creates the fulfillment Order on confirm
 //   Reopen       → closed-lost → qualified-to-buy (re-qualification)
 function dealStageMeta(stageId) {
@@ -3704,7 +4023,7 @@ function setStageConfirmEnabled(enabled, hint) {
   btn.classList.toggle('cursor-not-allowed', !enabled);
   btn.title = enabled ? '' : (hint || 'Resolve blockers first');
 }
-function openStagePopover({ anchorEl, title, checks, confirmLabel, onConfirm, requireReason, reasonOptions, allowConfirm, explainOnly }) {
+function openStagePopover({ anchorEl, title, checks, confirmLabel, onConfirm, requireReason, reasonOptions, allowConfirm, explainOnly, reasonLabel, confirmTone, reasonHint }) {
   const pop = document.getElementById('stage-popover');
   document.getElementById('stage-popover-title').textContent = title || 'Pre-fulfillment Review';
   const blocked = checks.filter(c => c.blocking && !c.ok);
@@ -3745,7 +4064,7 @@ function openStagePopover({ anchorEl, title, checks, confirmLabel, onConfirm, re
         </div>
       </div>`).join('') + (requireReason ? `
       <div class="border-t border-slate-100 mt-3 pt-3">
-        <label class="block text-[11px] font-bold uppercase text-slate-500 mb-1.5">Loss reason <span class="text-rose-500">*</span></label>
+        <label class="block text-[11px] font-bold uppercase text-slate-500 mb-1.5">${escapeHtml(reasonLabel || 'Loss reason')} <span class="text-rose-500">*</span></label>
         <select id="stage-lost-reason" class="form-select text-xs">
           <option value="">— Select a reason —</option>
           ${(reasonOptions || []).map(r => `<option value="${escapeHtml(r)}">${escapeHtml(r)}</option>`).join('')}
@@ -3754,7 +4073,7 @@ function openStagePopover({ anchorEl, title, checks, confirmLabel, onConfirm, re
     document.getElementById('stage-popover-confirm').textContent = confirmLabel || 'Confirm & Trigger Cascade';
     if (footer) footer.innerHTML = `
       <button onclick="closeStagePopover()" class="px-2.5 py-1 text-[11px] font-semibold text-slate-700 bg-white border border-slate-300 rounded hover:bg-slate-100">Back</button>
-      <button id="stage-popover-confirm" class="px-2.5 py-1 text-[11px] font-bold text-white bg-blue-600 rounded hover:bg-blue-700 shadow-sm">
+      <button id="stage-popover-confirm" class="px-2.5 py-1 text-[11px] font-bold text-white ${confirmTone === 'amber' ? 'bg-amber-600 hover:bg-amber-700' : confirmTone === 'rose' ? 'bg-rose-600 hover:bg-rose-700' : 'bg-blue-600 hover:bg-blue-700'} rounded shadow-sm">
         ${escapeHtml(confirmLabel || 'Confirm & Trigger Cascade')}
       </button>`;
   }
@@ -3776,7 +4095,7 @@ function openStagePopover({ anchorEl, title, checks, confirmLabel, onConfirm, re
   if (left + POP_W > window.innerWidth - MARGIN) left = window.innerWidth - POP_W - MARGIN;
   pop.style.top = top + 'px';
   pop.style.left = left + 'px';
-  _stagePopoverPending = { onConfirm, requireReason: !!requireReason };
+  _stagePopoverPending = { onConfirm, requireReason: !!requireReason, reasonHint: reasonHint || 'Select a loss reason first' };
   armStagePopoverDismiss();
   // Explain mode footer is already just "Got it" — nothing to sync.
   if (explainOnly) { refreshIcons(); return; }
@@ -3787,7 +4106,7 @@ function openStagePopover({ anchorEl, title, checks, confirmLabel, onConfirm, re
       const sel = document.getElementById('stage-lost-reason');
       const hasReason = !!(sel && sel.value);
       ok = ok && hasReason;
-      if (!hasReason) hint = 'Select a loss reason first';
+      if (!hasReason) hint = reasonHint || 'Select a loss reason first';
     }
     setStageConfirmEnabled(ok, hint);
   };
@@ -3837,7 +4156,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!_stagePopoverPending || !_stagePopoverPending.onConfirm) { closeStagePopover(); return; }
     if (btn.disabled) return;
     const reason = document.getElementById('stage-lost-reason')?.value || '';
-    if (_stagePopoverPending.requireReason && !reason) { showToast('Pick a loss reason first', 'warning'); return; }
+    if (_stagePopoverPending.requireReason && !reason) { showToast(_stagePopoverPending.reasonHint || 'Pick a reason first', 'warning'); return; }
     _stagePopoverPending.onConfirm({ reason });
     closeStagePopover();
   });
@@ -4024,7 +4343,7 @@ function navigateTo(section, opts={}) {
   }
   else if (section === 'deals') renderDeals();
   else if (section === 'tickets') renderTickets();
-  else if (section === 'tasks') renderTasks();
+  else if (section === 'tasks') { renderTasks(); }
   else if (section === 'orders') renderOrders();
   else if (section === 'contacts') renderContacts();
 
@@ -4477,15 +4796,61 @@ function toggleColsMenu(e) {
   document.getElementById('cols-menu').classList.toggle('hidden');
 }
 function closeAllMenus() {
-  ['filter-menu','sort-menu','cols-menu','deal-filter-menu','deal-sort-menu','ticket-filter-menu','ticket-sort-menu','order-filter-menu','order-sort-menu','user-menu'].forEach(id => {
+  ['filter-menu','sort-menu','cols-menu','deal-filter-menu','deal-sort-menu','ticket-filter-menu','ticket-sort-menu','order-filter-menu','order-sort-menu','task-filter-menu','task-sort-menu','user-menu'].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.classList.add('hidden');
   });
 }
 function toggleUserMenu(e) {
   if (e) e.stopPropagation();
+  const menu = document.getElementById('user-menu');
+  if (!menu) return;
+  const willOpen = menu.classList.contains('hidden');
   closeAllMenus();
-  document.getElementById('user-menu').classList.toggle('hidden');
+  if (!willOpen) return;
+  // Anchor the menu to the avatar button with fixed positioning so it is
+  // never clipped by the header's overflow-x scroll container.
+  const btn = e && e.currentTarget ? e.currentTarget : null;
+  if (btn && btn.getBoundingClientRect) {
+    const r = btn.getBoundingClientRect();
+    menu.style.top = (r.bottom + 6) + 'px';
+    menu.style.left = Math.max(8, r.right - 240) + 'px';
+    menu.style.right = 'auto';
+  }
+  menu.classList.remove('hidden');
+  refreshIcons();
+}
+// ============= DEMO PERSONA SWITCH (fake role-play, header only) =============
+// Purely cosmetic: swaps the identity chip in the header + shows a toast.
+// No permission gates anywhere — the "permissions updated" toast is theatre, not enforcement.
+const PERSONAS = {
+  kam: { name: 'Sarah Lin',  role: 'Key Account Manager', email: 'sarah.lin@nouvem.ie',    initials: 'SL', bg: '#ff7a59', toast: 'Permissions updated — now acting as Key Account Manager (Sarah Lin)' },
+  qa:  { name: 'Niamh Walsh', role: 'QA Auditor',         email: 'n.walsh@nouvem.ie',      initials: 'NW', bg: '#059669', toast: 'Permissions updated — now acting as QA Auditor (Niamh Walsh)' },
+  fin: { name: 'Elena Rostova', role: 'Finance Specialist', email: 'e.rostova@nouvem.ie',  initials: 'ER', bg: '#2563eb', toast: 'Permissions updated — now acting as Finance Specialist (Elena Rostova)' }
+};
+let currentPersona = 'kam';
+function switchPersona(key) {
+  const p = PERSONAS[key];
+  if (!p || key === currentPersona) { closeAllMenus(); return; }
+  currentPersona = key;
+  const av = document.getElementById('user-avatar');
+  if (av) { av.textContent = p.initials; av.style.background = p.bg; }
+  const name = document.getElementById('user-name');
+  if (name) name.textContent = p.name;
+  const role = document.getElementById('user-role');
+  if (role) role.textContent = p.role;
+  const mName = document.getElementById('user-menu-name');
+  if (mName) mName.textContent = p.name;
+  const mEmail = document.getElementById('user-menu-email');
+  if (mEmail) mEmail.textContent = p.email;
+  const mRole = document.getElementById('user-menu-role');
+  if (mRole) mRole.textContent = p.role;
+  document.querySelectorAll('.role-check').forEach(el => el.classList.add('hidden'));
+  const chk = document.getElementById('role-check-' + key);
+  if (chk) chk.classList.remove('hidden');
+  closeAllMenus();
+  showToast(p.toast, 'warning');
+  updateKbdStatus?.(`Identity switched: ${p.name} — ${p.role}`);
 }
 function toggleDealFilterMenu(e) {
   if (e) e.stopPropagation();
@@ -4516,6 +4881,17 @@ function toggleOrderSortMenu(e) {
   if (e) e.stopPropagation();
   closeAllMenus();
   document.getElementById('order-sort-menu').classList.toggle('hidden');
+}
+
+function toggleTaskFilterMenu(e) {
+  if (e) e.stopPropagation();
+  closeAllMenus();
+  document.getElementById('task-filter-menu').classList.toggle('hidden');
+}
+function toggleTaskSortMenu(e) {
+  if (e) e.stopPropagation();
+  closeAllMenus();
+  document.getElementById('task-sort-menu').classList.toggle('hidden');
 }
 
 // ============= DEALS: SEARCH / FILTER / SORT / EXPORT / CREATE =============
@@ -4889,6 +5265,85 @@ function createTicketForContact() {
   navigateTo('tickets');
 }
 
+// Open the New Order modal; company dropdown lists all customers, deal dropdown
+// lists that company's open deals (optional — leave empty for a pure ad-hoc order).
+function orderDealOptions(companyId, selectedId) {
+  const openDeals = deals.filter(d => d.companyId === companyId && !['closed-won', 'closed-lost'].includes(DB.dealStageId(d)));
+  return '<option value="">— Ad-hoc (no deal) —</option>' +
+    openDeals.map(d => `<option value="${d.id}"${d.id === selectedId ? ' selected' : ''}>${escapeHtml(d.title)}</option>`).join('');
+}
+function openOrderCreateModal(prefillCompanyId) {
+  const coSel = document.getElementById('order-create-company');
+  const dealSel = document.getElementById('order-create-deal');
+  if (!coSel || !dealSel) return;
+  const companyId = prefillCompanyId || (customers[0] ? customers[0].id : '');
+  coSel.innerHTML = '<option value="">— Select company —</option>' +
+    customers.map(c => `<option value="${c.id}">${escapeHtml(c.companyName)}</option>`).join('');
+  coSel.value = companyId;
+  const syncDeals = () => { dealSel.innerHTML = orderDealOptions(coSel.value, ''); refreshOrderCreateHint(); };
+  coSel.onchange = syncDeals;
+  dealSel.onchange = refreshOrderCreateHint;
+  syncDeals();
+  document.getElementById('order-create-items').value = '';
+  document.getElementById('order-create-total').value = '';
+  document.getElementById('order-create-eta').value = '';
+  openModal('order-create-modal');
+  setTimeout(() => document.getElementById('order-create-items')?.focus(), 50);
+  refreshIcons();
+}
+function refreshOrderCreateHint() {
+  const hint = document.getElementById('order-create-hint');
+  if (!hint) return;
+  const coSel = document.getElementById('order-create-company');
+  const company = coSel ? customers.find(x => x.id === coSel.value) : null;
+  if (company && (company.creditLimit || 0) > 0 && (company.outstandingAr || 0) > (company.creditLimit || 0)) {
+    hint.textContent = `${company.companyName} is on Credit Hold (A/R €${(company.outstandingAr || 0).toLocaleString()} > limit €${(company.creditLimit || 0).toLocaleString()}). The order can still be created — Deals stay blocked until A/R clears.`;
+    hint.classList.remove('hidden');
+  } else {
+    hint.textContent = '';
+    hint.classList.add('hidden');
+  }
+}
+function saveNewOrder() {
+  const companySel = document.getElementById('order-create-company');
+  const dealSel = document.getElementById('order-create-deal');
+  const companyId = companySel ? companySel.value : '';
+  const dealId = dealSel && dealSel.value ? dealSel.value : null;
+  const items = document.getElementById('order-create-items').value.trim();
+  const total = parseFloat(document.getElementById('order-create-total').value) || 0;
+  const eta = document.getElementById('order-create-eta').value.trim();
+  if (!companyId) { showToast('Please select a company'); companySel?.focus(); return; }
+  if (!items) { showToast('Items / scope is required'); document.getElementById('order-create-items').focus(); return; }
+  if (!(total > 0)) { showToast('Total must be greater than €0'); document.getElementById('order-create-total').focus(); return; }
+  if (dealId && !DB.deal(dealId)) { showToast('Selected deal no longer exists', 'warning'); return; }
+  const today = new Date();
+  const yyyy = today.getFullYear();
+  const payload = {
+    id: 'ord-' + Date.now(),
+    orderNumber: 'ORD-' + yyyy + '-' + Math.floor(1000 + Math.random() * 9000),
+    companyId,
+    dealId,
+    items,
+    total,
+    status: 'Pending',
+    eta: eta || `${yyyy}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`,
+    source: dealId ? 'deal-linked' : 'adhoc-manual',
+    createdAt: today.toISOString()
+  };
+  try {
+    DB.insertOrder(payload);
+  } catch (e) {
+    showToast(e.message || 'Could not create order', 'warning');
+    return;
+  }
+  closeModal('order-create-modal');
+  const deal = dealId ? DB.deal(dealId) : null;
+  showToast(deal ? `Order ${payload.orderNumber} created at Pending (linked to ${deal.title})` : `Order ${payload.orderNumber} created at Pending`);
+  if (document.getElementById('page-orders')?.classList.contains('active')) renderOrders();
+  setRailBadge('badge-orders', orders.length);
+  refreshIcons();
+}
+
 // Open the New Ticket modal; populate the company dropdown with all known customers.
 function openTicketCreateModal(prefillCompanyId) {
   const select = document.getElementById('ticket-create-company');
@@ -5157,7 +5612,7 @@ function resolveTicket(id) {
 
 // ============= TICKET DETAIL DRAWER: card + stepper state machine =============
 // Master list stays a TABLE (urgency scan: Severity P1/P2/P3 + SLA countdown).
-// All transitions live HERE as clickable buttons + a progress axis (防呆):
+// All transitions live HERE as clickable buttons + a progress axis (guarded):
 //   forward: Open → In Progress → Under QA Review → Resolved → Closed
 //   hold:    any open step ⇄ On Hold (backward escape, reason-free)
 // Resolved = deal-unblock point (P1 clears); Closed = terminal archival.
@@ -5452,6 +5907,16 @@ function addNote() {
 }
 
 // ============= MODALS =============
+function openAboutModal() {
+  openModal('about-modal');
+  const body = document.querySelector('#about-modal .modal-content');
+  if (body) body.scrollTop = 0;
+  refreshIcons();
+}
+function aboutScrollTo(id, e) {
+  if (e) e.preventDefault();
+  document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
 function openModal(id) { document.getElementById(id).classList.add('active'); }
 function closeModal(id) {
   document.getElementById(id).classList.remove('active');
@@ -6550,42 +7015,387 @@ function renderTickets() {
 }
 
 // ============= TASKS / ORDERS / CONTACTS =============
-function renderTasks() {
-  const list = document.getElementById('tasks-list');
-  if (list && (!Array.isArray(tasks) || tasks.length === 0)) {
-    list.innerHTML = '<div class="p-8 text-center text-xs text-slate-400">No tasks yet. Tasks created from deals, tickets or orders will appear here.</div>';
-    setRailBadge('badge-tasks', 0);
-    refreshIcons();
+// Tasks toolbar (mirrors Orders): one pipeline
+// handleTaskSearch / setTaskFilter / handleTaskSortChange / switchTaskView →
+// state → renderTasks() which renders through getFilteredSortedTasks() in both
+// List and Board modes; Export follows the Orders pattern.
+const TASK_COLUMNS_DEF = [
+  { id: 'title',    label: 'Task' },
+  { id: 'company',  label: 'Company' },
+  { id: 'related',  label: 'Related' },
+  { id: 'priority', label: 'Priority' },
+  { id: 'due',      label: 'Due' },
+  { id: 'status',   label: 'Status' }
+];
+function handleTaskSearch(v) {
+  taskSearchQuery = v || '';
+  renderTasks();
+}
+function setTaskFilter(f) {
+  taskFilter = f || 'all';
+  renderTasks();
+}
+function handleTaskSortChange(v) {
+  const [f, d] = (v || 'due-asc').split('-');
+  taskSortField = f;
+  taskSortDirection = d || 'asc';
+  renderTasks();
+}
+function clearTaskFilters() {
+  taskSearchQuery = '';
+  taskFilter = 'all';
+  const si = document.getElementById('task-search-input');
+  if (si) si.value = '';
+  renderTasks();
+}
+function switchTaskView(mode) {
+  taskView = mode;
+  const btnList = document.getElementById('btn-task-view-list');
+  const btnBoard = document.getElementById('btn-task-view-board');
+  if (mode === 'table') {
+    if (btnList) btnList.className = 'flex items-center gap-1.5 px-2.5 py-1 text-[11px] font-semibold rounded-md bg-white text-slate-900 shadow-xs';
+    if (btnBoard) btnBoard.className = 'flex items-center gap-1.5 px-2.5 py-1 text-[11px] font-semibold rounded-md text-slate-500 hover:text-slate-900';
+  } else {
+    if (btnBoard) btnBoard.className = 'flex items-center gap-1.5 px-2.5 py-1 text-[11px] font-semibold rounded-md bg-white text-slate-900 shadow-xs';
+    if (btnList) btnList.className = 'flex items-center gap-1.5 px-2.5 py-1 text-[11px] font-semibold rounded-md text-slate-500 hover:text-slate-900';
+  }
+  renderTasks();
+}
+function taskDueMs(t) {
+  // AR-chase tasks carry an ISO dueDateIso; legacy seeds use display strings.
+  const iso = t.dueDateIso ? Date.parse(t.dueDateIso) : NaN;
+  if (!isNaN(iso)) return iso;
+  const rel = String(t.due || '').toLowerCase();
+  if (rel.includes('today')) return Date.now();
+  if (rel.includes('tomorrow')) return Date.now() + 86400000;
+  const parsed = Date.parse(t.due || '');
+  return isNaN(parsed) ? Number.MAX_SAFE_INTEGER : parsed;
+}
+function taskIsDueSoon(t) {
+  if (t.status === 'Done') return false;
+  const ms = taskDueMs(t);
+  if (ms === Number.MAX_SAFE_INTEGER) return false;
+  const days = Math.ceil((ms - Date.now()) / 86400000);
+  return days <= 0;
+}
+function taskMatchesFilter(t, f) {
+  switch (f) {
+    case 'all':         return true;
+    case 'open':        return t.status === 'Open';
+    case 'in-progress': return t.status === 'In Progress';
+    case 'done':        return t.status === 'Done';
+    case 'urgent':      return t.priority === 'Urgent';
+    case 'high':        return t.priority === 'High';
+    case 'medium':      return t.priority === 'Medium';
+    case 'low':         return t.priority === 'Low';
+    case 'ar-chase':    return isArChaseTask(t);
+    case 'due-today':   return taskIsDueSoon(t);
+    default: return true;
+  }
+}
+function getFilteredSortedTasks() {
+  const q = (taskSearchQuery || '').toLowerCase().trim();
+  let result = tasks.filter(t => {
+    const company = DB.company(t.companyId);
+    const relLabel = (t.relatedToType && t.relatedToId) ? DB.resolveRelated(t.relatedToType, t.relatedToId).label : '';
+    const matchesQ = !q || [t.title, t.priority, t.status, t.due, company?.companyName, relLabel]
+      .some(x => (x || '').toLowerCase().includes(q));
+    if (!matchesQ) return false;
+    if (!taskMatchesFilter(t, taskFilter)) return false;
+    return true;
+  });
+  const dir = taskSortDirection === 'asc' ? 1 : -1;
+  const priRank = p => ({ 'Urgent': 0, 'High': 1, 'Medium': 2, 'Low': 3 }[p] ?? 99);
+  result.sort((a, b) => {
+    switch (taskSortField) {
+      case 'due':      return (taskDueMs(a) - taskDueMs(b)) * dir;
+      case 'priority': return (priRank(a.priority) - priRank(b.priority)) * dir;
+      case 'title':    return String(a.title || '').localeCompare(String(b.title || '')) * dir;
+      default: return 0;
+    }
+  });
+  return result;
+}
+function exportTasksCSV() {
+  const rows = getFilteredSortedTasks();
+  const headers = ['Task','Company','Related Type','Related','Priority','Due','Status'];
+  const body = rows.map(t => [
+    t.title || '', DB.company(t.companyId)?.companyName || '', t.relatedToType || '',
+    (t.relatedToType && t.relatedToId) ? DB.resolveRelated(t.relatedToType, t.relatedToId).label : '',
+    t.priority || '', t.due || '', t.status || ''
+  ]);
+  const csv = [headers, ...body].map(r => r.map(x => '"' + String(x ?? '').replace(/"/g, '""') + '"').join(',')).join('\n');
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `tasks-${new Date().toISOString().slice(0,10)}.csv`;
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+  showToast(`Exported ${rows.length} tasks`);
+}
+function taskStatusPill(t) {
+  const status = typeof t === 'string' ? t : (t && t.status);
+  if (typeof t !== 'string' && isPaymentTaskLocked(t)) {
+    return `<span class="px-2 py-0.5 rounded-full text-[10px] font-bold whitespace-nowrap bg-emerald-600 text-white" title="Payment collected ${escapeHtml(t.paidAt ? new Date(t.paidAt).toLocaleString('en-IE', { dateStyle: 'medium', timeStyle: 'short' }) : '')} — locked, cannot reopen">Paid ✓</span>`;
+  }
+  const map = {
+    'Open':        'bg-blue-100 text-blue-700',
+    'In Progress': 'bg-amber-100 text-amber-800',
+    'Done':        'bg-emerald-100 text-emerald-700'
+  };
+  return `<span class="px-2 py-0.5 rounded-full text-[10px] font-bold whitespace-nowrap ${map[status] || 'bg-slate-100 text-slate-600'}">${escapeHtml(status || '—')}</span>`;
+}
+function taskPriorityPill(priority) {
+  const cls = priority === 'Urgent' ? 'bg-rose-100 text-rose-700' :
+              priority === 'High' ? 'bg-amber-100 text-amber-800' :
+              priority === 'Medium' ? 'bg-blue-100 text-blue-700' : 'bg-slate-100 text-slate-600';
+  return `<span class="text-[10px] font-bold px-2 py-0.5 rounded ${cls} whitespace-nowrap">${escapeHtml(priority || '—')}</span>`;
+}
+function isArChaseTask(t) {
+  // AR chase tasks are flagged with kind='ar-chase' at dispatch time.
+  // Legacy check kept for tasks auto-created before this flag existed.
+  return t && (t.kind === 'ar-chase' || String(t.title || '').startsWith('[Payment chase]'));
+}
+function isPaymentTaskLocked(t) {
+  // A completed payment-chase task is a financial receipt: terminal, never reopened.
+  // paidAt is the audit proof; legacy Done chase rows without it are still locked.
+  return isArChaseTask(t) && t.status === 'Done';
+}
+// ---- Payment collection settlement (single choke point) ----
+// Completing a payment-chase task = cash received for the linked order:
+//   1. task → Done (locked, terminal — stamp paidAt + collectedAmount)
+//   2. order → Paid (stamp paidAt, keep the task's timestamp as the audit trail)
+//   3. company credit exposure released immediately (outstandingAr -= order total)
+//   4. if the company was in CreditHold only because of that exposure, unfreeze to Active
+// All four happen in one guarded transition so the three tables can never disagree.
+function settlePaymentTask(taskId) {
+  const t = tasks.find(x => x.id === taskId);
+  if (!t) return false;
+  if (!isArChaseTask(t)) return false;
+  if (t.status === 'Done') return true; // idempotent — already settled, never double-count
+  const order = (t.relatedToType === 'Order' && t.relatedToId) ? DB.order(t.relatedToId) : null;
+  const nowIso = new Date().toISOString();
+  t.status = 'Done';
+  t.paidAt = nowIso;
+  t.collectedAmount = order ? (order.total || 0) : 0;
+  if (!Array.isArray(t.history)) t.history = [];
+  t.history.unshift({ at: nowIso, from: 'Open', to: 'Done', via: 'payment-collected' });
+  if (order) {
+    order.paidAt = nowIso;
+    order.collectedViaTask = t.id;
+    if (order.status !== 'Paid') DB.updateOrderStatus(order.id, 'Paid');
+  }
+  releaseCreditExposure(t.companyId, order ? (order.total || 0) : 0);
+  saveStorage();
+  return true;
+}
+function releaseCreditExposure(companyId, collectedAmount) {
+  if (!companyId) return { released: 0, unfrozen: false };
+  const c = (typeof customers !== 'undefined') ? customers.find(x => x.id === companyId) : null;
+  const rel = DB.company(companyId);
+  const target = c || rel;
+  if (!target) return { released: 0, unfrozen: false };
+  const released = Math.max(0, collectedAmount || 0);
+  if (released > 0) target.outstandingAr = Math.max(0, (target.outstandingAr || 0) - released);
+  if (typeof target.overdueDays === 'number' && target.overdueDays > 0) {
+    // Cash cleared — the account is current again. Remaining exposure (if any)
+    // still counts toward the limit, but the overdue flag is gone.
+    const stillOver = (target.creditLimit || 0) > 0 && (target.outstandingAr || 0) > (target.creditLimit || 0);
+    if (!stillOver) target.overdueDays = 0;
+  }
+  let unfrozen = false;
+  if (target.operationalStatus === 'CreditHold') {
+    const overLimit = (target.creditLimit || 0) > 0 && (target.outstandingAr || 0) > (target.creditLimit || 0);
+    if (!overLimit) {
+      target.operationalStatus = 'Active';
+      unfrozen = true;
+    }
+  }
+  // Keep the relational projection in sync (it is rebuilt from customers on reload).
+  if (c && rel && rel !== c) {
+    rel.outstandingAr = c.outstandingAr;
+    rel.overdueDays = c.overdueDays;
+    rel.operationalStatus = c.operationalStatus;
+  }
+  return { released, unfrozen };
+}
+function taskDueCell(t) {
+  const isChase = isArChaseTask(t);
+  if (!isChase || t.status === 'Done') return `<span class="text-[11px] text-slate-500">${escapeHtml(t.due || '—')}</span>`;
+  const ms = taskDueMs(t);
+  const days = Math.ceil((ms - Date.now()) / 86400000);
+  const overdue = days < 0;
+  const urgentSoon = !overdue && days <= 3;
+  const cls = overdue ? 'text-rose-600 font-bold' : urgentSoon ? 'text-amber-600 font-bold' : 'text-slate-500';
+  const txt = overdue ? `Overdue ${Math.abs(days)}d` : urgentSoon ? (days === 0 ? 'Due today' : `Due in ${days}d`) : `Due ${fmtDateShort(new Date(ms))}`;
+  return `<span class="text-[11px] ${cls} inline-flex items-center gap-1 whitespace-nowrap"><i data-lucide="${overdue ? 'alarm-clock' : 'calendar-clock'}" class="w-3 h-3"></i>${escapeHtml(t.due)} · ${txt}</span>`;
+}
+function taskRelatedCell(t) {
+  if (!(t.relatedToType && t.relatedToId)) return '<span class="text-slate-400">—</span>';
+  const color = t.relatedToType === 'Deal' ? 'bg-purple-100 text-purple-700' : t.relatedToType === 'Ticket' ? 'bg-rose-100 text-rose-700' : 'bg-amber-100 text-amber-700';
+  const icon = t.relatedToType === 'Deal' ? 'target' : t.relatedToType === 'Ticket' ? 'life-buoy' : 'truck';
+  const nav = t.relatedToType === 'Deal' ? 'deals' : t.relatedToType === 'Ticket' ? 'tickets' : 'orders';
+  return `<span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded ${color}"><i data-lucide="${icon}" class="w-3 h-3"></i><button onclick="navigateTo('${nav}')" class="font-semibold hover:underline whitespace-nowrap">${escapeHtml(DB.resolveRelated(t.relatedToType, t.relatedToId).label)}</button></span>`;
+}
+function toggleTaskDone(id, done) {
+  const t = tasks.find(x => x.id === id);
+  if (!t) return;
+  // Settled payment-chase tasks are terminal receipts — never reopen or toggle.
+  if (isPaymentTaskLocked(t)) { showToast('Payment already collected — this task is locked', 'warning'); renderTasks(); return; }
+  if (done && isArChaseTask(t)) {
+    settlePaymentTask(id);
+    const order = (t.relatedToType === 'Order' && t.relatedToId) ? DB.order(t.relatedToId) : null;
+    showToast(order ? `${order.orderNumber} → Paid · ${fmtMoney(t.collectedAmount || order.total || 0)} collected` : 'Payment collected', 'success');
+    renderTasks();
+    if (typeof currentSection !== 'undefined' && currentSection === 'orders' && typeof renderOrders === 'function') renderOrders();
     return;
   }
-  document.getElementById('tasks-list').innerHTML = tasks.map(t => `
-    <div data-row-target="record-detail:${t.companyId}" data-row-label="${escapeHtml(t.title)}" class="p-3 hover:bg-slate-50 flex items-start gap-3">
-      <input type="checkbox" class="mt-1 w-4 h-4 rounded border-slate-300 text-[#ff7a59] focus:ring-[#ff7a59]" />
-      <div class="flex-1 min-w-0">
-        <div class="text-xs font-semibold text-slate-900 ${t.status==='Done' ? 'line-through text-slate-400' : ''}">${escapeHtml(t.title)}</div>
-        <div class="text-[11px] text-slate-500 mt-0.5 flex items-center gap-2 flex-wrap">
-          <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-slate-100 text-slate-700">
-            <i data-lucide="building-2" class="w-3 h-3"></i>
-            <span class="font-semibold">${escapeHtml(DB.company(t.companyId)?.companyName || '—')}</span>
-          </span>
-          ${(t.relatedToType && t.relatedToId) ? `
-            <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded ${t.relatedToType === 'Deal' ? 'bg-purple-100 text-purple-700' : t.relatedToType === 'Ticket' ? 'bg-rose-100 text-rose-700' : 'bg-amber-100 text-amber-700'}">
-              <i data-lucide="${t.relatedToType === 'Deal' ? 'target' : t.relatedToType === 'Ticket' ? 'life-buoy' : 'truck'}" class="w-3 h-3"></i>
-              <span>${t.relatedToType}:</span>
-              <button onclick="navigateTo('${t.relatedToType === 'Deal' ? 'deals' : t.relatedToType === 'Ticket' ? 'tickets' : 'orders'}')" class="font-semibold hover:underline">${escapeHtml(DB.resolveRelated(t.relatedToType, t.relatedToId).label)}</button>
-            </span>
-          ` : ''}
+  t.status = done ? 'Done' : 'Open';
+  saveStorage();
+  renderTasks();
+}
+function setTaskStatus(id, status) {
+  const t = tasks.find(x => x.id === id);
+  if (!t) return;
+  // Settled payment-chase tasks are terminal receipts — never reopen.
+  if (isPaymentTaskLocked(t) && status !== 'Done') { showToast('Payment already collected — this task is locked', 'warning'); renderTasks(); return; }
+  if (status === 'Done' && isArChaseTask(t) && t.status !== 'Done') {
+    settlePaymentTask(id);
+    const order = (t.relatedToType === 'Order' && t.relatedToId) ? DB.order(t.relatedToId) : null;
+    showToast(order ? `${order.orderNumber} → Paid · ${fmtMoney(t.collectedAmount || order.total || 0)} collected` : 'Payment collected', 'success');
+    renderTasks();
+    if (typeof currentSection !== 'undefined' && currentSection === 'orders' && typeof renderOrders === 'function') renderOrders();
+    return;
+  }
+  t.status = status;
+  saveStorage();
+  renderTasks();
+}
+function deleteTaskConfirm(id) {
+  const t = tasks.find(x => x.id === id);
+  if (!t) return;
+  // Settled payment-chase tasks are financial receipts — keep the audit trail.
+  if (isPaymentTaskLocked(t)) { showToast('Payment already collected — this receipt cannot be deleted', 'warning'); return; }
+  if (!confirm(`Delete task "${t.title}"?`)) return;
+  tasks = tasks.filter(x => x.id !== id);
+  saveStorage();
+  showToast('Task deleted');
+  renderTasks();
+}
+function openTaskCreateModal() {
+  if (typeof customers === 'undefined' || customers.length === 0) { showToast('No companies on file', 'warning'); return; }
+  const first = customers[0];
+  DB.insertTask({ title: 'New task — edit me', due: 'Today', priority: 'Medium', status: 'Open', companyId: first.id, relatedToType: null, relatedToId: null });
+  renderTasks();
+  showToast('Draft task created — rename it via the title');
+}
+function renderTasks() {
+  const visible = getFilteredSortedTasks();
+  const isFiltered = !!(taskSearchQuery && taskSearchQuery.trim()) || taskFilter !== 'all';
+  const dot = document.getElementById('task-filter-active-dot');
+  if (dot) dot.classList.toggle('hidden', taskFilter === 'all');
+  const lbl = document.getElementById('tasks-count-label');
+  if (lbl) lbl.textContent = `Showing ${visible.length} of ${tasks.length} tasks`;
+  const clr = document.getElementById('tasks-clear-filters');
+  if (clr) { clr.classList.toggle('hidden', !isFiltered); clr.classList.toggle('inline-flex', isFiltered); }
+  const tbl = document.getElementById('tasks-view-table');
+  const brd = document.getElementById('tasks-view-board');
+  if (tbl) tbl.classList.toggle('hidden', taskView !== 'table');
+  if (brd) brd.classList.toggle('hidden', taskView !== 'board');
+  const tbody = document.getElementById('tasks-tbody');
+  if (taskView === 'table' && tbody) {
+    tbody.innerHTML = visible.length === 0
+      ? `<tr><td colspan="7" class="px-3 py-8 text-center text-[12px] text-slate-400">${isFiltered ? 'No tasks match the current search / filters. <button onclick="clearTaskFilters()" class="text-blue-600 hover:underline font-semibold">Clear all</button>' : 'No tasks yet. Tasks created from deals, tickets or orders will appear here.'}</td></tr>`
+      : visible.map(t => {
+        const isChase = isArChaseTask(t);
+        return `
+    <tr data-row-target="record-detail:${t.companyId}" data-row-label="${escapeHtml(t.title)}" class="hover:bg-slate-50" onclick="navigateTo('record-detail',{customerId:'${t.companyId}'})">
+      <td class="px-3 py-2" data-task-col="title">
+        <div class="font-semibold text-slate-900 text-xs ${t.status === 'Done' ? 'line-through text-slate-400' : ''}">${isChase ? `<span class="inline-flex items-center gap-1 mr-1.5 px-1.5 py-0.5 rounded bg-blue-100 text-blue-700 text-[9px] font-bold align-middle"><i data-lucide="banknote" class="w-3 h-3"></i>AR·${t.paymentTermsDays || 30}D</span>` : ''}${escapeHtml(t.title)}</div>
+        ${t.overdue && t.status !== 'Done' ? '<div class="mt-0.5"><span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-rose-100 text-rose-700 text-[9px] font-bold"><i data-lucide="alert-triangle" class="w-3 h-3"></i>Bad-debt history</span></div>' : ''}
+      </td>
+      <td class="px-3 py-2 text-[11px]" data-task-col="company"><button onclick="event.stopPropagation(); navigateTo('record-detail',{customerId:'${t.companyId}'})" class="text-blue-600 hover:underline font-semibold">${escapeHtml(DB.company(t.companyId)?.companyName || '—')}</button></td>
+      <td class="px-3 py-2 text-[11px]" data-task-col="related">${taskRelatedCell(t)}</td>
+      <td class="px-3 py-2" data-task-col="priority">${taskPriorityPill(t.priority)}</td>
+      <td class="px-3 py-2" data-task-col="due">${taskDueCell(t)}</td>
+      <td class="px-3 py-2" data-task-col="status">${taskStatusPill(t)}</td>
+      <td class="px-3 py-2 text-right" onclick="event.stopPropagation()">
+        <div class="inline-flex items-center gap-0.5">
+          ${isPaymentTaskLocked(t)
+            ? `<span class="inline-flex items-center gap-1 px-2 py-1 text-[10px] font-bold text-emerald-700" title="Payment locked — cannot reopen"><i data-lucide="lock" class="w-3.5 h-3.5"></i>Locked</span>`
+            : `${t.status !== 'Done' ? `<button onclick="setTaskStatus('${t.id}','In Progress')" title="Mark in progress" class="w-7 h-7 rounded-md hover:bg-amber-50 flex items-center justify-center text-slate-400 hover:text-amber-600"><i data-lucide="loader" class="w-3.5 h-3.5"></i></button>` : ''}
+          <button onclick="setTaskStatus('${t.id}','${t.status === 'Done' ? 'Open' : 'Done'}')" title="${t.status === 'Done' ? 'Reopen' : 'Mark payment collected'}" class="w-7 h-7 rounded-md hover:bg-emerald-50 flex items-center justify-center text-slate-400 hover:text-emerald-600"><i data-lucide="${t.status === 'Done' ? 'rotate-ccw' : 'check'}" class="w-3.5 h-3.5"></i></button>`}
+          <button onclick="deleteTaskConfirm('${t.id}')" title="Delete task" class="w-7 h-7 rounded-md hover:bg-rose-50 flex items-center justify-center text-slate-300 hover:text-rose-500"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button>
         </div>
-      </div>
-      <div class="text-right shrink-0">
-        <span class="text-[10px] font-bold px-2 py-0.5 rounded ${
-          t.priority === 'Urgent' ? 'bg-rose-100 text-rose-700' :
-          t.priority === 'High' ? 'bg-amber-100 text-amber-800' :
-          'bg-blue-100 text-blue-700'}">${t.priority}</span>
-        <div class="text-[11px] text-slate-500 mt-1">${escapeHtml(t.due)}</div>
-      </div>
-    </div>`).join('');
+      </td>
+    </tr>`;
+      }).join('');
+  }
+  if (taskView === 'board') {
+    const groups = { 'Open': [], 'In Progress': [], 'Done': [] };
+    visible.forEach(t => { (groups[t.status] ? groups[t.status] : groups['Open']).push(t); });
+    // Kanban card: mirrors the Companies board card — white rounded card with
+    // priority stripe, AR badge / overdue highlight, company + related + due,
+    // and inline status-step buttons (Start / Done / Reopen) + delete.
+    const card = t => {
+      const isChase = isArChaseTask(t);
+      const ms = taskDueMs(t);
+      const days = ms === Number.MAX_SAFE_INTEGER ? null : Math.ceil((ms - Date.now()) / 86400000);
+      const overdue = days !== null && days < 0 && t.status !== 'Done';
+      const urgentSoon = days !== null && !overdue && days <= 3 && t.status !== 'Done';
+      const rel = (t.relatedToType && t.relatedToId) ? DB.resolveRelated(t.relatedToType, t.relatedToId) : null;
+      const stripe = t.priority === 'Urgent' ? 'border-l-rose-500' : t.priority === 'High' ? 'border-l-amber-500' : t.priority === 'Medium' ? 'border-l-blue-500' : 'border-l-slate-300';
+      const tone = overdue ? 'border-rose-300 bg-rose-50/40' : urgentSoon ? 'border-amber-300 bg-amber-50/40' : 'border-slate-200';
+      return `
+      <div class="bg-white rounded-lg border ${tone} border-l-4 ${stripe} p-3 hover:shadow-md transition-all">
+        <div class="mb-1.5">
+          <div class="min-w-0 flex-1">
+            <div class="text-xs font-bold text-slate-900 leading-snug ${t.status === 'Done' ? 'line-through text-slate-400' : ''}">${isChase ? `<span class="inline-flex items-center gap-1 mr-1 px-1.5 py-0.5 rounded bg-blue-100 text-blue-700 text-[9px] font-bold align-middle"><i data-lucide="banknote" class="w-3 h-3"></i>AR·${t.paymentTermsDays || 30}D</span>` : ''}${escapeHtml(t.title)}</div>
+          </div>
+        </div>
+        <div class="flex items-center gap-1.5 flex-wrap mb-1.5">
+          ${taskPriorityPill(t.priority)}
+          ${overdue ? `<span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-rose-100 text-rose-700 text-[9px] font-bold"><i data-lucide="alarm-clock" class="w-3 h-3"></i>Overdue ${Math.abs(days)}d</span>` : ''}
+          ${t.overdue && t.status !== 'Done' && !overdue ? '<span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-rose-100 text-rose-700 text-[9px] font-bold"><i data-lucide="alert-triangle" class="w-3 h-3"></i>Bad-debt history</span>' : ''}
+        </div>
+        <div class="text-[11px] text-slate-600 space-y-1 mb-2">
+          <div class="flex items-center gap-1.5"><i data-lucide="building-2" class="w-3 h-3 text-slate-400 shrink-0"></i><span class="font-semibold text-slate-700 truncate">${escapeHtml(DB.company(t.companyId)?.companyName || '—')}</span></div>
+          ${rel && rel.label !== '—' ? `<div class="flex items-center gap-1.5"><i data-lucide="${t.relatedToType === 'Deal' ? 'target' : t.relatedToType === 'Ticket' ? 'life-buoy' : 'truck'}" class="w-3 h-3 text-slate-400 shrink-0"></i><span class="text-slate-500 truncate">${escapeHtml(rel.label)}</span></div>` : ''}
+          <div class="flex items-center gap-1.5"><i data-lucide="calendar-clock" class="w-3 h-3 text-slate-400 shrink-0"></i>${taskDueCell(t)}</div>
+        </div>
+        <div class="flex items-center gap-1.5 pt-2 border-t border-slate-100" onclick="event.stopPropagation()">
+          ${isPaymentTaskLocked(t)
+            ? `<span class="flex-1 inline-flex items-center justify-center gap-1 px-2 py-1 text-[10px] font-bold text-emerald-700" title="Payment collected ${escapeHtml(t.paidAt ? new Date(t.paidAt).toLocaleDateString('en-IE', { day: 'numeric', month: 'short' }) : '')} — locked"><i data-lucide="lock" class="w-3 h-3"></i>Paid · Locked</span>`
+            : `${t.status === 'Open' ? `<button onclick="setTaskStatus('${t.id}','In Progress')" class="flex-1 px-2 py-1 rounded-md text-[10px] font-bold text-amber-700 bg-amber-50 hover:bg-amber-100 border border-amber-200 inline-flex items-center justify-center gap-1"><i data-lucide="play" class="w-3 h-3"></i>Start</button>` : ''}
+          ${t.status !== 'Done' ? `<button onclick="setTaskStatus('${t.id}','Done')" title="Mark payment collected" class="flex-1 px-2 py-1 rounded-md text-[10px] font-bold text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 inline-flex items-center justify-center gap-1"><i data-lucide="check" class="w-3 h-3"></i>Done</button>` : `<button onclick="setTaskStatus('${t.id}','Open')" class="flex-1 px-2 py-1 rounded-md text-[10px] font-bold text-slate-600 bg-slate-50 hover:bg-slate-100 border border-slate-200 inline-flex items-center justify-center gap-1"><i data-lucide="rotate-ccw" class="w-3 h-3"></i>Reopen</button>`}`}
+          <button onclick="deleteTaskConfirm('${t.id}')" title="Delete task" class="px-2 py-1 rounded-md text-slate-300 hover:text-rose-500 hover:bg-rose-50 border border-transparent hover:border-rose-200 inline-flex items-center justify-center"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button>
+        </div>
+      </div>`;
+    };
+    const COLUMN_STYLE = { 'Open': 'bg-blue-500', 'In Progress': 'bg-amber-400', 'Done': 'bg-emerald-500' };
+    const COLUMN_ORDER = ['Open', 'In Progress', 'Done'];
+    const TARGETS = { 'Open': 'tasks-board-open', 'In Progress': 'tasks-board-progress', 'Done': 'tasks-board-done' };
+    const COUNTS = { 'Open': 'task-board-open-count', 'In Progress': 'task-board-progress-count', 'Done': 'task-board-done-count' };
+    const brd = document.getElementById('tasks-view-board');
+    if (brd) {
+      brd.innerHTML = COLUMN_ORDER.map(col => `
+      <div class="pipeline-col">
+        <div class="flex items-center justify-between mb-2 px-1">
+          <div class="flex items-center gap-1.5">
+            <span class="w-2 h-2 rounded-full ${COLUMN_STYLE[col]}"></span>
+            <span class="text-xs font-bold text-slate-700">${col}</span>
+          </div>
+          <span id="${COUNTS[col]}" class="text-[11px] font-bold text-slate-500 bg-slate-200 px-1.5 py-0.5 rounded">${groups[col].length}</span>
+        </div>
+        <div id="${TARGETS[col]}" class="space-y-2">
+          ${groups[col].length ? groups[col].map(card).join('') : '<div class="text-[11px] text-slate-400 text-center py-4">No tasks</div>'}
+        </div>
+      </div>`).join('');
+    }
+  }
   setRailBadge('badge-tasks', tasks.filter(t => t.status !== 'Done').length);
+  wireKeyboardNavForTable();
   refreshIcons();
 }
 // ============= ORDERS: SEARCH / FILTER / SORT / EXPORT =============
@@ -6594,9 +7404,9 @@ function renderTasks() {
 // and call renderOrders(), which renders through getFilteredSortedOrders().
 
 // ---- Order fulfillment state machine ----
-// Linear 5-stage flow, one step at a time (防呆, same rule as deals):
-//   1 Pending → 2 In Production (weigh & label) → 3 In Transit (cold chain)
-//   → 4 Delivered (dock signed) → 5 Paid (finance closed)
+// Linear 5-stage flow, one step at a time (guarded, same rule as deals):
+//   Pending → In Production (weigh & label) → In Transit (cold chain)
+//   → Delivered (dock signed) → Paid (finance closed)
 // 'Delayed' is a side-state reachable from any pre-Delivered step and can
 // resume back; 'Cancelled' is terminal. Delayed on an order auto-creates a
 // P1 ticket (see Events.on('order.statusChanged')).
@@ -6637,18 +7447,233 @@ function orderStatusRail(status) {
   }).join('<span class="w-2 h-px bg-slate-300"></span>');
   return `<span class="inline-flex items-center gap-0.5">${dots}${delayed ? '<span class="w-2 h-2 rounded-full bg-rose-500 animate-pulse ml-0.5" title="Delayed"></span>' : ''}</span>`;
 }
+// ---- Awaiting Payment auto-task (event-driven finance chase) ----
+// Order flips to Delivered (dock signed) → read the customer's Payment Terms
+// (Net 14 / Net 30 / Net 60) → due = signed date + N days → push a structured
+// reconciliation task into Tasks. Priority upgrades to High when the customer
+// has a bad-debt history (overdueDays > 0 at dispatch time).
+function parsePaymentTermsDays(terms) {
+  const m = String(terms || '').match(/net\s*(\d+)/i);
+  return m ? parseInt(m[1], 10) : 30;
+}
+function fmtDateShort(d) {
+  return d.toLocaleDateString('en-IE', { day: 'numeric', month: 'short' });
+}
+function dispatchPaymentChaseTask(order, signedAt) {
+  const company = DB.company(order.companyId) || (typeof customers !== 'undefined' ? customers.find(x => x.id === order.companyId) : null);
+  if (!company) return null;
+  // Idempotency: one chase task per order (re-delivery / status flips back
+  // and forth must not stack duplicate finance tasks).
+  const existing = tasks.find(t => t.relatedToType === 'Order' && t.relatedToId === order.id && isArChaseTask(t));
+  if (existing) return existing;
+  const netDays = parsePaymentTermsDays(company.paymentTerms);
+  const due = new Date(signedAt.getTime() + netDays * 86400000);
+  const invoiceNo = order.invoiceNo || ('INV-' + order.orderNumber.replace(/[^0-9]/g, ''));
+  const hasDebtHistory = (company.overdueDays || 0) > 0;
+  const title = `[Payment chase] Collect ${company.companyName} order ${order.orderNumber} invoice ${invoiceNo} (${fmtMoney(order.total || 0)})`;
+  const task = DB.insertTask({
+    title,
+    due: due.toISOString().slice(0, 10),
+    priority: hasDebtHistory ? 'High' : 'Medium',
+    status: 'Open',
+    companyId: order.companyId,
+    relatedToType: 'Order',
+    relatedToId: order.id,
+    kind: 'ar-chase',
+    dueDateIso: due.toISOString(),
+    paymentTermsDays: netDays,
+    overdue: hasDebtHistory
+  });
+  showToast(`Order entered settlement (${company.paymentTerms || 'Net 30'}) — payment chase task auto-created for Finance, due ${fmtDateShort(due)} ✓`, 'success');
+  return task;
+}
 function advanceOrderStatus(id) {
   const o = orders.find(x => x.id === id);
   if (!o) return;
   const next = orderNextStatus(o);
   if (!next) return;
-  DB.updateOrderStatus(id, next);
-  showToast(`${o.orderNumber} → ${next}${next === 'Paid' ? ' · finance closed ✓' : next === 'Delivered' ? ' · dock signed ✓' : ''}`, 'success');
+  if (next === 'Delivered') {
+    // Dock-signed moment: stamp the signed date, then fire the finance chase
+    // chain (terms → due date → Tasks) through the event choke point.
+    o.deliveredAt = new Date().toISOString();
+    DB.updateOrderStatus(id, next);
+    dispatchPaymentChaseTask(o, new Date());
+    showToast(`${o.orderNumber} → Delivered · dock signed ✓`, 'success');
+  } else {
+    DB.updateOrderStatus(id, next);
+    showToast(`${o.orderNumber} → ${next}${next === 'Paid' ? ' · finance closed ✓' : ''}`, 'success');
+  }
   renderOrders();
+  if (typeof currentSection !== 'undefined' && currentSection === 'tasks') renderTasks();
 }
-function delayOrderStatus(id) {
+// ---- Context-Aware Hold Reasons (hold attribution matrix) ----
+// The physical reality of a hold differs per stage, so the reason list is
+// filtered by the order's CURRENT stage. Each reason carries its own cascade
+// actions which fire on confirm (guard: no reason picked = no confirm).
+const ORDER_HOLD_REASONS = {
+  'Pending': [
+    { id: 'credit',  label: 'Credit Limit breach',        detail: 'Outstanding A/R exceeds the customer credit limit',     icon: 'euro-sign',
+      cascade: ['credit-hold', 'task-chase'],           fix: 'Companies → mark Credit Hold + dispatch a collections task' },
+    { id: 'compliance', label: 'Bord Bia MPQAS lapsed / establishment no. invalid', detail: 'Producer approval expired or establishment number abnormal', icon: 'shield-check',
+      cascade: ['task-compliance'],                     fix: 'Dispatch a certification re-check task in Tasks' },
+    { id: 'material', label: 'Raw material QC incomplete', detail: 'Specified batch (e.g. sirloin) pending lab release',  icon: 'flask-conical',
+      cascade: [],                                      fix: 'Chase QC release for the batch, then resume' },
+  ],
+  'In Production': [
+    { id: 'tolerance', label: 'Weigh variance beyond ±3%',  detail: 'NOUVEM catch-weight variance exceeds tolerance',      icon: 'scale',
+      cascade: [],                                      fix: 'Re-weigh the batch on the line, then resume' },
+    { id: 'labeler',  label: 'Labeler thermal head fault / GS1 unreadable', detail: 'Print-head failure or barcode scan rejects', icon: 'printer',
+      cascade: ['ticket-maintenance'],                  fix: 'Auto-creates a line maintenance ticket in Tickets' },
+    { id: 'dafm',     label: 'DAFM batch hygiene re-sample',  detail: 'Department of Agriculture official re-inspection hold', icon: 'landmark',
+      cascade: ['ticket-maintenance'],                  fix: 'Auto-creates a QA hold ticket in Tickets' },
+  ],
+  'In Transit': [
+    { id: 'temp',     label: 'Reefer temp excursion (outside 0–4°C)', detail: 'Trailer telemetry alarm on cold chain',     icon: 'thermometer-snowflake',
+      cascade: [],                                      fix: 'Driver to verify reefer unit, then resume' },
+    { id: 'dc-full',  label: 'Retailer DC over-capacity (e.g. Naas)', detail: 'Receiving dock asked for re-scheduling', icon: 'warehouse',
+      cascade: ['task-reschedule'],                     fix: 'Auto-creates a high-priority dock re-scheduling task' },
+    { id: 'traffic',  label: 'Motorway delay — unloading window missed', detail: 'Heavy traffic makes the booked dock slot unreachable', icon: 'car',
+      cascade: ['task-reschedule'],                     fix: 'Auto-creates a dock re-scheduling task' },
+  ],
+  'Delivered': [
+    { id: 'damage',   label: 'Carton damage / count dispute at dock', detail: 'Minor crush damage or received-count mismatch', icon: 'package-x',
+      cascade: ['micro-claim'],                         fix: 'Opens a micro-claim to verify before settlement' },
+    { id: 'pod',      label: 'POD paperwork missing signature',   detail: 'Pallet out-note missing wet signature',        icon: 'file-signature',
+      cascade: ['micro-claim'],                         fix: 'Opens a micro-claim to retrieve the signed POD' },
+  ],
+};
+// De-dupes guard rows so the popover never repeats itself.
+function orderHoldGuards(o) {
+  const c = DB.company(o.companyId);
+  const legacy = (typeof customers !== 'undefined') ? customers.find(x => x.id === o.companyId) : null;
+  const guards = [];
+  const seen = new Set();
+  const add = (ok, label, value, fix) => {
+    if (seen.has(label)) return;
+    seen.add(label);
+    guards.push({ ok, blocking: !ok, label, value, fix });
+  };
+  if (legacy && (legacy.creditLimit || 0) > 0 && (legacy.outstandingAr || 0) > legacy.creditLimit) {
+    add(false, 'Customer on Credit Hold', `A/R €${(legacy.outstandingAr||0).toLocaleString()} > limit €${(legacy.creditLimit||0).toLocaleString()}`, 'Confirm hold → company flagged Credit Hold + collections task');
+  } else {
+    add(true, 'Credit standing OK', legacy ? `A/R €${(legacy.outstandingAr||0).toLocaleString()} within limit` : 'No credit data on file');
+  }
+  if (legacy && legacy.hasBordBiaMark === false) {
+    add(false, 'Bord Bia MPQAS not active', (legacy.establishmentNumber || '') + ' · approval lapsed', 'Confirm hold → certification re-check task');
+  } else {
+    add(true, 'Bord Bia MPQAS active', legacy?.establishmentNumber || '—');
+  }
+  const openTickets = DB.ticketsOfOrder(o.id).filter(t => !DB.isTicketResolved(t.status));
+  if (openTickets.length > 0) {
+    add(false, openTickets.length + ' open ticket(s) on this order', openTickets.map(t => t.ticketNumber).join(', '), 'Resolve the ticket(s) before resuming this order');
+  } else {
+    add(true, 'No open tickets on this order');
+  }
+  return guards;
+}
+// Resolve which hold reason is AUTO-derivable from data (used to pre-flag).
+function orderSuggestedHoldReason(o) {
+  const stage = o.prevStatus || o.status;
+  if (stage === 'Pending') {
+    const legacy = (typeof customers !== 'undefined') ? customers.find(x => x.id === o.companyId) : null;
+    if (legacy && (legacy.creditLimit || 0) > 0 && (legacy.outstandingAr || 0) > legacy.creditLimit) return ORDER_HOLD_REASONS.Pending.find(r => r.id === 'credit');
+    if (legacy && legacy.hasBordBiaMark === false) return ORDER_HOLD_REASONS.Pending.find(r => r.id === 'compliance');
+  }
+  if (stage === 'In Transit' && o.coldChainSpec && /freeze/i.test(o.coldChainSpec)) {
+    return ORDER_HOLD_REASONS['In Transit'].find(r => r.id === 'temp');
+  }
+  return null;
+}
+let _orderHoldPending = null;
+function openOrderHoldPopover(orderId, anchorEl) {
+  const o = orders.find(x => x.id === orderId);
+  if (!o || isOrderFulfilled(o.status) || o.status === 'Delayed') return;
+  const stage = o.status;
+  const reasons = ORDER_HOLD_REASONS[stage] || [];
+  if (reasons.length === 0) { showToast('No hold catalog for this stage', 'warning'); return; }
+  const suggested = orderSuggestedHoldReason(o);
+  const checks = orderHoldGuards(o).map(g => g);
+  openStagePopover({
+    anchorEl,
+    title: `Hold ${o.orderNumber} — ${stage}`,
+    confirmTone: 'amber',
+    checks,
+    requireReason: true,
+    reasonOptions: reasons.map(r => r.label),
+    reasonLabel: `Hold reason (${stage})`,
+    reasonHint: 'Pick the hold reason first',
+    confirmLabel: 'Confirm Hold & Cascade',
+    allowConfirm: true,
+    onConfirm: ({ reason }) => applyOrderHold(o, reason, reasons, checks),
+  });
+  // After openStagePopover renders the reason <select>, annotate options with
+  // the per-reason physical detail so the dispatcher sees context in-place.
+  const sel = document.getElementById('stage-lost-reason');
+  if (sel) {
+    Array.from(sel.options).forEach(opt => {
+      const meta = reasons.find(r => r.label === opt.value);
+      if (meta) opt.dataset.cascade = (meta.cascade || []).join(',');
+    });
+  }
+}
+function applyOrderHold(o, reasonLabel, reasons, guards) {
+  const meta = (reasons || []).find(r => r.label === reasonLabel);
+  o.prevStatus = o.status;
+  o.holdReason = reasonLabel;
+  o.holdStage = o.status;
+  if (!Array.isArray(o.holdHistory)) o.holdHistory = [];
+  o.holdHistory.unshift({ at: new Date().toISOString(), stage: o.status, reason: reasonLabel });
+  DB.updateOrderStatus(o.id, 'Delayed');
+  // Cascade actions per the context matrix — only the ones the reason declares.
+  const cascades = meta ? meta.cascade : [];
+  const legacy = (typeof customers !== 'undefined') ? customers.find(x => x.id === o.companyId) : null;
+  if (cascades.includes('credit-hold') && legacy) {
+    legacy.operationalStatus = 'CreditHold';
+    saveStorage();
+  }
+  const taskTitles = {
+    'task-chase':      `Chase overdue A/R for ${o.orderNumber} (Credit Hold)`,
+    'task-compliance': `Verify Bord Bia MPQAS / establishment no. for ${o.orderNumber}`,
+    'task-reschedule': `Call receiving dock to re-schedule ${o.orderNumber}`,
+  };
+  cascades.forEach(c => {
+    if (taskTitles[c]) {
+      DB.insertTask({ title: taskTitles[c], due: 'Today', priority: 'High', status: 'Open', companyId: o.companyId, relatedToType: 'Order', relatedToId: o.id });
+    }
+  });
+  if (cascades.includes('ticket-maintenance')) {
+    DB.insertTicket({
+      ticketNumber: 'TCK-' + Math.floor(8000 + Math.random() * 2000),
+      companyId: o.companyId, orderId: o.id,
+      title: `[Line maintenance] ${o.orderNumber} — ${reasonLabel}`,
+      category: o.holdStage === 'In Production' ? 'Packaging & Barcode' : 'Spec & Lab Discrepancy',
+      priority: 'Urgent', status: 'Open', assignee: 'Line Maintenance',
+      createdDate: 'Just now', description: `Auto-created from hold cascade on ${o.orderNumber} at stage ${o.holdStage}.`
+    });
+  }
+  if (cascades.includes('micro-claim')) {
+    DB.insertTask({ title: `Micro-claim verify: ${reasonLabel} on ${o.orderNumber}`, due: 'Tomorrow', priority: 'Medium', status: 'Open', companyId: o.companyId, relatedToType: 'Order', relatedToId: o.id });
+  }
+  const parts = [`Order ${o.orderNumber} on hold`];
+  if (cascades.includes('credit-hold')) parts.push('customer → Credit Hold');
+  const nTasks = cascades.filter(c => taskTitles[c] || c === 'micro-claim').length;
+  if (nTasks > 0) parts.push(`${nTasks} task${nTasks > 1 ? 's' : ''} dispatched`);
+  if (cascades.includes('ticket-maintenance')) parts.push('maintenance ticket opened');
+  showToast(parts.join(' · '), 'warning');
+  renderOrders();
+  if (typeof currentSection !== 'undefined' && currentSection === 'tasks') renderTasks();
+  if (typeof currentSection !== 'undefined' && currentSection === 'companies') renderCompanies();
+}
+function delayOrderStatus(id, anchorEl) {
   const o = orders.find(x => x.id === id);
   if (!o || isOrderFulfilled(o.status) || o.status === 'Delayed') return;
+  // Context-aware: route through the hold-reason popover instead of an
+  // unconditional flip. Fallback keeps the old one-click behavior if the
+  // popover engine is unavailable.
+  if (typeof openOrderHoldPopover === 'function' && anchorEl) {
+    openOrderHoldPopover(id, anchorEl);
+    return;
+  }
   o.prevStatus = o.status;
   DB.updateOrderStatus(id, 'Delayed');
   showToast(`${o.orderNumber} marked Delayed — P1 ticket auto-created`, 'warning');
@@ -6657,8 +7682,20 @@ function delayOrderStatus(id) {
 function resumeOrderStatus(id) {
   const o = orders.find(x => x.id === id);
   if (!o || o.status !== 'Delayed') return;
+  // Guard: an unresolved maintenance ticket opened by the hold cascade blocks
+  // resuming an In Production hold until the line issue is closed.
+  if (o.holdStage === 'In Production' && o.holdReason) {
+    const blocker = DB.ticketsOfOrder(o.id).find(t => !DB.isTicketResolved(t.status) && String(t.title || '').includes('Line maintenance'));
+    if (blocker) {
+      showToast(`Blocked: ${blocker.ticketNumber} still open — resolve it before resuming`, 'warning');
+      return;
+    }
+  }
   const back = (o.prevStatus && ORDER_FLOW.includes(o.prevStatus)) ? o.prevStatus : 'Pending';
+  if (!Array.isArray(o.holdHistory)) o.holdHistory = [];
+  o.holdHistory.unshift({ at: new Date().toISOString(), stage: back, reason: '— resumed —' });
   o.prevStatus = null;
+  o.holdReason = null;
   DB.updateOrderStatus(id, back);
   showToast(`${o.orderNumber} resumed → ${back}`, 'success');
   renderOrders();
@@ -6783,14 +7820,25 @@ function renderOrders() {
       <div class="text-right shrink-0">
         <div class="text-sm font-bold text-blue-600">${fmtMoney(o.total)}</div>
         <div class="mt-0.5 flex items-center justify-end gap-1.5">${orderStatusChip(o.status)}<span class="text-[10px] text-slate-400 whitespace-nowrap">${escapeHtml(o.eta || '')}</span></div>
+        ${o.status === 'Delivered' ? (() => {
+          const terms = DB.company(o.companyId)?.paymentTerms || 'Net 30 Days';
+          const netDays = parsePaymentTermsDays(terms);
+          const base = o.deliveredAt ? new Date(o.deliveredAt) : new Date();
+          const due = new Date(base.getTime() + netDays * 86400000);
+          const days = Math.ceil((due.getTime() - Date.now()) / 86400000);
+          const dueCls = days < 0 ? 'text-rose-600 font-bold' : days <= 3 ? 'text-amber-600 font-bold' : 'text-slate-500';
+          const dueTxt = days < 0 ? `Overdue ${Math.abs(days)}d` : `${fmtDateShort(due)} · ${days}d`;
+          return `<div class="mt-0.5 text-[10px] font-semibold ${dueCls} inline-flex items-center gap-1" title="Awaiting payment — ${escapeHtml(terms)} from dock-sign date"><i data-lucide="calendar-clock" class="w-3 h-3"></i>${escapeHtml(terms)} · ${dueTxt}</div>`;
+        })() : ''}
         <div class="mt-1 flex items-center justify-end gap-1" onclick="event.stopPropagation()">
           ${delayed
-            ? `<button onclick="resumeOrderStatus('${o.id}')" title="Resume back to ${escapeHtml((o.prevStatus && ORDER_FLOW.includes(o.prevStatus)) ? o.prevStatus : 'Pending')}" class="px-2 py-0.5 rounded text-[10px] font-bold text-amber-700 bg-amber-50 hover:bg-amber-100 border border-amber-200 inline-flex items-center gap-1"><i data-lucide="play" class="w-3 h-3"></i>Resume</button>`
+            ? `<button onclick="resumeOrderStatus('${o.id}')" title="Resume back to ${escapeHtml((o.prevStatus && ORDER_FLOW.includes(o.prevStatus)) ? o.prevStatus : 'Pending')}${o.holdReason ? ' — held: ' + escapeHtml(o.holdReason) : ''}" class="px-2 py-0.5 rounded text-[10px] font-bold text-amber-700 bg-amber-50 hover:bg-amber-100 border border-amber-200 inline-flex items-center gap-1"><i data-lucide="play" class="w-3 h-3"></i>Resume</button>`
             : fulfilled
             ? `<span class="text-[10px] text-slate-400 font-semibold">${o.status === 'Paid' ? 'Closed ✓' : 'Awaiting payment'}</span>`
             : `<button onclick="advanceOrderStatus('${o.id}')" title="Advance to ${escapeHtml(next || '—')} — one step at a time" class="px-2 py-0.5 rounded text-[10px] font-bold ${next === 'Delivered' || next === 'Paid' ? 'text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border-emerald-200' : 'text-blue-700 bg-blue-50 hover:bg-blue-100 border-blue-200'} border inline-flex items-center gap-1"><i data-lucide="arrow-right" class="w-3 h-3"></i>${next === 'Paid' ? 'Mark Paid' : next === 'Delivered' ? 'Mark Delivered' : 'Advance'}</button>
-               <button onclick="delayOrderStatus('${o.id}')" title="Put on hold — auto-creates a P1 ticket" class="px-2 py-0.5 rounded text-[10px] font-bold text-rose-700 bg-rose-50 hover:bg-rose-100 border border-rose-200 inline-flex items-center gap-1"><i data-lucide="pause" class="w-3 h-3"></i>Hold</button>`}
+               <button onclick="delayOrderStatus('${o.id}', this)" title="Hold with stage-specific reason — cascades per context matrix" class="px-2 py-0.5 rounded text-[10px] font-bold text-rose-700 bg-rose-50 hover:bg-rose-100 border border-rose-200 inline-flex items-center gap-1"><i data-lucide="pause" class="w-3 h-3"></i>Hold</button>`}
         </div>
+        ${delayed && o.holdReason ? `<div class="mt-1 flex items-center justify-end gap-1 text-[9px] font-bold text-rose-600 bg-rose-50 border border-rose-200 rounded px-1.5 py-0.5 max-w-full"><i data-lucide="pause-circle" class="w-3 h-3 shrink-0"></i><span class="truncate" title="Held at ${escapeHtml(o.holdStage || '')}: ${escapeHtml(o.holdReason)}">${escapeHtml(o.holdReason)}</span></div>` : ''}
       </div>
     </div>`;
   }).join('');
@@ -6954,7 +8002,7 @@ function getRowSelector() {
     'contacts':   '#contacts-tbody tr',
     'deals':      '#deals-table tr',
     'tickets':    '#tickets-tbody tr',
-    'tasks':      '#tasks-list > div',
+    'tasks':      '#tasks-tbody tr',
     'orders':     '#orders-list > div'
   };
   return map[currentSection] || null;
@@ -7167,6 +8215,13 @@ window.addEventListener('keydown', (e) => {
 
   // Don't fight the user when they're typing in a form
   if (isEditingText()) return;
+  // Esc closes the About / Architecture README first (same class as help).
+  const aboutModal = document.getElementById('about-modal');
+  if (e.key === 'Escape' && aboutModal && aboutModal.classList.contains('active')) {
+    e.preventDefault();
+    closeModal('about-modal');
+    return;
+  }
   // Esc closes an open Quick 360 drawer first (it is a transient overlay, not
   // a page). Only when nothing transient is open do we fall through to the
   // modal check and the Esc = go back behavior below.
@@ -7228,7 +8283,7 @@ window.addEventListener('keydown', (e) => {
 // we never navigate away: on pages without a search box this is a no-op with
 // a status hint, so ⌘/ cannot surprise the user by leaving the page.
 function focusActiveSearch() {
-  const candidates = ['ticket-search-input', 'deal-search-input', 'order-search-input', 'search-input'];
+  const candidates = ['task-search-input', 'ticket-search-input', 'deal-search-input', 'order-search-input', 'search-input'];
   for (const id of candidates) {
     const input = document.getElementById(id);
     if (input && isElementVisible(input)) {
