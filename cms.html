@@ -1851,7 +1851,7 @@
   <div class="workspace-container">
     <div class="flex items-center justify-between mb-3">
       <div>
-        <h1 class="text-2xl font-bold text-slate-900 mb-1">Support Tickets</h1>
+        <h1 class="text-2xl font-bold text-slate-900 mb-1">Tickets</h1>
         <p class="text-xs text-slate-500">Cold chain, compliance, SLA, packaging &amp; barcode issues.</p>
       </div>
     </div>
@@ -1870,7 +1870,7 @@
         <div id="ticket-filter-menu" class="hidden absolute left-0 top-full mt-1 z-40 bg-white border border-slate-200 rounded-lg shadow-lg w-60 p-2 max-h-[80vh] overflow-y-auto">
           <div class="text-[9px] font-bold text-slate-400 uppercase tracking-wider px-2 py-1">Status</div>
           <button onclick="setTicketFilterMenuValue('all');closeAllMenus()" class="filter-menu-item"><i data-lucide="layers" class="w-3.5 h-3.5 text-slate-400"></i>All tickets</button>
-          <button onclick="setTicketQuickFilter('open');closeAllMenus()" class="filter-menu-item"><i data-lucide="flame" class="w-3.5 h-3.5 text-amber-500"></i>Open pipeline</button>
+          <button onclick="setTicketFilterMenuValue('open');closeAllMenus()" class="filter-menu-item"><i data-lucide="flame" class="w-3.5 h-3.5 text-amber-500"></i>Open pipeline</button>
           <button onclick="setTicketFilterMenuValue('in-progress');closeAllMenus()" class="filter-menu-item"><i data-lucide="play-circle" class="w-3.5 h-3.5 text-blue-500"></i>In Progress</button>
           <button onclick="setTicketFilterMenuValue('qa-review');closeAllMenus()" class="filter-menu-item"><i data-lucide="shield-check" class="w-3.5 h-3.5 text-purple-500"></i>Under QA Review</button>
           <button onclick="setTicketFilterMenuValue('on-hold');closeAllMenus()" class="filter-menu-item"><i data-lucide="pause-circle" class="w-3.5 h-3.5 text-amber-500"></i>On Hold</button>
@@ -1950,7 +1950,7 @@
     </div>
     <!-- Clear filter chip — only visible when a non-default filter is active -->
     <div class="flex items-center justify-end mb-3 -mt-2 h-5">
-      <button id="tk-filter-reset" onclick="setTicketFilter('all')" class="hidden text-[11px] text-slate-500 hover:text-rose-600 font-semibold inline-flex items-center gap-1 px-2 py-1 rounded hover:bg-rose-50">
+      <button id="tk-filter-reset" onclick="clearTicketFilters()" class="hidden text-[11px] text-slate-500 hover:text-rose-600 font-semibold inline-flex items-center gap-1 px-2 py-1 rounded hover:bg-rose-50">
         <i data-lucide="x" class="w-3 h-3"></i> Clear filter
       </button>
     </div>
@@ -2528,10 +2528,17 @@
         <input id="ticket-create-title" class="form-input" placeholder="e.g. Reefer temp excursion on Lot #9021B" />
       </div>
 
-      <!-- Company -->
-      <div>
-        <label class="form-label">Company <span class="text-rose-500">*</span></label>
-        <select id="ticket-create-company" class="form-select"></select>
+      <!-- Company + Linked order row -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <div>
+          <label class="form-label">Company <span class="text-rose-500">*</span></label>
+          <select id="ticket-create-company" class="form-select"></select>
+        </div>
+        <div>
+          <label class="form-label">Linked order <span class="font-normal normal-case tracking-normal text-slate-400">(optional)</span></label>
+          <select id="ticket-create-order" class="form-select"></select>
+          <p class="text-[10px] text-slate-400 mt-1">Shipment-bound (cold chain / SLA / barcode) → link the truck. Account-level (certs / specs / audits) → leave as None.</p>
+        </div>
       </div>
 
       <!-- Category + Priority row -->
@@ -2953,14 +2960,19 @@ const SEED_DEALS = [
 ];
 
 const SEED_TICKETS = [
+  // Two faces of a ticket:
+  //   Order-bound (shipment) — cold chain / SLA / barcode on a specific truck:
+  //     orderId MUST point at a real SEED_ORDERS row of the SAME company.
+  //   Account-level (compliance) — Bord Bia certs, spec sheets, audits:
+  //     orderId is null (whole-company scope, shown as — in the table).
   // FK-only: companyId → companies.id, contactId → contacts.id
   // slaDueMin: minutes until the 06:00 CDC cut-off breach → feeds the table SLA column.
-  { id:'tck-1', ticketNumber:'TCK-8921', title:'Reefer Trailer Temp Excursion: -14°C on Lot #9021B (SLA requires <-18°C)', companyId:'cust-100', contactId:'contact-pri-cust-100', category:'Cold Chain Excursion', priority:'Urgent', status:'In Progress', assignee:'Alex Rivera (Cold Chain QA)', createdDate:'Today at 08:30 AM', slaDueMin:42, description:'In-transit telemetry alert on Dunnes cross-dock transfer.' },
-  { id:'tck-2', ticketNumber:'TCK-8920', title:'Bord Bia Quality Mark Traceability Audit Certificate Verification', companyId:'cust-101', contactId:'contact-pri-cust-101', category:'Bord Bia / DAFM', priority:'High', status:'Open', assignee:'Sarah Lin (QA Lead)', createdDate:'Yesterday at 04:15 PM', slaDueMin:305, description:'Tesco central QA requested DAFM IE 388 EC and Bord Bia annual compliance packet.' },
-  { id:'tck-3', ticketNumber:'TCK-8919', title:'06:00 AM Kilcock CDC Early Morning SLA Cut-off Delivery Warning', companyId:'cust-102', contactId:'contact-pri-cust-102', category:'SLA Cut-off Delivery', priority:'Urgent', status:'Under QA Review', assignee:'Logistics Dispatch Desk', createdDate:'Today at 05:15 AM', slaDueMin:18, description:'Fleet GPS check indicates trailer arrival at 05:42 AM.' },
-  { id:'tck-4', ticketNumber:'TCK-8918', title:'Net 60 Terms & Barcode Label Verification on Spar Cured Pork Batch', companyId:'cust-103', contactId:'contact-pri-cust-103', category:'Packaging & Barcode', priority:'Medium', status:'Open', assignee:'Commercial Finance Desk', createdDate:'Sep 11, 2026', slaDueMin:1420, description:'Verify GS1 barcode alignment for Spar deli counter pre-packs.' },
-  { id:'tck-5', ticketNumber:'TCK-8917', title:'Connacht Artisan — Bord Bia Compliance Blocker Active', companyId:'cust-104', contactId:'contact-pri-cust-104', category:'Bord Bia / DAFM', priority:'Urgent', status:'Resolved', assignee:'Thalita Milan', createdDate:'Sep 09, 2026', slaDueMin:0, description:'Compliance blocker tracked for Connacht Artisan Meats.' },
-  { id:'tck-6', ticketNumber:'TCK-8916', title:'Galway Bay — IQF Specification Sheet on Salmon Portions', companyId:'cust-105', contactId:'contact-pri-cust-105', category:'Spec & Lab Discrepancy', priority:'Low', status:'Open', assignee:'Marcus Vance', createdDate:'Sep 12, 2026', slaDueMin:2880, description:'Updated IQF spec required for Atlantic salmon 150g portions.' }
+  { id:'tck-1', ticketNumber:'TCK-8921', title:'Reefer Trailer Temp Excursion: -14°C on Lot #9021B (SLA requires <-18°C)', companyId:'cust-100', contactId:'contact-pri-cust-100', orderId:'ord-1', category:'Cold Chain Excursion', priority:'Urgent', status:'In Progress', assignee:'Alex Rivera (Cold Chain QA)', createdDate:'Today at 08:30 AM', slaDueMin:42, description:'In-transit telemetry alert on Dunnes cross-dock transfer — trailer ORD-2026-4412.' },
+  { id:'tck-2', ticketNumber:'TCK-8920', title:'Bord Bia Quality Mark Traceability Audit Certificate Verification', companyId:'cust-101', contactId:'contact-pri-cust-101', orderId:null, category:'Bord Bia / DAFM', priority:'High', status:'Open', assignee:'Sarah Lin (QA Lead)', createdDate:'Yesterday at 04:15 PM', slaDueMin:305, description:'Tesco central QA requested DAFM IE 388 EC and Bord Bia annual compliance packet.' },
+  { id:'tck-3', ticketNumber:'TCK-8919', title:'06:00 AM Kilcock CDC Early Morning SLA Cut-off Delivery Warning', companyId:'cust-102', contactId:'contact-pri-cust-102', orderId:'ord-3', category:'SLA Cut-off Delivery', priority:'Urgent', status:'Under QA Review', assignee:'Logistics Dispatch Desk', createdDate:'Today at 05:15 AM', slaDueMin:18, description:'Fleet GPS check indicates trailer ORD-2026-4414 arrival at 05:42 AM.' },
+  { id:'tck-4', ticketNumber:'TCK-8918', title:'Net 60 Terms & Barcode Label Verification on Spar Cured Pork Batch', companyId:'cust-103', contactId:'contact-pri-cust-103', orderId:null, category:'Packaging & Barcode', priority:'Medium', status:'Open', assignee:'Commercial Finance Desk', createdDate:'Sep 11, 2026', slaDueMin:1420, description:'Verify GS1 barcode alignment for Spar deli counter pre-packs.' },
+  { id:'tck-5', ticketNumber:'TCK-8917', title:'Connacht Artisan — Bord Bia Compliance Blocker Active', companyId:'cust-104', contactId:'contact-pri-cust-104', orderId:'ord-5', category:'Bord Bia / DAFM', priority:'Urgent', status:'Resolved', assignee:'Thalita Milan', createdDate:'Sep 09, 2026', slaDueMin:0, description:'Compliance blocker tracked for Connacht Artisan Meats on fulfillment ORD-2026-4418.' },
+  { id:'tck-6', ticketNumber:'TCK-8916', title:'Galway Bay — IQF Specification Sheet on Salmon Portions', companyId:'cust-105', contactId:'contact-pri-cust-105', orderId:null, category:'Spec & Lab Discrepancy', priority:'Low', status:'Open', assignee:'Marcus Vance', createdDate:'Sep 12, 2026', slaDueMin:2880, description:'Updated IQF spec required for Atlantic salmon 150g portions.' }
 ];
 
 const SEED_TASKS = [
@@ -3798,12 +3810,25 @@ function showToast(msg, variant = 'success', opts = {}) {
       <div class="text-[10px] font-bold uppercase tracking-wide opacity-70">${s.title}</div>
       <div class="text-xs font-medium leading-snug">${escapeHtml(msg)}</div>
     </div>
-    ${opts.undo ? `<button class="text-[11px] font-bold px-2 py-1 rounded ${variant === 'destructive' ? 'bg-amber-400 text-slate-900 hover:bg-amber-300' : 'bg-white/80 text-slate-800 hover:bg-white'} shrink-0" onclick="(opts.undoCallback && opts.undoCallback()); document.getElementById('${id}').remove();">↺ Undo</button>` : ''}
-    <button class="opacity-50 hover:opacity-100 shrink-0" onclick="document.getElementById('${id}').remove()">
+    ${opts.undo ? `<button type="button" class="toast-undo-btn text-[11px] font-bold px-2 py-1 rounded ${variant === 'destructive' ? 'bg-amber-400 text-slate-900 hover:bg-amber-300' : 'bg-white/80 text-slate-800 hover:bg-white'} shrink-0">↺ Undo</button>` : ''}
+    <button type="button" class="toast-dismiss-btn opacity-50 hover:opacity-100 shrink-0">
       <i data-lucide="x" class="w-3.5 h-3.5"></i>
     </button>
   `;
   stack.appendChild(toast);
+
+  // Wire the Undo action via a closure listener, NOT an inline onclick. Inline
+  // handlers evaluate in the global scope where `opts`/`toast` don't exist, so
+  // the old string form threw "Uncaught ReferenceError: opts is not defined"
+  // the moment a user clicked Undo.
+  const undoBtn = toast.querySelector('.toast-undo-btn');
+  if (undoBtn && typeof opts.undoCallback === 'function') {
+    undoBtn.addEventListener('click', () => {
+      try { opts.undoCallback(); } catch (e) { console.error('[showToast.undo]', e); }
+      toast.remove();
+    });
+  }
+  toast.querySelector('.toast-dismiss-btn')?.addEventListener('click', () => toast.remove());
   refreshIcons();
   setTimeout(() => {
     const el = document.getElementById(id);
@@ -4310,6 +4335,9 @@ function navigateTo(section, opts={}) {
   // the screenshot: Companies list visible under a stale drawer) is a bug.
   if (typeof closeQuick360Drawer === 'function') closeQuick360Drawer();
   if (typeof closeAllMenus === 'function') closeAllMenus();
+  // Recompute the clock on every navigation so a laptop that slept and woke up
+  // never shows a stale (drifted) Dublin time until the next 1s tick lands.
+  if (typeof updateDublinTime === 'function') updateDublinTime();
   // Skip duplicate consecutive pushes (e.g. clicking the same nav item twice
   // would otherwise clog the back stack with no-ops).
   const top = navigationHistory[navigationHistory.length - 1];
@@ -4905,11 +4933,11 @@ function handleDealSearch(v) {
 }
 function setDealFilter(f) {
   dealFilter = f || 'all';
-  if (typeof DEAL_STAGES !== 'undefined' && DEAL_STAGES.some(s => s.id === dealFilter)) {
-    dealsFunnelFilter = dealFilter;
-  } else {
-    dealsFunnelFilter = null;
-  }
+  // Single-scope rule: the Filter menu and the funnel share ONE state slot.
+  // Attention presets are orthogonal to a stage column, so picking one always
+  // releases any funnel stage first — otherwise a residual stage column ANDs
+  // with the preset and the table silently goes empty.
+  dealsFunnelFilter = (typeof DEAL_STAGES !== 'undefined' && DEAL_STAGES.some(s => s.id === dealFilter)) ? dealFilter : null;
   renderDeals();
 }
 function handleDealSortChange(v) {
@@ -4928,9 +4956,14 @@ function clearDealFilters() {
 }
 function getFilteredSortedDeals() {
   const q = (dealSearchQuery || '').toLowerCase().trim();
-  // Funnel selection and Filter-menu stage choice are the same state —
-  // keep the single source in `dealFilter` (stage ids double as filter values).
-  const stageFilter = dealsFunnelFilter || ((DEAL_OPEN_FLOW.includes(dealFilter) || dealFilter === 'closed-lost') ? dealFilter : null);
+  // Single-scope invariant (enforced by both writers): at most ONE of the two
+  // filter slots is ever non-default, so the table can never be ANDed into a
+  // silent empty. The funnel column wins if both are somehow set (e.g. a saved
+  // view restored underneath a funnel click) — it is the more specific scope.
+  const attentionPreset = ['open','won','lost','blocked','warnings','low_score','high_value'].includes(dealFilter) ? dealFilter : null;
+  const stageIdFilter = dealsFunnelFilter
+    || ((DEAL_OPEN_FLOW.includes(dealFilter) || dealFilter === 'closed-lost') ? dealFilter : null);
+  const stageFilter = stageIdFilter || null;
   let result = deals.filter(d => {
     const company = DB.company(d.companyId);
     const contact = DB.contact(d.contactId);
@@ -4939,7 +4972,10 @@ function getFilteredSortedDeals() {
     if (!matchesQ) return false;
     const stageId = DB.dealStageId(d);
     if (stageFilter && stageId !== stageFilter) return false;
-    switch (dealFilter) {
+    // Attention presets only apply when NO funnel column is pinning the table;
+    // when a stage column is active it is the sole authority (see above).
+    if (stageFilter) return true;
+    switch (attentionPreset || dealFilter) {
       case 'open':     return !isDealTerminal(stageId);
       case 'won':      return stageId === 'closed-won';
       case 'lost':     return stageId === 'closed-lost';
@@ -5345,12 +5381,24 @@ function saveNewOrder() {
 }
 
 // Open the New Ticket modal; populate the company dropdown with all known customers.
-function openTicketCreateModal(prefillCompanyId) {
+function openTicketCreateModal(prefillCompanyId, prefillOrderId) {
   const select = document.getElementById('ticket-create-company');
+  const orderSelect = document.getElementById('ticket-create-order');
   if (!select) return;
   select.innerHTML = '<option value="">— Select company —</option>' +
     customers.map(c => `<option value="${c.id}">${escapeHtml(c.companyName)}</option>`).join('');
   select.value = prefillCompanyId || (customers[0] ? customers[0].id : '');
+  const syncOrderOptions = () => {
+    if (!orderSelect) return;
+    const cid = select.value;
+    const rows = cid ? orders.filter(o => o.companyId === cid) : [];
+    orderSelect.innerHTML = '<option value="">None (account-level)</option>' +
+      rows.map(o => `<option value="${o.id}">${escapeHtml(o.orderNumber)} · ${escapeHtml(o.status)}</option>`).join('');
+    if (prefillOrderId && rows.some(o => o.id === prefillOrderId)) orderSelect.value = prefillOrderId;
+    else orderSelect.value = '';
+  };
+  select.onchange = () => { syncOrderOptions(); };
+  syncOrderOptions();
   document.getElementById('ticket-create-title').value = '';
   document.getElementById('ticket-create-description').value = '';
   document.getElementById('ticket-create-priority').value = 'Medium';
@@ -5369,12 +5417,20 @@ function saveNewTicket() {
   const category = document.getElementById('ticket-create-category').value;
   const priority = document.getElementById('ticket-create-priority').value;
   const description = document.getElementById('ticket-create-description').value.trim();
+  const orderId = document.getElementById('ticket-create-order')?.value || null;
+  // FK guard: a linked order must exist AND belong to the ticket's company —
+  // otherwise the traceability link (shipment ↔ ticket) is a lie.
+  if (orderId) {
+    const linked = DB.order(orderId);
+    if (!linked || linked.companyId !== companyId) { showToast('Linked order does not belong to this company'); return; }
+  }
   const newTicket = {
     id: 'tck-' + Date.now(),
     ticketNumber: 'TCK-' + Math.floor(8000 + Math.random() * 1000),
     title,
     companyId,
     contactId: DB.primaryContactOfCompany(companyId)?.id || null,
+    orderId,
     category,
     priority,
     status: 'Open',
@@ -5649,6 +5705,13 @@ function setTicketStatus(id, next, via) {
   t.history.unshift({ at: new Date().toISOString(), from, to: t.status, via: via || 'drawer-stepper' });
   if (DB.isTicketResolved(t.status) && typeof t.slaDueMin === 'number') t.slaDueMin = 0;
   saveStorage();
+  // Live-sync every status-derived surface: the table rows, the four stat
+  // cards (counts + which one is highlighted), the Filter-menu dot and the
+  // reset chip — all read fresh state in renderTickets(). Dashboard KPIs and
+  // the rail badge follow here too, so no surface shows a stale count after
+  // a drawer transition.
+  if (typeof renderTickets === 'function') renderTickets();
+  if (typeof currentSection !== 'undefined' && currentSection === 'dashboard' && typeof renderDashboard === 'function') renderDashboard();
   return true;
 }
 function openTicketDetail(id) {
@@ -5750,7 +5813,7 @@ function renderTicketDetail() {
     metaEl.innerHTML = `
       <div class="flex justify-between gap-3"><span class="text-slate-500">Company</span><button onclick="navigateTo('record-detail',{customerId:'${t.companyId}'});closeTicketDetail()" class="font-semibold text-blue-600 hover:underline text-right">${escapeHtml(company?.companyName || '—')}</button></div>
       <div class="flex justify-between gap-3"><span class="text-slate-500">Contact</span><span class="font-semibold text-slate-900 text-right">${escapeHtml(contact?.name || '—')}</span></div>
-      <div class="flex justify-between gap-3"><span class="text-slate-500">Order</span><span class="font-mono font-semibold text-slate-900 text-right">${escapeHtml(order?.orderNumber || '—')}</span></div>
+      <div class="flex justify-between gap-3"><span class="text-slate-500">Order</span>${order ? `<button onclick="event.stopPropagation(); navigateTo('orders'); closeTicketDetail();" class="font-mono font-semibold text-blue-600 hover:underline text-right">${escapeHtml(order.orderNumber)} · ${escapeHtml(order.status)}</button>` : '<span class="text-slate-400 text-[11px]">— account-level (no shipment)</span>'}</div>
       <div class="flex justify-between gap-3"><span class="text-slate-500">Category</span><span class="font-semibold text-slate-900 text-right">${escapeHtml(t.category || '—')}</span></div>
       <div class="flex justify-between gap-3"><span class="text-slate-500">Assignee</span><span class="font-semibold text-slate-900 text-right">${escapeHtml(t.assignee || '—')}</span></div>
       <div class="flex justify-between gap-3"><span class="text-slate-500">Opened</span><span class="font-semibold text-slate-900 text-right">${escapeHtml(t.createdDate || '—')}</span></div>
@@ -5917,7 +5980,14 @@ function aboutScrollTo(id, e) {
   if (e) e.preventDefault();
   document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
-function openModal(id) { document.getElementById(id).classList.add('active'); }
+function openModal(id) {
+  // A modal (z-index 100) and the Quick 360 drawer (z-index 50) can coexist when
+  // a modal is launched from a record page with the drawer open; the stale drawer
+  // then sits under the overlay and its own dimmer can mis-handle clicks. Close it
+  // first so only one overlay owns the screen at a time.
+  if (typeof closeQuick360Drawer === 'function') closeQuick360Drawer();
+  document.getElementById(id).classList.add('active');
+}
 function closeModal(id) {
   document.getElementById(id).classList.remove('active');
   if (id === 'company-modal') { hideGeoMenu(); hideCountyMenu(); }
@@ -6178,7 +6248,7 @@ function wireGeoLevel(inputId, menuId, st, kind, onPick) {
     st.timer = setTimeout(() => {
       st.seq += 1;
       searchGeoScoped(kind, kind === 'address' ? geoScopedQuery(q) : q, st.seq);
-    }, 350);
+    }, 500);
   });
   input.addEventListener('keydown', e => {
     if (menu.classList.contains('hidden') || !st.results.length) {
@@ -6679,6 +6749,9 @@ function toggleDealsFunnel(stageId) {
   // Funnel includes Closed Lost (outside DEAL_OPEN_FLOW) — accept any known stage.
   const known = DEAL_STAGES.some(s => s.id === stageId);
   dealsFunnelFilter = (dealsFunnelFilter === stageId) ? null : (known ? stageId : null);
+  // Single-scope rule (mirror of setDealFilter): a funnel column replaces the
+  // menu preset rather than ANDing with it, so selecting a stage can never
+  // silently empty the table against a stale attention filter.
   dealFilter = dealsFunnelFilter || 'all';
   renderDeals();
 }
@@ -6806,6 +6879,7 @@ function ticketMatchesMenu(t, f) {
   const sla = ticketSla(t);
   switch (f) {
     case 'all':        return true;
+    case 'open':        return !DB.isTicketResolved(t.status);
     case 'in-progress': return t.status === 'In Progress';
     case 'qa-review':   return t.status === 'Under QA Review';
     case 'on-hold':     return t.status === 'On Hold';
@@ -6832,12 +6906,6 @@ function handleTicketSearch(v) {
 }
 function setTicketQuickFilter(f) {
   currentTicketFilter = f || 'all';
-  ['all','urgent','open','resolved'].forEach(k => {
-    const el = document.getElementById('tk-filter-' + k);
-    if (el) el.classList.toggle('active', k === (f === 'open' ? 'open' : f === 'resolved' ? 'resolved' : 'all'));
-  });
-  const reset = document.getElementById('tk-filter-reset');
-  if (reset) reset.classList.toggle('hidden', (currentTicketFilter === 'all' || currentTicketFilter === 'urgent') && ticketFilter === 'all' && !(ticketSearchQuery || '').trim());
   renderTickets();
 }
 function setTicketFilterMenuValue(f) {
@@ -6909,13 +6977,6 @@ function exportTicketsCSV() {
 // Legacy alias — stat cards + old callers still use setTicketFilter().
 function setTicketFilter(filter) {
   currentTicketFilter = filter;
-  // Toggle .active class on the four stat-mini cards + show/hide the "Clear filter" chip
-  ['all','urgent','open','resolved'].forEach(k => {
-    const el = document.getElementById('tk-filter-' + k);
-    if (el) el.classList.toggle('active', k === filter);
-  });
-  const reset = document.getElementById('tk-filter-reset');
-  if (reset) reset.classList.toggle('hidden', filter === 'all');
   renderTickets();
 }
 
@@ -6957,13 +7018,32 @@ function ticketSeverity(t) {
 function renderTickets() {
   const total = tickets.length;
   const urgent = tickets.filter(t => t.priority === 'Urgent').length;
-  const open = tickets.filter(t => t.status !== 'Resolved').length;
-  const resolved = tickets.filter(t => t.status === 'Resolved').length;
+  const open = tickets.filter(t => !DB.isTicketResolved(t.status)).length;
+  const resolved = tickets.filter(t => DB.isTicketResolved(t.status)).length;
   document.getElementById('tk-total').textContent = total;
   document.getElementById('tk-urgent').textContent = urgent;
   document.getElementById('tk-open').textContent = open;
   document.getElementById('tk-resolved').textContent = resolved;
   setRailBadge('badge-tickets', open);
+
+  // ── Card highlight: always derived from live data, not just click-time state.
+  // The Resolved card follows status changes (a ticket that resolves itself from
+  // the drawer highlights that card); Urgent degrades gracefully to Open when
+  // the Urgent count hits zero so the highlight never points at an empty card.
+  let activeCard = currentTicketFilter;
+  if (activeCard === 'urgent' && urgent === 0) activeCard = 'open';
+  ['all','urgent','open','resolved'].forEach(k => {
+    const el = document.getElementById('tk-filter-' + k);
+    if (el) el.classList.toggle('active', k === activeCard);
+  });
+
+  // Reset chip + Filter dot re-evaluated on every render so status flips that
+  // empty the current menu filter (e.g. last 'On Hold' resumed) refresh too.
+  const isFiltered = !!(ticketSearchQuery && ticketSearchQuery.trim()) || currentTicketFilter !== 'all' || ticketFilter !== 'all';
+  const resetChip = document.getElementById('tk-filter-reset');
+  if (resetChip) resetChip.classList.toggle('hidden', !isFiltered);
+  const dot = document.getElementById('ticket-filter-active-dot');
+  if (dot) dot.classList.toggle('hidden', ticketFilter === 'all');
 
   // Persist search box value across re-renders (mirrors Deals toolbar).
   const si = document.getElementById('ticket-search-input');
@@ -6971,9 +7051,6 @@ function renderTickets() {
 
   // Unified pipeline: quick stat cards × search × Filter menu × Sort.
   const visible = getFilteredSortedTickets();
-  const isFiltered = !!(ticketSearchQuery && ticketSearchQuery.trim()) || currentTicketFilter !== 'all' || ticketFilter !== 'all';
-  const dot = document.getElementById('ticket-filter-active-dot');
-  if (dot) dot.classList.toggle('hidden', ticketFilter === 'all');
   const lbl = document.getElementById('ticket-count-label');
   if (lbl) lbl.textContent = `Showing ${visible.length} of ${tickets.length} tickets`;
   const clr = document.getElementById('ticket-clear-filters');
