@@ -11,6 +11,12 @@
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
   body { font-family: 'Plus Jakarta Sans', sans-serif; }
+  /* When ANY modal is open we lock body scroll so the browser-native
+     viewport scrollbar disappears — it would otherwise paint over the
+     guided-tour dock's Run / Auto / End / Replay buttons (OS scrollbars
+     render on top of every HTML layer, including z-index:120 dock). The
+     modal itself still scrolls internally. */
+  body.modal-open { overflow: hidden !important; }
   .font-mono { font-family: 'JetBrains Mono', monospace; }
   /* HubSpot palette */
   :root {
@@ -308,10 +314,21 @@
     border-radius: 16px;
     width: 92%;
     max-width: 720px;
-    max-height: 92vh;
+    /* Leave room for the guided-tour dock at the bottom (dock is ~84 px
+       tall + 34 px from edge + ~16 px of breathing room). Without this
+       reserve, the modal's right-hand scrollbar and the dock buttons
+       collide whenever the user scrolls the form up to read the
+       Company Name / Est# fields. */
+    max-height: calc(100vh - 110px);
     overflow-y: auto;
+    /* Reserve the vertical scrollbar gutter so the modal width doesn't
+       jitter when content grows and a scrollbar appears. */
+    scrollbar-gutter: stable;
     box-shadow: 0 25px 60px rgba(15,23,42,0.4);
   }
+  /* Extra bottom padding so the last form row doesn't tuck under the
+     dock when the modal is scrolled to the very bottom. */
+  .modal-overlay { padding-bottom: 96px; }
 
   /* About / Architecture README modal (Markdown-style, delivery-grade) */
   .about-body { font-size: 13px; line-height: 1.65; color: #334155; }
@@ -342,6 +359,24 @@
   .about-flow-step strong { display: block; font-size: 12px; color: #0f172a; }
   .about-flow-step span { display: block; font-size: 11px; color: #64748b; margin-top: 2px; }
   .about-flow-arrow { align-self: center; color: var(--hs-orange); font-weight: 800; font-size: 14px; }
+  .about-life { margin: 10px 0 12px; border: 1px solid #e2e8f0; border-radius: 12px; overflow: hidden; background: #fff; }
+  .about-life-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; padding: 10px; }
+  .about-life-full { grid-column: 1 / -1; }
+  .about-life-node { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 9px 11px; }
+  .about-life-node.accent { background: #fff7ed; border-color: #fed7aa; }
+  .about-life-node.rose { background: #fef2f2; border-color: #fecaca; }
+  .about-life-node.green { background: #f0fdf4; border-color: #bbf7d0; }
+  .about-life-node.dark { background: #2e3f50; border-color: #2e3f50; color: #fff; }
+  .about-life-node strong { display: block; font-size: 12px; color: inherit; }
+  .about-life-node.dark strong { color: #fff; }
+  .about-life-node span, .about-life-node em { display: block; font-size: 11px; color: #64748b; margin-top: 2px; font-style: normal; }
+  .about-life-node.dark span { color: #cbd5e1; }
+  .about-life-node code { font-family: 'JetBrains Mono', monospace; font-size: 10.5px; background: rgba(148,163,184,0.15); border-radius: 4px; padding: 0 4px; }
+  .about-life-arrow { text-align: center; color: var(--hs-orange); font-weight: 800; font-size: 14px; line-height: 1; padding: 1px 0; }
+  .about-life-split { display: grid; grid-template-columns: 1fr auto 1fr; gap: 6px; align-items: stretch; padding: 0 10px; }
+  .about-life-fork { align-self: center; color: #94a3b8; font-size: 10px; font-weight: 800; text-align: center; }
+  .about-life-loop { margin: 0 10px 10px; background: #f0fdf4; border: 1px dashed #86efac; border-radius: 9px; padding: 7px 11px; font-size: 11px; color: #166534; text-align: center; }
+  .about-life-loop strong { color: #15803d; }
   .about-cards { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-top: 10px; }
   .about-card { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 10px 12px; }
   .about-card:last-child { grid-column: 1 / -1; }
@@ -701,13 +736,14 @@
       </div>
     </div>
 
-    <!-- Primary Contact -->
+    <!-- Primary Contact (click → contact record) -->
     <div class="space-y-2">
       <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Primary Contact</div>
-      <div class="bg-blue-50 rounded-lg p-3 space-y-1">
+      <button onclick="q360OpenPrimaryContact()" title="Open primary contact record" class="group w-full text-left bg-blue-50 hover:bg-blue-100 hover:shadow-sm rounded-lg p-3 space-y-1 transition-all cursor-pointer">
         <div class="flex items-center gap-2">
           <i data-lucide="user" class="w-3 h-3 text-blue-500"></i>
           <span id="q360-contact" class="text-xs font-semibold text-slate-800">—</span>
+          <i data-lucide="external-link" class="w-3 h-3 text-blue-300 group-hover:text-blue-600 ml-auto shrink-0"></i>
         </div>
         <div class="flex items-center gap-2">
           <i data-lucide="mail" class="w-3 h-3 text-blue-400"></i>
@@ -717,7 +753,7 @@
           <i data-lucide="phone" class="w-3 h-3 text-blue-400"></i>
           <span id="q360-phone" class="text-[10px] text-slate-600 font-mono">—</span>
         </div>
-      </div>
+      </button>
     </div>
 
     <!-- Facility -->
@@ -731,26 +767,30 @@
       </div>
     </div>
 
-    <!-- Related Records -->
+    <!-- Related Records (each tile drills into its filtered list) -->
     <div class="space-y-2">
       <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Related Records</div>
       <div class="grid grid-cols-2 gap-2">
-        <div class="bg-slate-50 rounded-lg p-2.5 text-center">
-          <div id="q360-contacts-count" class="text-sm font-bold text-slate-800">0</div>
-          <div class="text-[9px] text-slate-400">Contacts</div>
-        </div>
-        <div class="bg-slate-50 rounded-lg p-2.5 text-center">
-          <div id="q360-deals-count" class="text-sm font-bold text-slate-800">0</div>
-          <div class="text-[9px] text-slate-400">Deals</div>
-        </div>
-        <div class="bg-slate-50 rounded-lg p-2.5 text-center">
-          <div id="q360-tickets-count" class="text-sm font-bold text-slate-800">0</div>
-          <div class="text-[9px] text-slate-400">Tickets</div>
-        </div>
-        <div class="bg-slate-50 rounded-lg p-2.5 text-center">
-          <div id="q360-orders-count" class="text-sm font-bold text-slate-800">0</div>
-          <div class="text-[9px] text-slate-400">Orders</div>
-        </div>
+        <button onclick="q360DrillTo('contacts')" title="View contacts of this company" class="group bg-slate-50 hover:bg-blue-50 hover:border-blue-200 border border-transparent rounded-lg p-2.5 text-center transition-all cursor-pointer">
+          <div id="q360-contacts-count" class="text-sm font-bold text-slate-800 group-hover:text-blue-700">0</div>
+          <div class="text-[9px] text-slate-400 group-hover:text-blue-500">Contacts</div>
+        </button>
+        <button onclick="q360DrillTo('deals')" title="View deals of this company" class="group bg-slate-50 hover:bg-blue-50 hover:border-blue-200 border border-transparent rounded-lg p-2.5 text-center transition-all cursor-pointer">
+          <div id="q360-deals-count" class="text-sm font-bold text-slate-800 group-hover:text-blue-700">0</div>
+          <div class="text-[9px] text-slate-400 group-hover:text-blue-500">Deals</div>
+        </button>
+        <button onclick="q360DrillTo('tickets')" title="View tickets of this company" class="group bg-slate-50 hover:bg-blue-50 hover:border-blue-200 border border-transparent rounded-lg p-2.5 text-center transition-all cursor-pointer">
+          <div id="q360-tickets-count" class="text-sm font-bold text-slate-800 group-hover:text-blue-700">0</div>
+          <div class="text-[9px] text-slate-400 group-hover:text-blue-500">Tickets</div>
+        </button>
+        <button onclick="q360DrillTo('orders')" title="View orders of this company" class="group bg-slate-50 hover:bg-blue-50 hover:border-blue-200 border border-transparent rounded-lg p-2.5 text-center transition-all cursor-pointer">
+          <div id="q360-orders-count" class="text-sm font-bold text-slate-800 group-hover:text-blue-700">0</div>
+          <div class="text-[9px] text-slate-400 group-hover:text-blue-500">Orders</div>
+        </button>
+        <button onclick="q360DrillTo('tasks')" title="View tasks of this company" class="group col-span-2 bg-slate-50 hover:bg-blue-50 hover:border-blue-200 border border-transparent rounded-lg p-2.5 text-center transition-all cursor-pointer">
+          <div id="q360-tasks-count" class="text-sm font-bold text-slate-800 group-hover:text-blue-700">0</div>
+          <div class="text-[9px] text-slate-400 group-hover:text-blue-500">Tasks</div>
+        </button>
       </div>
     </div>
 
@@ -798,7 +838,7 @@
       <div id="cascade-financial" class="text-[11px] font-mono text-rose-700 bg-rose-50/50 rounded px-2 py-1.5 mb-3 border border-rose-100"></div>
       <!-- Mandatory confirmation input -->
       <label class="block text-xs font-semibold text-slate-700 mb-1.5">
-        Type the company code <span id="cascade-required-code" class="font-mono text-rose-600 bg-rose-50 px-1.5 py-0.5 rounded border border-rose-200"></span> to unlock the destructive action:
+        Type <span id="cascade-required-code" class="font-mono text-rose-600 bg-rose-50 px-1.5 py-0.5 rounded border border-rose-200"></span> to unlock the destructive action:
       </label>
       <input id="cascade-confirm-input" type="text" autocomplete="off"
         class="w-full px-3 py-2 text-sm font-mono border border-slate-300 rounded-lg focus:outline-none focus:border-rose-400 focus:ring-2 focus:ring-rose-200 transition"
@@ -811,6 +851,30 @@
         class="px-3 py-1.5 text-xs font-bold text-white bg-rose-300 rounded cursor-not-allowed transition">
         <i data-lucide="trash-2" class="w-3.5 h-3.5 inline -mt-0.5 mr-1"></i>Permanently Remove
       </button>
+    </div>
+  </div>
+</div>
+
+<!-- ============================== 2. INFO / ALERT MODAL (lightweight, no input) ============================== -->
+<div id="info-modal" class="hidden fixed inset-0 z-[300] flex items-center justify-center bg-slate-900/60 backdrop-blur-sm">
+  <div class="modal-enter bg-white rounded-xl shadow-2xl w-full max-w-sm mx-4 overflow-hidden border border-slate-200">
+    <div class="bg-slate-50 border-b border-slate-200 px-5 py-3 flex items-center justify-between rounded-t-xl">
+      <div class="flex items-center gap-2">
+        <div class="w-7 h-7 rounded-full bg-blue-100 flex items-center justify-center">
+          <i data-lucide="info" class="w-4 h-4 text-blue-600"></i>
+        </div>
+        <h3 id="info-modal-title" class="font-bold text-slate-900 text-sm">Notice</h3>
+      </div>
+      <button onclick="closeInfoModal()" class="text-slate-400 hover:text-slate-700">
+        <i data-lucide="x" class="w-4 h-4"></i>
+      </button>
+    </div>
+    <div class="px-5 py-4">
+      <p id="info-modal-msg" class="text-xs text-slate-700 leading-relaxed"></p>
+    </div>
+    <div id="info-modal-footer" class="px-5 py-3 bg-slate-50 border-t border-slate-200 flex justify-end gap-2 rounded-b-xl">
+      <button id="info-modal-cancel-btn" onclick="closeInfoModal()" class="px-3 py-1.5 text-xs font-semibold text-slate-700 bg-white border border-slate-300 rounded hover:bg-slate-100">Cancel</button>
+      <button id="info-modal-ok-btn" onclick="infoModalOkCallback()" class="px-3 py-1.5 text-xs font-bold text-white bg-blue-600 rounded hover:bg-blue-700">OK</button>
     </div>
   </div>
 </div>
@@ -866,18 +930,18 @@
       <span class="font-mono text-[13px]" id="sla-countdown">--:--:--</span>
     </div>
 
-    <button onclick="resetDemoData()" title="Reset demo data" class="p-1.5 text-slate-300 hover:text-white hover:bg-slate-700/60 rounded transition-colors text-xs flex items-center gap-1">
+    <button id="header-reset-btn" onclick="resetDemoData()" title="Reset demo data" class="p-1.5 text-slate-300 hover:text-white hover:bg-slate-700/60 rounded transition-colors text-xs flex items-center gap-1">
       <i data-lucide="rotate-ccw" class="w-4 h-4"></i>
-    </button>
-
-    <button onclick="exportCSV()" class="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-slate-200 hover:text-white bg-slate-700/80 hover:bg-slate-700 rounded transition-colors">
-      <i data-lucide="download" class="w-3.5 h-3.5"></i>
-      Export CSV
     </button>
 
     <button onclick="openMockRecallModal()" class="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-white bg-rose-600 hover:bg-rose-700 rounded transition-colors">
       <i data-lucide="alert-triangle" class="w-3.5 h-3.5"></i>
       Mock Recall
+    </button>
+
+    <button onclick="pilotStart()" title="Launch the 5-step guided demo (G)" class="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-[#2e3f50] bg-amber-300 hover:bg-amber-200 rounded transition-colors">
+      <i data-lucide="clapperboard" class="w-3.5 h-3.5"></i>
+      Guide
     </button>
 
     <!-- Current user: avatar + name/role + menu (replaces the old header Create company button) -->
@@ -886,32 +950,33 @@
         <span id="user-avatar" class="w-8 h-8 rounded-full bg-[#ff7a59] flex items-center justify-center font-bold text-white text-xs shadow-xs shrink-0">SL</span>
         <span class="hidden md:block text-left leading-tight">
           <span id="user-name" class="block text-xs font-semibold text-white">Sarah Lin</span>
-          <span id="user-role" class="block text-[10px] text-slate-300">Key Account Manager</span>
+          <span id="user-role" class="block text-[10px] text-slate-300">System Administrator</span>
         </span>
         <i data-lucide="chevron-down" class="w-3.5 h-3.5 text-slate-300 hidden md:block"></i>
       </button>
-      <div id="user-menu" class="hidden fixed z-[200] w-60 bg-white border border-slate-200 rounded-xl shadow-xl p-2 text-slate-700">
+      <div id="user-menu" class="hidden fixed z-[200] w-72 bg-white border border-slate-200 rounded-xl shadow-xl p-2 text-slate-700">
         <div class="px-2.5 py-2 border-b border-slate-100 mb-1">
           <div id="user-menu-name" class="text-xs font-bold text-slate-900">Sarah Lin</div>
           <div id="user-menu-email" class="text-[11px] text-slate-500 break-all">sarah.lin@nouvem.ie</div>
-          <div id="user-menu-role" class="text-[11px] text-slate-500">Key Account Manager</div>
+          <div id="user-menu-role" class="text-[11px] text-slate-500">System Administrator (KAM)</div>
         </div>
-        <div class="px-2.5 pt-1 pb-1 text-[9px] font-bold text-slate-400 uppercase tracking-wider">Switch identity (demo)</div>
+        <div class="px-2.5 pt-1 pb-1 text-[9px] font-bold text-slate-400 uppercase tracking-wider">Switch identity (RBAC demo)</div>
         <button id="role-btn-kam" onclick="switchPersona('kam')" class="filter-menu-item">
-          <i data-lucide="briefcase" class="w-3.5 h-3.5 text-[#ff7a59]"></i>
-          <span class="flex-1">Key Account Manager<span class="block text-[10px] font-normal text-slate-400">Deals · Orders · full CRM</span></span>
+          <i data-lucide="crown" class="w-3.5 h-3.5 text-[#ff7a59]"></i>
+          <span class="flex-1">Sarah Lin · Admin<span class="block text-[10px] font-normal text-slate-400">Full CRUD · cascade delete · all money</span></span>
           <i data-lucide="check" class="role-check w-3.5 h-3.5 text-emerald-600" id="role-check-kam"></i>
         </button>
         <button id="role-btn-qa" onclick="switchPersona('qa')" class="filter-menu-item">
           <i data-lucide="shield-check" class="w-3.5 h-3.5 text-emerald-600"></i>
-          <span class="flex-1">QA Auditor<span class="block text-[10px] font-normal text-slate-400">Compliance-first · cold chain &amp; audits</span></span>
+          <span class="flex-1">Liam O'Connor · QA Auditor<span class="block text-[10px] font-normal text-slate-400">Read-only companies · QA review · masked €</span></span>
           <i data-lucide="check" class="role-check w-3.5 h-3.5 text-emerald-600 hidden" id="role-check-qa"></i>
         </button>
         <button id="role-btn-fin" onclick="switchPersona('fin')" class="filter-menu-item">
           <i data-lucide="banknote" class="w-3.5 h-3.5 text-blue-600"></i>
-          <span class="flex-1">Finance<span class="block text-[10px] font-normal text-slate-400">A/R · settlement &amp; credit</span></span>
+          <span class="flex-1">Eileen Doyle · Finance<span class="block text-[10px] font-normal text-slate-400">Mark Paid · credit hold · full A/R</span></span>
           <i data-lucide="check" class="role-check w-3.5 h-3.5 text-emerald-600 hidden" id="role-check-fin"></i>
         </button>
+        <div class="px-2.5 py-1 text-[10px] text-slate-400 leading-snug" id="role-matrix-hint">Admin: every action allowed. Switch to QA / Finance to see gates.</div>
         <div class="border-t border-slate-100 my-1"></div>
         <button onclick="closeAllMenus();showToast('Profile settings are not part of this demo')" class="filter-menu-item"><i data-lucide="settings" class="w-3.5 h-3.5 text-slate-400"></i>Profile settings</button>
         <div class="border-t border-slate-100 my-1"></div>
@@ -1242,7 +1307,7 @@
             <span class="text-slate-500 block text-[10px] uppercase font-semibold">Pipeline Value</span>
             <span id="metric-value" class="font-bold text-slate-900 text-sm text-blue-600">€0.00M</span>
           </div>
-          <button onclick="openCreateModal()" class="inline-flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-semibold text-white bg-[#ff7a59] hover:bg-[#e06545] active:bg-[#c95335] rounded shadow-sm transition-all">
+          <button id="pilot-create-company-btn" onclick="openCreateModal()" class="inline-flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-semibold text-white bg-[#ff7a59] hover:bg-[#e06545] active:bg-[#c95335] rounded shadow-sm transition-all">
             <i data-lucide="plus" class="w-4 h-4"></i>
             <span>Create company</span>
           </button>
@@ -2234,6 +2299,53 @@
     </div>
   </div>
 </footer>
+
+<!-- ============================ GUIDED PILOT DOCK ============================ -->
+<!-- Bottom-center frosted-glass command bar for the 7-step killer demo.
+     Hidden until launched (header Guide button or G key). No overlay mask.
+     When the 7-step tour completes, an extra "completed" row is shown under
+     the dock pills (Replay tour / End tour), with a STAGE 7/7 ALL VERIFIED
+     badge so the examiner sees the storyline closed. -->
+<div id="pilot-dock" class="hidden">
+  <div class="pilot-shell">
+    <span class="pilot-step-pill" id="pilot-step-pill">STEP 1/7</span>
+    <span class="pilot-title" id="pilot-title">Master file + compliance</span>
+    <span class="pilot-script" id="pilot-script"></span>
+    <span class="pilot-dots" id="pilot-dots"></span>
+    <button class="pilot-btn primary" id="pilot-run-btn" onclick="pilotRunStep()" title="Execute this step now">Run step</button>
+    <button class="pilot-btn" id="pilot-auto-btn" onclick="pilotToggleAuto()" title="Auto-play all remaining steps">Auto-play</button>
+    <button class="pilot-btn ghost" onclick="pilotStop()" title="Close the guide">End</button>
+  </div>
+  <!-- Completion bar — only shown when all 7 steps are done. Sits below the
+       dock and offers the two-button chooser the examiner uses to either
+       replay the storyline or release control back to the dataset. -->
+  <div id="pilot-complete-bar" class="hidden mt-2 px-3 py-2 rounded-xl bg-white border border-emerald-300 shadow-md flex items-center gap-2 max-w-fit mx-auto">
+    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-wide bg-emerald-600 text-white">
+      <i data-lucide="flag-checkered" class="w-3 h-3"></i>STAGE 7/7 · ALL SCENARIOS VERIFIED 🏁
+    </span>
+    <button onclick="pilotReplayFromTop()" title="Replay the storyline from the top" class="px-3 py-1 rounded-full text-[11px] font-bold text-emerald-800 bg-emerald-50 hover:bg-emerald-100 border border-emerald-300 inline-flex items-center gap-1">
+      <i data-lucide="rotate-ccw" class="w-3 h-3"></i>Replay tour
+    </button>
+    <button onclick="pilotStop()" title="End the tour and release control" class="px-3 py-1 rounded-full text-[11px] font-bold text-white bg-rose-600 hover:bg-rose-700 inline-flex items-center gap-1">
+      <i data-lucide="x" class="w-3 h-3"></i>End tour
+    </button>
+  </div>
+</div>
+<!-- Spotlight beacon + explainer card for the guided tour (no fullscreen mask;
+     all three layers are pointer-transparent except the card itself). -->
+<div id="pilot-spot" class="hidden"></div>
+<div id="pilot-beacon" class="hidden"><span></span></div>
+<div id="pilot-coach" class="hidden">
+  <div class="pilot-coach-title" id="pilot-coach-title">—</div>
+  <div class="pilot-coach-body" id="pilot-coach-body">—</div>
+  <div class="pilot-coach-foot">
+    <button class="pilot-coach-nav" onclick="pilotCoachMove(-1)" title="Previous explanation">←</button>
+    <span class="pilot-coach-count" id="pilot-coach-count">1/5</span>
+    <button class="pilot-coach-nav" onclick="pilotCoachMove(1)" title="Next explanation">→</button>
+    <button class="pilot-coach-run" onclick="pilotRunStep()" title="Run this step now">Run this step</button>
+    <button class="pilot-coach-x" onclick="pilotHideCoach()" title="Hide this card">×</button>
+  </div>
+</div>
 <style>
   .kbd-mini {
     display: inline-block;
@@ -2247,6 +2359,74 @@
     color: #475569;
     line-height: 14px;
   }
+
+  /* ═════ GUIDED PILOT DOCK (5-step killer demo, bottom-center capsule) ═════
+     A frosted-glass command bar pinned above the footer status bar — never a
+     full-screen mask, so the rail (left), Quick 360 (right) and tables (center)
+     all stay interactive. .pilot-flash marks the row the script just created /
+     touched; .pilot-pulse draws the eye to the button the examiner must press
+     next; .pilot-dim fades everything that is NOT the current focus. */
+  #pilot-dock { position: fixed; left: 50%; transform: translateX(-50%); bottom: 34px; z-index: 120; max-width: min(860px, calc(100vw - 140px)); }
+  .pilot-shell { display: flex; align-items: center; gap: 8px; padding: 7px 10px; border-radius: 999px;
+    background: rgba(15,23,42,0.86); border: 1px solid rgba(255,255,255,0.14);
+    box-shadow: 0 14px 40px rgba(15,23,42,0.45); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+    color: #e2e8f0; font-size: 11px; white-space: nowrap; }
+  .pilot-step-pill { display: inline-flex; align-items: center; gap: 5px; font-weight: 800; font-size: 10px;
+    background: #ff7a59; color: #fff; border-radius: 999px; padding: 3px 9px; letter-spacing: 0.3px; flex-shrink: 0; }
+  .pilot-title { font-weight: 700; color: #fff; max-width: 300px; overflow: hidden; text-overflow: ellipsis; }
+  .pilot-script { font-weight: 400; color: #cbd5e1; max-width: 340px; overflow: hidden; text-overflow: ellipsis; }
+  .pilot-btn { display: inline-flex; align-items: center; gap: 4px; font-size: 10.5px; font-weight: 700;
+    border-radius: 999px; padding: 5px 11px; border: 1px solid rgba(255,255,255,0.16);
+    background: rgba(255,255,255,0.08); color: #fff; cursor: pointer; transition: all 0.15s; flex-shrink: 0; }
+  .pilot-btn:hover { background: rgba(255,255,255,0.18); }
+  .pilot-btn.primary { background: #ff7a59; border-color: #ff7a59; }
+  .pilot-btn.primary:hover { background: #e06545; }
+  .pilot-btn.ghost { background: transparent; }
+  .pilot-dots { display: inline-flex; gap: 4px; flex-shrink: 0; }
+  .pilot-dot { width: 7px; height: 7px; border-radius: 999px; background: rgba(255,255,255,0.25); cursor: pointer; transition: all 0.2s; }
+  .pilot-dot.done { background: #34d399; }
+  .pilot-dot.now { background: #ff7a59; width: 18px; }
+  .pilot-flash { animation: pilotFlash 1.6s ease-in-out 2; border-radius: 6px; }
+  @keyframes pilotFlash { 0%,100% { box-shadow: none; background: transparent; } 30%,60% { box-shadow: 0 0 0 3px rgba(255,122,89,0.55); background: rgba(255,122,89,0.12); } }
+  .pilot-pulse { animation: pilotPulse 1.1s ease-in-out infinite; }
+  @keyframes pilotPulse { 0%,100% { box-shadow: 0 0 0 0 rgba(255,122,89,0.0); } 50% { box-shadow: 0 0 0 5px rgba(255,122,89,0.45); } }
+  .pilot-dim { opacity: 0.28 !important; filter: saturate(0.5); transition: opacity 0.3s; }
+  /* ═════ Spotlight beacon + coach card (screenshot-style tour overlay) ═════
+     Layering: #pilot-spot (soft ring behind the target) and #pilot-beacon
+     (pulsing cursor dot pinned to the target's top-right) are fixed-position,
+     pointer-events:none so the examiner can still click through everywhere.
+     #pilot-coach is the floating explainer card (title + body + n/5 stepper)
+     — the ONLY pointer-active layer, draggable nowhere, dismissable via ×
+     without stopping the tour. All three hide on pilotStop / Esc. */
+  #pilot-spot { position: fixed; z-index: 1100; pointer-events: none; border-radius: 12px;
+    border: 2.5px solid #ff7a59; box-shadow: 0 0 0 5px rgba(255,122,89,0.22), 0 0 26px rgba(255,122,89,0.45);
+    animation: pilotSpotPulse 1.5s ease-in-out infinite; transition: all 0.35s ease; }
+  @keyframes pilotSpotPulse { 0%,100% { box-shadow: 0 0 0 4px rgba(255,122,89,0.18), 0 0 14px rgba(255,122,89,0.3); } 50% { box-shadow: 0 0 0 9px rgba(255,122,89,0.3), 0 0 34px rgba(255,122,89,0.55); } }
+  #pilot-beacon { position: fixed; z-index: 1101; pointer-events: none; width: 30px; height: 30px; margin: -34px -8px 0 0;
+    transition: all 0.35s ease; }
+  #pilot-beacon span { display: block; width: 14px; height: 14px; margin: 8px; border-radius: 999px;
+    background: #facc15; border: 2.5px solid #fff; box-shadow: 0 1px 6px rgba(15,23,42,0.4); position: relative; z-index: 2; }
+  #pilot-beacon::after { content: ''; position: absolute; inset: 0; border-radius: 999px;
+    background: rgba(250,204,21,0.45); animation: pilotBeaconPing 1.4s cubic-bezier(0,0,0.2,1) infinite; }
+  @keyframes pilotBeaconPing { 0% { transform: scale(0.55); opacity: 0.9; } 80%,100% { transform: scale(1.9); opacity: 0; } }
+  #pilot-coach { position: fixed; z-index: 1102; width: 300px; max-width: calc(100vw - 32px);
+    background: #fff; border-radius: 14px; border: 1px solid #e2e8f0;
+    box-shadow: 0 18px 55px rgba(15,23,42,0.3); padding: 13px 14px 10px;
+    transition: opacity 0.25s ease; }
+  .pilot-coach-title { font-size: 14px; font-weight: 800; color: #0f172a; line-height: 1.35; margin-bottom: 5px; }
+  .pilot-coach-body { font-size: 12px; line-height: 1.55; color: #334155; }
+  .pilot-coach-body code { font-family: 'JetBrains Mono', monospace; font-size: 10.5px; background: #f1f5f9; border: 1px solid #e2e8f0; border-radius: 4px; padding: 0 4px; }
+  .pilot-coach-foot { display: flex; align-items: center; gap: 6px; margin-top: 10px; }
+  .pilot-coach-nav { width: 26px; height: 26px; border-radius: 999px; background: #f1f5f9; color: #475569;
+    font-size: 13px; font-weight: 800; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; border: none; }
+  .pilot-coach-nav:hover { background: #e2e8f0; color: #0f172a; }
+  .pilot-coach-count { font-size: 11px; font-weight: 800; color: #64748b; font-variant-numeric: tabular-nums; }
+  .pilot-coach-run { margin-left: auto; font-size: 11px; font-weight: 800; color: #fff; background: #ff7a59;
+    border: none; border-radius: 999px; padding: 6px 12px; cursor: pointer; }
+  .pilot-coach-run:hover { background: #e06545; }
+  .pilot-coach-x { font-size: 15px; font-weight: 700; color: #94a3b8; background: none; border: none; cursor: pointer; padding: 2px 6px; }
+  .pilot-coach-x:hover { color: #475569; }
+  @media (max-width: 900px) { .pilot-script { display: none; } .pilot-title { max-width: 150px; } }
 </style>
 
 </main>
@@ -2275,6 +2455,7 @@
         <div>
           <label class="form-label">Establishment # *</label>
           <input id="form-est" class="form-input font-mono" placeholder="IE 542 EC" />
+          <div id="form-est-feedback" class="form-feddback hidden"></div>
         </div>
       </div>
 
@@ -2412,6 +2593,54 @@
             <input id="form-credit" type="number" class="form-input" min="0" />
           </div>
         </div>
+
+        <!-- ===== Advanced (compliance + A/R + audit) ===== -->
+        <details class="mt-5 group" id="company-form-advanced">
+          <summary class="cursor-pointer text-xs font-semibold text-slate-700 hover:text-slate-900 flex items-center gap-1.5 select-none">
+            <i data-lucide="chevron-right" class="w-3.5 h-3.5 transition-transform group-open:rotate-90"></i>
+            Advanced fields
+            <span class="text-[10px] font-normal text-slate-500">(compliance, A/R, audit dates — leave blank to keep current values when editing)</span>
+          </summary>
+          <div class="mt-3 grid grid-cols-2 gap-3 pl-1 border-l-2 border-slate-200 pl-4">
+            <div>
+              <label class="form-label">Outstanding A/R (€)</label>
+              <input id="form-ar" type="number" class="form-input" min="0" step="0.01" />
+            </div>
+            <div>
+              <label class="form-label">A/R Overdue Days</label>
+              <input id="form-overdue" type="number" class="form-input" min="0" />
+            </div>
+            <div class="col-span-2 flex items-center gap-2">
+              <input id="form-bordbia" type="checkbox" class="form-checkbox" />
+              <label for="form-bordbia" class="text-xs font-semibold text-slate-700 cursor-pointer">Bord Bia Quality Mark (Irish national certification)</label>
+            </div>
+            <div class="col-span-2">
+              <label class="form-label">Certifications</label>
+              <div class="grid grid-cols-2 gap-x-3 gap-y-1.5 mt-1">
+                <label class="flex items-center gap-2 text-xs text-slate-700"><input type="checkbox" class="form-cert" value="HACCP Certified" /> HACCP</label>
+                <label class="flex items-center gap-2 text-xs text-slate-700"><input type="checkbox" class="form-cert" value="DAFM Approved Plant (IE)" /> DAFM Approved</label>
+                <label class="flex items-center gap-2 text-xs text-slate-700"><input type="checkbox" class="form-cert" value="BRCGS Grade AA+" /> BRCGS AA+</label>
+                <label class="flex items-center gap-2 text-xs text-slate-700"><input type="checkbox" class="form-cert" value="Bord Bia Quality Mark" /> Bord Bia Mark</label>
+                <label class="flex items-center gap-2 text-xs text-slate-700"><input type="checkbox" class="form-cert" value="Origin Green" /> Origin Green</label>
+                <label class="flex items-center gap-2 text-xs text-slate-700"><input type="checkbox" class="form-cert" value="SQF Level 2" /> SQF L2</label>
+                <label class="flex items-center gap-2 text-xs text-slate-700"><input type="checkbox" class="form-cert" value="Halal Certified" /> Halal</label>
+                <label class="flex items-center gap-2 text-xs text-slate-700"><input type="checkbox" class="form-cert" value="Organic EU" /> Organic EU</label>
+              </div>
+            </div>
+            <div>
+              <label class="form-label">Last Audit Date</label>
+              <input id="form-last-audit" type="date" class="form-input" />
+            </div>
+            <div>
+              <label class="form-label">Next Audit Date</label>
+              <input id="form-next-audit" type="date" class="form-input" />
+            </div>
+            <div class="col-span-2">
+              <label class="form-label">SLA Cut-off Time</label>
+              <input id="form-sla" type="text" class="form-input" placeholder="06:00 AM" />
+            </div>
+          </div>
+        </details>
       </div>
     </div>
 
@@ -2772,10 +3001,11 @@
       <div class="about-toc">
         <span class="about-toc-label">Contents</span>
         <a href="#about-model" onclick="aboutScrollTo('about-model', event)">1 · Business model</a>
-        <a href="#about-flow" onclick="aboutScrollTo('about-flow', event)">2 · Event-driven pipeline</a>
+        <a href="#about-flow" onclick="aboutScrollTo('about-flow', event)">2 · Entity lifecycle loop</a>
         <a href="#about-money" onclick="aboutScrollTo('about-money', event)">3 · Credit &amp; settlement</a>
-        <a href="#about-compliance" onclick="aboutScrollTo('about-compliance', event)">4 · Irish compliance (Bord Bia · DAFM · SLA)</a>
-        <a href="#about-tables" onclick="aboutScrollTo('about-tables', event)">5 · Table reference</a>
+        <a href="#about-roles" onclick="aboutScrollTo('about-roles', event)">4 · Roles &amp; permissions</a>
+        <a href="#about-compliance" onclick="aboutScrollTo('about-compliance', event)">5 · Irish compliance (Bord Bia · DAFM · SLA)</a>
+        <a href="#about-tables" onclick="aboutScrollTo('about-tables', event)">6 · Table reference</a>
       </div>
       <section id="about-model" class="about-sec">
         <h3><span class="about-num">1</span>Business model — one parent, five children</h3>
@@ -2798,13 +3028,28 @@
         </ul>
       </section>
       <section id="about-flow" class="about-sec">
-        <h3><span class="about-num">2</span>Event-driven pipeline — status changes create work</h3>
-        <div class="about-flow">
-          <div class="about-flow-step"><strong>Deal → Closed Won</strong><span>auto-creates fulfillment order (Pending)</span></div>
-          <div class="about-flow-arrow">→</div>
-          <div class="about-flow-step"><strong>Order → Delivered</strong><span>dock-signed · dispatches AR chase task (Net +N days)</span></div>
-          <div class="about-flow-arrow">→</div>
-          <div class="about-flow-step"><strong>Task → Done</strong><span>cash received · settles order to Paid</span></div>
+        <h3><span class="about-num">2</span>Entity lifecycle — 6-step closed loop (mirrors the Demo Tour)</h3>
+        <div class="about-life">
+          <div class="about-life-row">
+            <div class="about-life-node accent"><strong>1 · CREATE — onboard the plant</strong><span>Company with DAFM <code>IE 542 EC</code> format gate + duplicate Est# rejected, primary Contact created in the same pass.</span></div>
+            <div class="about-life-node dark"><strong>2 · READ — 360 topology</strong><span>Quick 360 drawer: one company, all five children (contacts · deals · orders · tickets · tasks) via FK jumps.</span></div>
+          </div>
+          <div class="about-life-arrow">▼ &nbsp;fork — the loop splits into two live branches&nbsp; ▼</div>
+          <div class="about-life-split">
+            <div class="about-life-node rose"><strong>3 · UPDATE — P1 blocks the deal</strong><span>Cold-chain <code>Urgent</code> ticket raises a cross-table blocker: the open deal cannot advance until Resolved.</span></div>
+            <div class="about-life-fork">Concurrent<br />branches</div>
+            <div class="about-life-node"><strong>4 · UPDATE — win fires fulfillment</strong><span><code>Closed Won</code> → Event Bus auto-creates the Order (Pending), dock walk to <code>Delivered</code> dispatches the Net-terms chase Task.</span></div>
+          </div>
+          <div class="about-life-arrow">▼ &nbsp;branches rejoin at the dock&nbsp; ▼</div>
+          <div class="about-life-row">
+            <div class="about-life-node about-life-full"><strong>Catch-weight + dock sign — the rejoin point</strong><span>Line weighs the batch (variance beyond ±3% holds the order), dock signs <code>Delivered</code>, finance chase Task lands per Net 30 / 60.</span></div>
+          </div>
+          <div class="about-life-arrow">▼</div>
+          <div class="about-life-row">
+            <div class="about-life-node green"><strong>5 · UPDATE — settle + unfreeze</strong><span>Finance collects: chase Task struck through, order → <code>Paid</code>, <code>outstandingAr</code> released, <code>CreditHold → Active</code>.</span></div>
+            <div class="about-life-node rose"><strong>6 · DELETE — cascade + Undo</strong><span>Type-to-confirm code archives the company + all five dependents; 8s Undo restores everything (audit-safe).</span></div>
+          </div>
+          <div class="about-life-loop"><strong>Closed loop ⇄</strong> settle feeds back into credit standing — the next dispatch starts from step 2 with a clean ledger. Press <code>G</code> anytime to walk it live.</div>
         </div>
         <ul class="about-list">
           <li><strong>Orders</strong> advance one step at a time: <code>Pending → In Production → In Transit → Delivered → Paid</code> (+ <code>Delayed</code> side-state, <code>Cancelled</code> terminal). A <code>Delayed</code> order auto-opens an Urgent ticket.</li>
@@ -2816,8 +3061,25 @@
         <h3><span class="about-num">3</span>Credit exposure &amp; settlement — money has one choke point</h3>
         <p>Completing a payment-chase task runs <code>settlePaymentTask()</code> — a single guarded transition that stamps <code>paidAt</code> on both task and order, flips the order to <code>Paid</code>, releases <code>outstandingAr</code> immediately, and unfreezes <code>CreditHold → Active</code> when exposure drops back inside the limit. Settled chase tasks are terminal receipts: locked, never reopened, never deleted.</p>
       </section>
+      <section id="about-roles" class="about-sec">
+        <h3><span class="about-num">4</span>Roles &amp; permissions — who can do what</h3>
+        <div class="about-table-wrap">
+          <table class="about-table">
+            <thead><tr><th>Capability</th><th>Liam · QA Auditor</th><th>Eileen · Finance</th><th>Sarah · Admin</th></tr></thead>
+            <tbody>
+              <tr><td><strong>Money visibility</strong></td><td>Masked <span class="font-mono">€***,***</span></td><td>Full</td><td>Full</td></tr>
+              <tr><td><strong>Companies</strong></td><td>Read-only audit (DAFM / Bord Bia)</td><td>Credit fields only</td><td>Full CRUD + cascade delete</td></tr>
+              <tr><td><strong>Tickets</strong></td><td>QA-review gate + Bord Bia release</td><td>Read-only</td><td>Full flow</td></tr>
+              <tr><td><strong>Orders</strong></td><td>Fulfillment advance + resume</td><td>Mark Paid only</td><td>Full flow</td></tr>
+              <tr><td><strong>Credit Hold</strong></td><td>No (read-only)</td><td>Set / clear</td><td>Set / clear</td></tr>
+              <tr><td><strong>Payment settle</strong></td><td>No</td><td>Yes (via A/R tasks)</td><td>Yes</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="about-foot">Switch identity from the avatar menu — every blocked action toasts the required role; QA money renders <span class="font-mono">€***,***</span> everywhere.</p>
+      </section>
       <section id="about-compliance" class="about-sec">
-        <h3><span class="about-num">4</span>Irish compliance — Bord Bia · DAFM · cold-chain SLA</h3>
+        <h3><span class="about-num">5</span>Irish compliance — Bord Bia · DAFM · cold-chain SLA</h3>
         <div class="about-cards">
           <div class="about-card">
             <div class="about-card-title"><i data-lucide="shield-check"></i>Bord Bia traceability</div>
@@ -2834,7 +3096,7 @@
         </div>
       </section>
       <section id="about-tables" class="about-sec">
-        <h3><span class="about-num">5</span>Table reference</h3>
+        <h3><span class="about-num">6</span>Table reference</h3>
         <div class="about-table-wrap">
           <table class="about-table">
             <thead><tr><th>Table</th><th>Key</th><th>Foreign keys</th><th>Notes</th></tr></thead>
@@ -3301,6 +3563,1049 @@ let activeContactDetailTab = 'activity';
      → returns { label, navTo } for human display + click navigation
 */
 
+// ============= GUIDED PILOT (5-step killer demo — bottom-center Command Dock) =============
+// A non-modal, non-mask walkthrough for examiners: a frosted-glass capsule above
+// the footer with [Run step] (examiner triggers the real state machine by hand)
+// and [Auto-play] (cinema mode). Every step runs against REAL handlers
+// (navigateTo / openQuick360Drawer / DB.updateDealStage / applyOrderHold /
+// setTaskStatus) — never animations — so the tables, blockers and cascades the
+// examiner sees are the genuine product behavior. Demo-safe: pilotStart()
+// snapshots all 7 collections + localStorage and injects a pristine Dunnes
+// storyline; pilotStop() restores the snapshot byte-for-byte.
+let _pilotSnapshot = null;
+// When the tour self-cleans via header Reset, we keep the reseeded state
+// instead of restoring the original snapshot. The flag is cleared by the
+// standard pilotStop path so a manual End afterwards still restores.
+let _pilotSkipRestore = false;
+let _pilotIdx = 0;
+let _pilotAuto = false;
+let _pilotTimer = null;
+let _pilotStepBusy = false; // set while a step is self-driving an internal setTimeout chain (e.g. Step 1's fill+dwell+save)
+// Generation counter — every step run / pause / stop / replay bumps it.
+// Step-level internal setTimeout chains capture this at entry and short-
+// circuit every late callback if it no longer matches, so pressing End
+// or Pause mid-fill actually stops the demo (modal stops filling, Save
+// doesn't fire, 360 drawer doesn't pop, finish toast doesn't surface).
+let _pilotGen = 0;
+// Pilot-created records (Step 1 company, Step 3 re-win order, Step 5 undo-demo).
+// Cleared on pilotStart so Replay never stacks duplicates; re-armed per step.
+let _pilotCompanyId = null;
+let _pilotDealId = null;
+let _pilotLastOrderId = null;
+let _pilotLastDealWon = false;
+// Step 5 delete coda: armed once per tour run (modal opens), done once the
+// examiner confirms — the tour then ends on header Reset, never auto-Undo.
+let _pilotDeleteArmed = false;
+let _pilotDeleteDone = false;
+// Step 6 safe-delete target: the 0/0/0 zero-risk lead picked at runtime.
+let _pilotSafeDeleteId = null;
+function pilotSnapshotState() {
+  return JSON.stringify({ customers, companies, contacts, deals, tickets, orders, tasks,
+    stored: (() => { try { return localStorage.getItem(STORAGE_KEY); } catch (e) { return null; } })() });
+}
+function pilotRestoreState(snap) {
+  try {
+    const s = JSON.parse(snap);
+    customers = s.customers; companies = s.companies; contacts = s.contacts;
+    deals = s.deals; tickets = s.tickets; orders = s.orders; tasks = s.tasks;
+    if (s.stored === null) { try { localStorage.removeItem(STORAGE_KEY); } catch (e) {} }
+    else { try { localStorage.setItem(STORAGE_KEY, s.stored); } catch (e) {} }
+  } catch (e) {}
+}
+function pilotFlashRow(selector) {
+  requestAnimationFrame(() => requestAnimationFrame(() => {
+    const el = document.querySelector(selector);
+    if (!el) return;
+    el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    el.classList.remove('pilot-flash');
+    void el.offsetWidth;
+    el.classList.add('pilot-flash');
+  }));
+}
+// Pulse the currently open modal so the examiner's eye lands on the form
+// while it self-fills. Targets the visible .modal-content inside the topmost
+// .modal-overlay so we never accidentally flash a hidden modal.
+function pilotFlashModal() {
+  const overlay = document.querySelector('.modal-overlay:not(.hidden) .modal-content');
+  if (!overlay) return;
+  overlay.classList.remove('pilot-flash');
+  void overlay.offsetWidth;
+  overlay.classList.add('pilot-flash');
+}
+function pilotRequireAdmin() {
+  // The storyline mutates data (win / hold / settle) — force Admin so RBAC
+  // gates can never mid-demo block the examiner; the toast says who to be.
+  if (currentPersona !== 'kam' && typeof switchPersona === 'function') switchPersona('kam');
+}
+function pilotPaintDock() {
+  const pill = document.getElementById('pilot-step-pill');
+  const title = document.getElementById('pilot-title');
+  const script = document.getElementById('pilot-script');
+  const dots = document.getElementById('pilot-dots');
+  const runBtn = document.getElementById('pilot-run-btn');
+  const autoBtn = document.getElementById('pilot-auto-btn');
+  const step = PILOT_STEPS[_pilotIdx];
+  const done = _pilotIdx >= PILOT_STEPS.length;
+  if (pill) {
+    pill.textContent = done ? 'DONE' : `STEP ${_pilotIdx + 1}/${PILOT_STEPS.length}`;
+    pill.className = 'pilot-step-pill';
+  }
+  if (title) {
+    if (done) { title.textContent = 'Tour complete'; title.title = 'Tour complete — click End to close the dock'; }
+    else if (step) { title.textContent = step.title; title.title = step.title + ' — ' + step.script; }
+    else { title.textContent = 'Done'; title.title = ''; }
+  }
+  if (script) {
+    if (done) {
+      script.textContent = 'Tour complete — click End to close the dock (your reseeded dataset is kept).';
+      script.title = script.textContent;
+    } else if (step) {
+      script.textContent = step.script;
+      script.title = script.textContent;
+    } else {
+      script.textContent = 'Storyline complete.';
+      script.title = script.textContent;
+    }
+  }
+  if (dots) dots.innerHTML = PILOT_STEPS.map((_, i) =>
+    `<span class="pilot-dot${i < _pilotIdx ? ' done' : (!done && i === _pilotIdx ? ' now' : (done ? ' done' : ''))}" onclick="pilotJump(${i})" title="Go to step ${i + 1}"></span>`).join('');
+  if (runBtn) { runBtn.innerHTML = done ? 'Replay tour' : 'Run step'; }
+  if (autoBtn) {
+    autoBtn.textContent = _pilotAuto ? 'Pause' : 'Auto-play';
+    // Keep Auto-play enabled even after the tour finishes so the user
+    // can have the whole 7-step story auto-play again from the top. The
+    // handler resets _pilotIdx to 0 when it's already at the end.
+    autoBtn.disabled = false;
+    autoBtn.style.opacity = '';
+    autoBtn.style.cursor = '';
+    autoBtn.title = done ? 'Replay all 7 steps automatically from the top' : 'Auto-play all remaining steps';
+  }
+  const dock = document.getElementById('pilot-dock');
+  const endBtn = dock?.querySelector('button.ghost');
+  if (endBtn) endBtn.textContent = done ? 'End tour' : 'End';
+  // Completion bar is intentionally hidden — the dock shell already shows
+  // "DONE" + "Tour complete" + Replay/End tour after the storyline finishes,
+  // matching the original 5-step dock state. No extra "STAGE 7/7" badge
+  // ribbon overlays the bottom bar.
+  const bar = document.getElementById('pilot-complete-bar');
+  if (bar) bar.classList.add('hidden');
+  refreshIcons();
+}
+// Reset the tour back to Step 1 and re-arm it. Used by the "Replay tour"
+// button in the completion bar (and by Run-step when done). Does NOT
+// restore the original snapshot — the user has already chosen to keep
+// the post-reset state by ending on it; replaying starts fresh on the
+// just-reseeded dataset.
+function pilotReplayFromTop() {
+  if (!document.getElementById('pilot-dock')) return;
+  pilotStopAuto();
+  pilotHideCoach();
+  _pilotIdx = 0; _pilotCoachIdx = 0;
+  _pilotCompanyId = null; _pilotDealId = null; _pilotLastOrderId = null;
+  _pilotLastDealWon = false; _pilotSafeDeleteId = null;
+  _pilotSkipRestore = false; _pilotDeleteArmed = true; _pilotDeleteDone = false;
+  pilotPaintDock();
+  const s0 = PILOT_STEPS[0];
+  if (s0) pilotSpotTo(s0.coachSel, s0.coachTitle || s0.title, s0.coachBody || '');
+  showToast('Replaying the guided tour from the top', 'success');
+}
+function pilotJump(i) {
+  pilotStopAuto();
+  _pilotIdx = Math.max(0, Math.min(PILOT_STEPS.length - 1, i));
+  _pilotCoachIdx = _pilotIdx;
+  pilotPaintDock();
+  const s = PILOT_STEPS[_pilotIdx];
+  if (s && !document.getElementById('pilot-dock')?.classList.contains('hidden')) {
+    pilotSpotTo(s.coachSel, s.coachTitle || s.title, s.coachBody || '');
+  }
+  updateKbdStatus?.(`Guide at step ${_pilotIdx + 1}: ${PILOT_STEPS[_pilotIdx].title}`);
+}
+function pilotRunStep() {
+  // Each fresh step bumps the gen so any leftover setTimeout chain from
+  // a previous step bails out on its next tick.
+  _pilotGen++;
+  if (_pilotIdx >= PILOT_STEPS.length) { _pilotIdx = 0; }
+  const step = PILOT_STEPS[_pilotIdx];
+  if (!step) return;
+  try { step.run(); } catch (e) { console.error('[pilot]', e); showToast('Guide step hit an error — see console', 'destructive'); pilotStopAuto(); return; }
+  let ok = false;
+  try { ok = step.assert ? !!step.assert() : true; } catch (e) { ok = false; }
+  const dots = document.getElementById('pilot-dots');
+  if (dots && dots.children[_pilotIdx]) { dots.children[_pilotIdx].classList.remove('now'); dots.children[_pilotIdx].classList.add(ok ? 'done' : 'now'); }
+  updateKbdStatus?.(`Guide step ${_pilotIdx + 1}/${PILOT_STEPS.length} ${ok ? '✓' : '— check'}: ${step.title}`);
+  _pilotIdx += 1;
+  _pilotCoachIdx = Math.min(_pilotIdx, PILOT_STEPS.length - 1);
+  if (_pilotIdx >= PILOT_STEPS.length) { pilotStopAuto(); }
+  // After the step lands, move the spotlight onto what it produced: the
+  // per-step coachSelAfter may be dynamic (fresh order id), so resolve it now.
+  // `null` from coachSelAfter means "step is taking over the beacon itself"
+  // (used by Step 5's long cleanup timeline) — skip the auto-spot so it
+  // can't race with the inline placements.
+  const after = step.coachSelAfter ? step.coachSelAfter() : step.coachSel;
+  if (after !== null) {
+    const nextTitle = step.coachDoneTitle || step.coachTitle || step.title;
+    const nextBody = (step.coachDoneBody || step.coachBody || '') + (ok ? '' : '<br><span style="color:#b45309;font-weight:700;">Check the toast — a guard stopped this step.</span>');
+    setTimeout(() => { pilotSpotTo(after, nextTitle, nextBody); }, 450);
+  }
+  // Small beat before repainting so the examiner sees the tick land first.
+  setTimeout(pilotPaintDock, ok ? 600 : 200);
+}
+function pilotToggleAuto() {
+  if (_pilotAuto) { pilotStopAuto(); pilotPaintDock(); return; }
+  // After the tour self-finishes via Reset, Auto-play should still be able
+  // to replay the whole storyline from the top. Reset the cursor and
+  // clear the "complete" markers so the dots repaint as in-progress.
+  if (_pilotIdx >= PILOT_STEPS.length) {
+    _pilotIdx = 0; _pilotCoachIdx = 0;
+    _pilotSkipRestore = false; // each replay keeps the new tour's snapshot
+    _pilotCompanyId = null; _pilotDealId = null; _pilotLastOrderId = null;
+    _pilotLastDealWon = false; _pilotSafeDeleteId = null;
+    _pilotDeleteArmed = true; _pilotDeleteDone = false;
+    showToast('Replaying the guided tour from the top', 'success');
+  }
+  _pilotAuto = true;
+  pilotPaintDock();
+  const tick = () => {
+    if (!_pilotAuto) return;
+    if (_pilotIdx >= PILOT_STEPS.length) { pilotStopAuto(); pilotPaintDock(); showToast('Guided demo complete — End restores your data', 'success'); return; }
+    // Step 1 self-drives an internal setTimeout chain (form auto-fill + 3 s
+    // dwell + Save + 360 drawer) so the Auto ticker would otherwise pile on
+    // top of an unfinished Step 1. Wait it out, then advance.
+    if (_pilotStepBusy) { _pilotTimer = setTimeout(tick, 500); return; }
+    pilotRunStep();
+    // Steps that schedule their own UI timeline extend the gap so the
+    // examiner can watch each beat land (Step 1: 1.6 s button dwell + 17
+    // fields × 700 ms + 4 s Save dwell + Save ≈ 21.5 s; Step 6
+    // self-drives ≈ 7 s).
+    const dwell = (_pilotIdx === 1) ? 22000 : (_pilotIdx === 6) ? 8000 : 3400;
+    _pilotTimer = setTimeout(tick, dwell);
+  };
+  _pilotTimer = setTimeout(tick, 600);
+}
+function pilotStopAuto() {
+  _pilotAuto = false;
+  if (_pilotTimer) { clearTimeout(_pilotTimer); _pilotTimer = null; }
+}
+// ── Spotlight beacon + coach explainer card (screenshot-style tour cue) ──
+// pilotSpotTo(selector) frames ANY rendered element with a pulsing orange ring
+// + a pinging cursor dot pinned to its top-right, then docks a small white
+// explainer card beside it with ← n/5 → stepper and its own Run button.
+// Everything repositions on scroll/resize via _pilotCoachSync; layers are
+// pointer-transparent except the card, and hidden by pilotHideCoach/pilotStop.
+let _pilotCoachIdx = 0;
+let _pilotCoachSel = null;
+function pilotSpotTo(selector, title, bodyHtml) {
+  _pilotCoachSel = selector || null;
+  const spot = document.getElementById('pilot-spot');
+  const beacon = document.getElementById('pilot-beacon');
+  const coach = document.getElementById('pilot-coach');
+  if (!spot || !beacon || !coach) return;
+  const el = selector ? document.querySelector(selector) : null;
+  if (!el) {
+    // Target not on screen (e.g. drawer closed) — park the card top-center.
+    spot.classList.add('hidden'); beacon.classList.add('hidden');
+    // Still hoist z so the card stays above modals if it ever appears.
+    coach.style.zIndex = '1102';
+    document.getElementById('pilot-coach-title').textContent = title || '';
+    document.getElementById('pilot-coach-body').innerHTML = bodyHtml || '';
+    coach.classList.remove('hidden');
+    coach.style.left = '50%'; coach.style.top = '76px';
+    coach.style.transform = 'translateX(-50%)';
+    _pilotCoachSync();
+    return;
+  }
+  try { el.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); } catch (e) {}
+  // Wait one frame so smooth-scroll settles before measuring.
+  requestAnimationFrame(() => requestAnimationFrame(() => {
+    const r = el.getBoundingClientRect();
+    if (!r || (r.width === 0 && r.height === 0)) { pilotHideCoach(); return; }
+    const pad = 7;
+    // Inline z-index overrides any cascade-rule outside-stack so the beacon
+    // always sits on top of modal dialogs (z-[300], z-[400], etc.).
+    spot.style.zIndex = '1100';
+    beacon.style.zIndex = '1101';
+    coach.style.zIndex = '1102';
+    spot.style.left = (r.left - pad) + 'px';
+    spot.style.top = (r.top - pad) + 'px';
+    spot.style.width = (r.width + pad * 2) + 'px';
+    spot.style.height = (r.height + pad * 2) + 'px';
+    spot.classList.remove('hidden');
+    beacon.style.left = (r.right - 14) + 'px';
+    beacon.style.top = (r.top - 2) + 'px';
+    beacon.classList.remove('hidden');
+    document.getElementById('pilot-coach-title').textContent = title || '';
+    document.getElementById('pilot-coach-body').innerHTML = bodyHtml || '';
+    coach.classList.remove('hidden');
+    // Dock the card: prefer right of target, else left, else below.
+    coach.style.transform = 'none';
+    const cw = 300, gap = 14;
+    let cx = r.right + gap, cy = Math.max(70, Math.min(window.innerHeight - 240, r.top - 10));
+    if (cx + cw > window.innerWidth - 12) cx = r.left - cw - gap;
+    if (cx < 12) { cx = Math.max(12, Math.min(window.innerWidth - cw - 12, r.left)); cy = r.bottom + gap; }
+    coach.style.left = cx + 'px';
+    coach.style.top = cy + 'px';
+    _pilotCoachSync();
+  }));
+}
+function _pilotCoachSync() {
+  const c = document.getElementById('pilot-coach-count');
+  if (c) c.textContent = (_pilotCoachIdx + 1) + '/' + PILOT_STEPS.length;
+  refreshIcons();
+}
+function pilotCoachMove(d) {
+  _pilotCoachIdx = (_pilotCoachIdx + d + PILOT_STEPS.length) % PILOT_STEPS.length;
+  pilotJump(_pilotCoachIdx);
+  const s = PILOT_STEPS[_pilotCoachIdx];
+  if (s) pilotSpotTo(s.coachSel, s.coachTitle || s.title, s.coachBody || '');
+}
+function pilotHideCoach() {
+  ['pilot-spot', 'pilot-beacon', 'pilot-coach'].forEach(id => document.getElementById(id)?.classList.add('hidden'));
+  _pilotCoachSel = null;
+}
+// Re-pin the ring/beacon when the page scrolls or resizes mid-tour.
+window.addEventListener('scroll', () => {
+  const sel = _pilotCoachSel;
+  if (!sel || document.getElementById('pilot-coach')?.classList.contains('hidden')) return;
+  const el = document.querySelector(sel);
+  const spot = document.getElementById('pilot-spot');
+  const beacon = document.getElementById('pilot-beacon');
+  if (!el || !spot || !beacon) return;
+  const r = el.getBoundingClientRect();
+  if (r.width === 0 && r.height === 0) return;
+  const pad = 7;
+  spot.style.left = (r.left - pad) + 'px'; spot.style.top = (r.top - pad) + 'px';
+  spot.style.width = (r.width + pad * 2) + 'px'; spot.style.height = (r.height + pad * 2) + 'px';
+  beacon.style.left = (r.right - 14) + 'px'; beacon.style.top = (r.top - 2) + 'px';
+}, { passive: true, capture: true });
+window.addEventListener('resize', () => {
+  if (_pilotCoachSel && !document.getElementById('pilot-coach')?.classList.contains('hidden')) {
+    const s = PILOT_STEPS[_pilotCoachIdx];
+    if (s) pilotSpotTo(s.coachSel, s.coachTitle || s.title, s.coachBody || '');
+  }
+});
+function pilotStart() {
+  if (!document.getElementById('pilot-dock')) return;
+  if (!_pilotSnapshot) _pilotSnapshot = pilotSnapshotState();
+  _pilotIdx = 0; _pilotLastOrderId = null; _pilotLastDealWon = false;
+  _pilotCompanyId = null; _pilotDealId = null; _pilotCoachIdx = 0;
+  _pilotSafeDeleteId = null;
+  _pilotDeleteArmed = true; _pilotDeleteDone = false;
+  pilotStopAuto();
+  document.getElementById('pilot-dock').classList.remove('hidden');
+  pilotPaintDock();
+  const s0 = PILOT_STEPS[0];
+  if (s0) pilotSpotTo(s0.coachSel, s0.coachTitle || s0.title, s0.coachBody || '');
+  updateKbdStatus?.('Guide live: Run step walks the Dunnes storyline (G advances, Esc ends)');
+  showToast('Guided demo armed — your data is snapshotted, End restores it', 'success');
+  refreshIcons();
+}
+function pilotStop() {
+  // Bump the generation FIRST so any in-flight setTimeout chain (Step 1
+  // form-fill, Step 6 delete-cascade, etc.) short-circuits on its next
+  // tick instead of continuing to land effects after the dock is hidden.
+  _pilotGen++;
+  pilotStopAuto();
+  pilotHideCoach();
+  _pilotStepBusy = false; // drop any in-flight internal chain (Step 1 fill+dwell+save)
+  document.getElementById('pilot-dock')?.classList.add('hidden');
+  // Close any half-filled modal so an aborted run can't leave the user
+  // stranded on a flash-clicked Create Company form.
+  try { const m = document.getElementById('company-modal'); if (m && !m.classList.contains('hidden')) (window.closeCreateModal || function(){})(); } catch (e) {}
+  try { const qm = document.getElementById('quick-360-drawer'); if (qm && !qm.classList.contains('hidden')) (window.closeQuick360Drawer || function(){})(); } catch (e) {}
+  // When the tour self-cleans via header Reset, the reseeded state must be
+  // kept; the snapshot is only restored on manual End or Esc afterwards.
+  if (_pilotSnapshot && !_pilotSkipRestore) { pilotRestoreState(_pilotSnapshot); }
+  _pilotSnapshot = null; _pilotSkipRestore = false;
+  _pilotIdx = 0; _pilotLastOrderId = null; _pilotLastDealWon = false;
+  _pilotCompanyId = null; _pilotDealId = null; _pilotSafeDeleteId = null;
+  navigateTo('dashboard');
+  showToast(_pilotSkipRestore ? 'Guide closed — tour reseed kept' : 'Guide closed — original data restored', 'success');
+}
+// ─── 7-step Storyline (industrial meat-CRM closed-loop demo) ──────────────
+// Step 1: C — Onboard Boyne Valley Meats (DAFM IE 621 EC + primary Ciarán
+//         Murphy) → 360 drawer focused on the Deals tile (drill-through)
+// Step 2: C — New Deal (€380k Q4 Grass-Fed Angus Beef Supply, contact
+//         inherited, delivery Q4 06:00 CDC window)
+// Step 3: U — Advance the Deal to Closed Won (4 hops: presentation →
+//         decision-maker → contract → won). Won fires the Event Bus which
+//         auto-creates a fulfillment Order.
+// Step 4: U — Order advances: catch-weight +0.56% compliant → In Transit,
+//         then dock signs → Delivered (e-POD), dispatching the Net 30 chase.
+// Step 5: U — Tasks page: Mark Paid on the AR chase task. The order
+//         flips to Paid, the task is struck-through, credit is unfrozen.
+// Step 6: D — Companies: click the trash on Ardara Prime Beef (the
+//         0/0/0 audit) → confirm input + Permanently Remove → header
+//         Reset modal → OK (tour fires it).
+// Step 7: End — All beacons + mask retract; dock shows STAGE 7/7 ALL
+//         VERIFIED 🏁 and the Replay / End Tour chooser buttons.
+const PILOT_STEPS = [
+  {
+    title: 'New Company & Contact',
+    script: 'DAFM IE format gate + duplicate Est# rejected; primary contact linked in one pass.',
+    coachSel: '#pilot-create-company-btn',
+    coachTitle: 'New Company & Contact',
+    coachBody: 'Beacon lands on the <strong>+ Create company</strong> button. The real form modal opens and self-fills — Company Name <code>Boyne Valley Meats</code>, Est# <code>IE 621 EC</code> (live format gate flips the input border green and stamps <strong>✓ DAFM Approved</strong> the moment the regex matches), Sector → Further Food Processing, Cold Chain → Chilled, Annual Contract €1,250,000, Credit €250,000, Navan / Co. Meath, primary contact <code>Ciarán Murphy</code>. The form lingers open for ~3 s so the examiner can read every field, then <strong>Save company</strong> fires — one write lands a Companies row <strong>and</strong> a Contacts row (primary). The Quick 360 drawer pops open and Step 2 lights the Deals tile.',
+    coachSelAfter() {
+      // After this step lands: 360 drawer is open; beacon lands on the
+      // drawer body so the next auto-step can drill through Deals.
+      return '#quick-360-drawer';
+    },
+    coachDoneTitle: 'Company + Contact linked',
+    coachDoneBody: 'Format gate passed (DAFM <code>IE 621 EC</code>), duplicate Est# rejected, primary linked. Watch the right-edge <code>Quick 360</code> drawer — every tile (Contacts · Deals · Tickets · Orders · Tasks) is a clickable FK jump.',
+    run() {
+      pilotRequireAdmin();
+      // Idempotent replay: drop the previous demo company before re-creating.
+      if (_pilotCompanyId && customers.some(c => c.id === _pilotCompanyId)) {
+        try { DB.deleteCompany(_pilotCompanyId); } catch (e) {}
+      }
+      _pilotCompanyId = 'cust-pilot-boyne';
+      _pilotDealId = null;
+      // Land on Companies page so the header Create-company button is in view.
+      currentTab = 'all'; searchQuery = '';
+      const si = document.getElementById('search-input'); if (si) si.value = '';
+      navigateTo('companies');
+      // Mark the step busy so Auto-play doesn't pile on top of the
+      // internal setTimeout chain (fill + ~3 s dwell + Save + 360 drawer).
+      _pilotStepBusy = true;
+      // ── Real form path: open the actual Create-company modal so the
+      // examiner sees the same UI the dealer would use. We then drive the
+      // modal's inputs through their native 'input' event so the live
+      // Est# format gate fires and the green ✓ DAFM Approved pill appears
+      // while the value is still being typed. ──
+      const setVal = (id, val) => {
+        const el = document.getElementById(id);
+        if (!el) return;
+        el.value = val;
+        // dispatch native input event so wireEstFormatFeedback / other
+        // listeners (and the saveCustomer() read) see the new value.
+        el.dispatchEvent(new Event('input', { bubbles: true }));
+        el.dispatchEvent(new Event('change', { bubbles: true }));
+        // Suppress the Nominatim dropdown that wireGeoLevel opens 500 ms
+        // after a value lands in form-city / form-address — the dealer
+        // wouldn't want to pick a Nominatim result for a typed value, and
+        // leaving the menu open blocks the coach card + later beats.
+        if (id === 'form-city')    { try { GEO_CITY_STATE.timer && clearTimeout(GEO_CITY_STATE.timer); hideGeoMenuEl('geo-city-menu', GEO_CITY_STATE); } catch (e) {} }
+        if (id === 'form-address') { try { GEO_STATE.timer        && clearTimeout(GEO_STATE.timer);        hideGeoMenuEl('geo-menu',        GEO_STATE);        } catch (e) {} }
+      };
+      const openBtn = document.getElementById('pilot-create-company-btn');
+      if (!openBtn) { showToast('Pilot Step 1: Create company button not in DOM', 'destructive'); _pilotStepBusy = false; return; }
+
+      // Capture the generation so the many setTimeouts in this step can
+      // bail out the moment the user hits Pause / End / Auto-play again.
+      // Without this guard, an End during the 21-second Step 1 chain
+      // would still flash the row + open the 360 drawer ~22 s later.
+      const stepGen = _pilotGen;
+      const stillRunning = () => stepGen === _pilotGen;
+
+      // ── Slow beacon timeline ──────────────────────────────────────────
+      // Each beat:   spot beacon → fill value → ~600ms eye-dwell → next.
+      // Group labels surface in the coach card so the examiner always
+      // knows which section is being filled (Company Info → Primary
+      // Contact → Location → Operations). Total ≈ 12.5 s + ~3 s final
+      // dwell + Save ≈ 16 s end-to-end.
+      const beats = [
+        // [groupLabel, selector, action, optional delayBefore(ms)]
+        ['Company Info · Name',     '#form-name',  () => setVal('form-name',  'Boyne Valley Meats')],
+        ['Company Info · Est#',     '#form-est',   () => setVal('form-est',   'IE 621 EC')],          // ← live green ✓
+        ['Company Info · Sector',   '#form-sector',() => setVal('form-sector', 'Further Food Processing')],
+        ['Company Info · Stage',    '#form-stage', () => setVal('form-stage',  'Lead / Inbound')],
+        ['Primary Contact · Name',  '#form-contact-name',  () => setVal('form-contact-name',  'Ciarán Murphy')],
+        ['Primary Contact · Title', '#form-contact-title', () => setVal('form-contact-title', 'VP of Meat Procurement & QA')],
+        ['Primary Contact · Email', '#form-contact-email', () => setVal('form-contact-email', 'c.murphy@boynevalley.ie')],
+        ['Primary Contact · Phone', '#form-contact-phone', () => setVal('form-contact-phone', '+353 (46) 902-1144')],
+        ['Location · County',       '#form-state-btn',     () => setCountyValue('Co. Meath', true)],
+        ['Location · City',         '#form-city',    () => setVal('form-city',    'Navan')],
+        ['Location · Address',      '#form-address', () => setVal('form-address', 'Navan Industrial Estate')],
+        ['Operations · Cold Chain', '#form-coldchain', () => setVal('form-coldchain', 'Chilled Storage (0°C to 4°C)')],
+        ['Operations · Terms',      '#form-payment',   () => setVal('form-payment',   'Net 30 Days')],
+        ['Operations · Volume',     '#form-volume',    () => setVal('form-volume',    520)],
+        ['Operations · Contract',   '#form-contract',  () => setVal('form-contract',  1250000)],
+        ['Operations · OTIF',       '#form-otif',      () => setVal('form-otif',      96)],
+        ['Operations · Credit',     '#form-credit',    () => setVal('form-credit',    250000)],
+      ];
+      const BEAT_MS = 700;     // time per beat — slow enough to read
+      const SAVE_AT = BEAT_MS * (beats.length + 1) + 4000; // 4 s dwell AFTER last beat → Save
+      // Open-button dwell: the beacon sits on `#pilot-create-company-btn` for
+      // ~1.6 s BEFORE we click it, so the examiner's eye can find the
+      // button first instead of the modal popping up over the headline.
+      const OPEN_BTN_DWELL = 1600;
+      const openAt  = OPEN_BTN_DWELL + 200;  // tiny settle after click so the modal paints
+      const openBtnSelector = '#pilot-create-company-btn';
+
+      // ── Beacon sits on the Create-company button FIRST so the examiner
+      // can see the exact button the demo is about to click. Then we
+      // click it (real openCreateModal) and start the per-field timeline. ──
+      if (stillRunning()) {
+        try {
+          pilotSpotTo(openBtnSelector, 'New Company & Contact',
+            'Beacon lands on <strong>+ Create company</strong> — the real form modal opens here. The Est# field will flip <strong>green ✓ DAFM Approved</strong> as soon as <code>IE 621 EC</code> matches the format gate.');
+        } catch (e) {}
+      }
+      setTimeout(() => {
+        if (!stillRunning()) return;
+        try { openBtn.click(); } catch (e) {}
+        // After modal opens, briefly re-spot the button (the modal sits on
+        // top of it, so this is more of a "we just clicked this" confirmation).
+        setTimeout(() => {
+          if (!stillRunning()) return;
+          try { pilotSpotTo(openBtnSelector, 'Modal opening…', 'The real Create-company form is loading — the next beacon lands on <strong>Company Name</strong>.'); } catch (e) {}
+        }, 300);
+      }, OPEN_BTN_DWELL);
+
+      // For each beat:  spotlight → fill → keep card visible for the beat.
+      beats.forEach((b, i) => {
+        const t = openAt + (i + 1) * BEAT_MS;
+        setTimeout(() => {
+          if (!stillRunning()) return;
+          try {
+            // Move the beacon to the next field with a tiny per-field coach card.
+            const body = `Filling <strong>${b[0]}</strong> · ${i + 1} / ${beats.length + 1}.`;
+            pilotSpotTo(b[1], b[0], body);
+          } catch (e) {}
+        }, t - 250);
+        setTimeout(() => { if (!stillRunning()) return; try { b[2](); } catch (e) { console.error('[pilot] beat', i, e); } }, t);
+      });
+
+      // t = after last beat — re-pulse the entire modal so the eye lands on
+      // the now-completed form. Keep beacon on Save button for ~4 s.
+      const dwellAt = openAt + (beats.length + 1) * BEAT_MS;
+      setTimeout(() => {
+        if (!stillRunning()) return;
+        try { pilotFlashModal(); } catch (e) {}
+        // Spot the Save button so the user sees where the click is about to land.
+        const saveBtn = Array.from(document.querySelectorAll('#company-modal button')).find(b => /Save company/i.test(b.textContent || ''));
+        if (saveBtn) {
+          try {
+            pilotSpotTo(saveBtn, 'Form filled — about to save',
+              `All ${beats.length} fields written. Watch the green ✓ on Est# <code>IE 621 EC</code> · Saving in ~4 s…`);
+          } catch (e) {}
+        }
+      }, dwellAt);
+
+      // ── Save (real saveCustomer path so format/required gates run live). ──
+      setTimeout(() => {
+        if (!stillRunning()) return;
+        try {
+          // Keep Advanced panel collapsed — falls back to default certs
+          // (HACCP + DAFM Approved).
+          const adv = document.getElementById('company-form-advanced');
+          if (adv) adv.removeAttribute('open');
+          // Re-stamp Est# so the green ✓ pill is visible at the moment of save.
+          const est = document.getElementById('form-est');
+          if (est) { est.value = 'IE 621 EC'; est.dispatchEvent(new Event('input', { bubbles: true })); }
+          // Belt-and-suspenders: cancel any pending Nominatim timers and
+          // force the geo dropdowns shut so they can't sneak over the
+          // modal after Save and obstruct the row / drawer.
+          try { GEO_CITY_STATE.timer && clearTimeout(GEO_CITY_STATE.timer); hideGeoMenuEl('geo-city-menu', GEO_CITY_STATE); } catch (e) {}
+          try { GEO_STATE.timer        && clearTimeout(GEO_STATE.timer);        hideGeoMenuEl('geo-menu',        GEO_STATE);        } catch (e) {}
+          try { hideCountyMenu(); } catch (e) {}
+          saveCustomer();
+        } catch (e) { console.error('[pilot] step1 save', e); }
+      }, SAVE_AT);
+
+      // ── After save: flash the new row + open the 360 drawer. ──
+      setTimeout(() => {
+        if (!stillRunning()) { _pilotStepBusy = false; return; }
+        try {
+          const c = customers.find(x => x.establishmentNumber && String(x.establishmentNumber).toUpperCase() === 'IE 621 EC');
+          if (!c) { showToast('Pilot Step 1: Boyne Valley not created — see console', 'destructive'); _pilotStepBusy = false; return; }
+          _pilotCompanyId = c.id;
+          pilotFlashRow(`[data-row-target="record-detail:${c.id}"]`);
+          openQuick360Drawer(c.id);
+          showToast('Boyne Valley Meats created — IE 621 EC valid, Ciarán Murphy linked as primary', 'success');
+        } catch (e) { console.error('[pilot] step1 post-save', e); }
+        finally { _pilotStepBusy = false; }
+      }, SAVE_AT + 700);
+    },
+    assert() {
+      // Look up the row by either the legacy fixed id (replay) or the
+      // random id produced by saveCustomer() on a fresh run.
+      const c = customers.find(x => x.id === _pilotCompanyId)
+             || customers.find(x => x.establishmentNumber && String(x.establishmentNumber).toUpperCase() === 'IE 621 EC');
+      if (!c) return false;
+      _pilotCompanyId = c.id;
+      const pc = DB.primaryContactOfCompany(c.id);
+      return !!pc && pc.companyId === c.id && String(c.establishmentNumber || '').toUpperCase() === 'IE 621 EC';
+    }
+  },
+  {
+    title: 'New Deal',
+    script: 'Boyne Valley — Q4 Grass-Fed Angus Beef Supply, €380k, contact inherited, early cold-chain window.',
+    coachSel: '#quick-360-drawer [onclick="q360DrillTo(\'deals\')"]',
+    coachTitle: 'New Deal',
+    coachBody: 'Beacon lights the <strong>Deals</strong> tile of the Quick 360 drawer. Clicking drills into Deals pre-scoped to <code>Boyne Valley Meats</code>. The new-deal modal inherits the company, the primary contact (<code>Ciarán Murphy</code>), and the credit ceiling (€250,000) — €380k trips the credit guard so the examiner sees the warning before confirm.',
+    coachSelAfter: () => '#deals-table tr',
+    coachDoneTitle: 'Deal €380k bound to Boyne Valley',
+    coachDoneBody: 'Deal title <code>Boyne Valley — Q4 Grass-Fed Angus Beef Supply</code> lands in the Deals list, primary contact inherited, CDC early-cold window locked. Credit guard fired the warning because €380k &gt; the €250k ceiling — examiner saw the soft-block before confirm.',
+    run() {
+      pilotRequireAdmin();
+      // Drill into Deals via the drawer (same path the beacon just showed).
+      const companyId = _pilotCompanyId || 'cust-pilot-boyne';
+      dealSearchQuery = 'Boyne Valley Meats'; dealFilter = 'all'; dealsFunnelFilter = null;
+      const dsi = document.getElementById('deal-search-input'); if (dsi) dsi.value = 'Boyne Valley Meats';
+      navigateTo('deals');
+      // Drop the previous demo deal so replay is idempotent.
+      const prev = deals.find(x => x.companyId === companyId && String(x.title || '').includes('Boyne Valley'));
+      if (prev) { try { deals = deals.filter(x => x.id !== prev.id); saveStorage(); } catch (e) {} }
+      const primary = DB.primaryContactOfCompany(companyId);
+      if (!primary) { showToast('Pilot Step 2: No primary contact for Boyne Valley — Step 1 missing', 'destructive'); return; }
+      const dealId = 'deal-pilot-boyne-' + Date.now();
+      _pilotDealId = dealId;
+      const deal = {
+        id: dealId,
+        title: 'Boyne Valley — Q4 Grass-Fed Angus Beef Supply',
+        amount: 380000,
+        stageId: 'qualified-to-buy',
+        stageName: 'Qualified To Buy',
+        stage: 'qualified-to-buy',
+        closeDate: '',
+        dealOwner: 'Sarah Lin',
+        score: 78,
+        companyId,
+        contactId: primary.id,
+        productLine: 'Grass-Fed Irish Angus Beef Primal Cuts (chilled 0°C–4°C)',
+        slaCutOffTime: '06:00 AM',
+        deliveryWindow: 'Q4 2026 · 06:00 AM CDC cold-chain slot',
+        createdAt: new Date().toISOString(),
+        history: [{ at: new Date().toISOString(), from: '', to: 'qualified-to-buy', via: 'pilot-create', reason: 'Tour Step 2 (New Deal)' }]
+      };
+      // Credit guard: 380k > 250k → soft warning baked into the run log so
+      // the examiner can see it surfaced even though the deal still lands
+      // (the system warns on confirm; here we show it in the toast).
+      const limit = (customers.find(c => c.id === companyId) || {}).creditLimit || 0;
+      const overLimit = limit > 0 && deal.amount > limit;
+      try { deals.unshift(deal); saveStorage(); } catch (e) {}
+      // Re-render Deals list to reflect the new row.
+      try { if (typeof renderDeals === 'function') renderDeals(); } catch (e) {}
+      // Flash the new row so the eye finds it instantly.
+      setTimeout(() => { try { pilotFlashRow(`[data-row-target="record-detail:${dealId}"]`); } catch (e) {} }, 250);
+      showToast(
+        (overLimit ? `⚠ Credit guard: €380k > €250k limit — confirmed anyway · ` : '') +
+        `Deal created — €380k bound to Boyne Valley, Ciarán Murphy inherited, Q4 06:00 CDC slot`,
+        overLimit ? 'warning' : 'success'
+      );
+    },
+    assert() {
+      const d = deals.find(x => x.companyId === (_pilotCompanyId || 'cust-pilot-boyne') && String(x.title || '').includes('Boyne Valley'));
+      const primary = DB.primaryContactOfCompany(d?.companyId);
+      return !!d && !!primary && d.contactId === primary.id && d.amount === 380000;
+    }
+  },
+  {
+    title: 'Won to Order',
+    script: 'Advance the deal through 4 gates to Closed Won — the Event Bus auto-creates a fulfillment Order.',
+    coachSel: '[data-row-target="record-detail:' + (_pilotDealId || 'deal-pilot-boyne') + '"]',
+    coachTitle: 'Won to Order',
+    coachBody: 'Beacon lands on the <strong>Advance</strong> action of the Boyne Valley deal. Four hops in one pass: <code>Qualified To Buy</code> → <code>Presentation Scheduled</code> → <code>Decision Maker Bought-In</code> → <code>Contract Sent</code> → <code>Closed Won</code>. At the moment of Closed Won the Event Bus broadcasts <code>deal.stageChanged</code> and a fresh <code>ORD-2026-XXXX</code> Order is appended to fulfillment — no manual hand-off, no click "create order".',
+    coachSelAfter: () => {
+      const oid = _pilotLastOrderId || (DB.ordersOfDeal(_pilotDealId || '').slice(-1)[0] || {}).id;
+      return oid ? `[data-row-target="record-detail:${oid}"]` : '#orders-list';
+    },
+    coachDoneTitle: 'Closed Won, fulfillment Order dispatched',
+    coachDoneBody: 'One win produced a fulfillment Order (catch-weight still to be measured). The beacon now lights the new Order row — Step 4 picks it up.',
+    run() {
+      pilotRequireAdmin();
+      const dealId = _pilotDealId || deals.find(x => x.companyId === (_pilotCompanyId || 'cust-pilot-boyne') && String(x.title || '').includes('Boyne Valley'))?.id;
+      if (!dealId) { showToast('Pilot Step 3: No Boyne Valley deal — Step 2 missing', 'destructive'); return; }
+      _pilotDealId = dealId;
+      const d = DB.deal(dealId);
+      if (!d) { showToast('Pilot Step 3: deal disappeared', 'destructive'); return; }
+      const startId = DB.dealStageId(d);
+      // Walk the open flow one step at a time so every transition shows
+      // its toast and we land precisely on closed-won. The DB chokepoint
+      // enforces the 1-step rule, so we loop.
+      const flow = ['qualified-to-buy', 'presentation-scheduled', 'decision-maker-bought-in', 'contract-sent', 'closed-won'];
+      const fromIdx = flow.indexOf(startId);
+      for (let i = Math.max(fromIdx, 0); i < flow.length; i++) {
+        const target = flow[i];
+        if (DB.dealStageId(DB.deal(dealId)) === target) continue;
+        const res = DB.updateDealStage(dealId, target, { via: 'pilot-win-' + target });
+        if (!res.ok) { showToast(`Step 3 advance → ${target} blocked: ${(res.blockers || []).map(b => b.label).join(' · ')}`, 'warning'); break; }
+        if (target === 'closed-won') { _pilotLastDealWon = true; showToast(`Deal won (€${(d.amount || 0).toLocaleString()}) — Event Bus dispatched the fulfillment Order`, 'success'); }
+      }
+      // Pull the order the event bus just appended.
+      const fresh = DB.ordersOfDeal(dealId).slice(-1)[0];
+      _pilotLastOrderId = fresh ? fresh.id : null;
+      // Drop into Orders so the dealer tile the beacon lands on is visible.
+      orderSearchQuery = ''; orderFilter = 'all';
+      const osi = document.getElementById('order-search-input'); if (osi) osi.value = '';
+      navigateTo('orders');
+      if (_pilotLastOrderId) setTimeout(() => { try { pilotFlashRow(`[data-row-target="record-detail:${_pilotLastOrderId}"]`); } catch (e) {} }, 250);
+    },
+    assert() {
+      const dealId = _pilotDealId || deals.find(x => x.companyId === (_pilotCompanyId || 'cust-pilot-boyne'))?.id;
+      if (!dealId) return false;
+      const d = DB.deal(dealId);
+      if (!d || DB.dealStageId(d) !== 'closed-won') return false;
+      const o = _pilotLastOrderId ? DB.order(_pilotLastOrderId) : DB.ordersOfDeal(dealId).slice(-1)[0];
+      return !!o && o.dealId === dealId && o.status === 'Pending';
+    }
+  },
+  {
+    title: 'Weigh & Delivery',
+    script: 'Two advances: catch-weight +0.56% → In Transit, then dock signs → Delivered.',
+    coachSel: () => _pilotLastOrderId ? `[data-row-target="record-detail:${_pilotLastOrderId}"]` : '#orders-list',
+    coachTitle: 'Weigh & Delivery',
+    coachBody: 'Beacon lands on the <strong>Advance</strong> action of the new Order. First click: plant floor finishes weighing — catch-weight <strong>241.35 kg</strong>, variance <strong>+0.56%</strong> (well within the ±3% tolerance) — status flips <code>Pending → In Production → In Transit</code>. Second click: dock signs — e-POD archived, status flips <code>In Transit → Delivered</code>, and the Event Bus dispatches the <strong>Net 30 finance chase</strong> task automatically.',
+    coachSelAfter: () => {
+      const chase = tasks.find(t => t.relatedToType === 'Order' && t.relatedToId === _pilotLastOrderId && isArChaseTask(t));
+      return chase ? `[data-row-target="record-detail:${chase.id}"]` : '#tasks-tbody tr';
+    },
+    coachDoneTitle: 'Delivered, Net-30 chase dispatched',
+    coachDoneBody: 'Catch-weight audit +0.56% green · e-POD archived · Awaiting Payment pill on · Net 30 chase task created. Beacon now lights the chase task — Step 5 collects the cash.',
+    run() {
+      pilotRequireAdmin();
+      const o = _pilotLastOrderId ? DB.order(_pilotLastOrderId) : null;
+      if (!o) { showToast('Pilot Step 4: No fulfillment order — Step 3 missing', 'destructive'); return; }
+      // First click: walk Pending → In Production → In Transit in one beat
+      // so the catch-weight toast can read as a single plant-floor event.
+      // We do this by direct DB.updateOrderStatus calls (advanceOrderStatus
+      // shows its own toast per hop, which would clobber the catch-weight
+      // message we want to anchor the step on).
+      DB.updateOrderStatus(o.id, 'In Production');
+      showToast('Plant floor finished weighing & dispatched (Catch-Weight 241.35 kg · variance +0.56% — within tolerance) ✓', 'success');
+      DB.updateOrderStatus(o.id, 'In Transit');
+      saveStorage();
+      try { renderOrders(); } catch (e) {}
+      // Second click: dock signs — use the real advanceOrderStatus so the
+      // dispatchPaymentChaseTask choke point + e-POD + deliveredAt all fire
+      // exactly as they do in the wild.
+      setTimeout(() => {
+        try {
+          if (o.status !== 'Delivered') advanceOrderStatus(o.id);
+          // Stomp the stock toast so the e-POD message wins the screen.
+          showToast(`${o.orderNumber} → Delivered (dock signed · e-POD archived) ✓`, 'success');
+        } catch (e) { console.error('[pilot] step4 dock', e); }
+      }, 700);
+      navigateTo('orders');
+      if (_pilotLastOrderId) setTimeout(() => { try { pilotFlashRow(`[data-row-target="record-detail:${_pilotLastOrderId}"]`); } catch (e) {} }, 250);
+    },
+    assert() {
+      const o = _pilotLastOrderId ? DB.order(_pilotLastOrderId) : null;
+      if (!o) return false;
+      return o.status === 'Delivered' && !!tasks.find(x => x.relatedToType === 'Order' && x.relatedToId === o.id && isArChaseTask(x));
+    }
+  },
+  {
+    title: 'Paid & Settle',
+    script: 'Mark Paid on the Net-30 chase task: order → Paid, task struck-through, credit released.',
+    coachSel: () => {
+      const chase = tasks.find(t => t.relatedToType === 'Order' && t.relatedToId === _pilotLastOrderId && isArChaseTask(t));
+      return chase ? `[data-row-target="record-detail:${chase.id}"]` : '#tasks-tbody tr';
+    },
+    coachTitle: 'Paid & Settle',
+    coachBody: 'Beacon lands on the right-side <strong>Mark Paid</strong> action of the auto-dispatched Net-30 chase task for <code>Boyne Valley — €380,000</code>. One click fires three things at once: the task is struck-through (Done), the Order flips to <code>Paid</code>, and the customer\'s outstanding A/R drops so the credit guard is released for the next deal.',
+    coachSelAfter: () => _pilotLastOrderId ? `[data-row-target="record-detail:${_pilotLastOrderId}"]` : '#orders-list',
+    coachDoneTitle: 'Paid, credit unfrozen',
+    coachDoneBody: 'Wire transfer received €380,000 reconciled — Order badge is the green <code>Closed / Paid ✓</code> pill, the chase task is line-through, the credit ceiling is released. Beacon now lights the Orders page so the examiner sees the closed-loop badge.',
+    run() {
+      pilotRequireAdmin();
+      const o = _pilotLastOrderId ? DB.order(_pilotLastOrderId) : null;
+      if (!o) { showToast('Pilot Step 5: No order to settle — Step 4 missing', 'destructive'); return; }
+      // Find the auto-dispatched Net-30 chase task for this order.
+      const chase = tasks.find(t => t.relatedToType === 'Order' && t.relatedToId === o.id && isArChaseTask(t) && t.status !== 'Done');
+      if (!chase) { showToast('Pilot Step 5: No Net-30 chase task found — Step 4 did not deliver', 'destructive'); return; }
+      // 1. Strike-through the chase task (Done).
+      try { setTaskStatus(chase.id, 'Done'); } catch (e) { DB.updateTaskStatus?.(chase.id, 'Done'); chase.status = 'Done'; saveStorage(); }
+      // 2. Flip the Order to Paid (the choke point the finance close goes
+      // through — fires the order.statusChanged event for downstream UI).
+      DB.updateOrderStatus(o.id, 'Paid');
+      // 3. Reverse the AR on the customer side so the credit guard is
+      // released for the next deal cycle (this is what the examiner reads
+      // off the Companies tile after the loop closes).
+      const c = customers.find(x => x.id === o.companyId);
+      if (c) {
+        c.outstandingAr = Math.max(0, (c.outstandingAr || 0) - (o.total || 0));
+        // Light-up: zero overdue, badge back to Active.
+        c.overdueDays = 0;
+        if (c.operationalStatus === 'Credit Hold') c.operationalStatus = 'Active';
+        saveStorage();
+      }
+      // Render so the strike-through, Paid pill, and AR drop are visible.
+      try { renderTasks(); } catch (e) {}
+      try { renderOrders(); } catch (e) {}
+      // Drop back into Orders and flash the Paid row — the headline of the
+      // lead-to-cash close the examiner is supposed to read.
+      orderSearchQuery = ''; orderFilter = 'all';
+      const osi = document.getElementById('order-search-input'); if (osi) osi.value = '';
+      navigateTo('orders');
+      if (_pilotLastOrderId) setTimeout(() => { try { pilotFlashRow(`[data-row-target="record-detail:${_pilotLastOrderId}"]`); } catch (e) {} }, 250);
+      showToast('Wire transfer received €380,000 reconciled! Credit ceiling released, related to-dos closed automatically ✓', 'success');
+    },
+    assert() {
+      const o = _pilotLastOrderId ? DB.order(_pilotLastOrderId) : null;
+      if (!o) return false;
+      const chase = tasks.find(t => t.relatedToType === 'Order' && t.relatedToId === o.id && isArChaseTask(t));
+      return o.status === 'Paid' && !!chase && chase.status === 'Done';
+    }
+  },
+  {
+    title: 'Delete & Reset',
+    script: 'Trash the 0/0/0 lead → cascade modal → code-confirm → header Reset → OK.',
+    coachSel: () => null, // step.run() owns the entire beacon timeline
+    coachTitle: 'Delete & Reset',
+    coachBody: 'Beacon hops three places. (1) Trash icon on the early-stage <code>Ardara Prime Beef</code> row — the destructive cascade modal lists <strong>0 deals · 0 orders · 0 tickets</strong> (a zero-risk audit). (2) Confirm input + <strong>Permanently Remove</strong> — the row vanishes. (3) Header <strong>Reset</strong> — info modal opens, beacon pins on the OK button, tour auto-confirms.',
+    coachSelAfter: () => null, // step.run() owns the entire beacon timeline
+    coachDoneTitle: 'Environment restored',
+    coachDoneBody: 'Lead safely archived · dataset reseeded to the original sample. Beacon now retracts and Step 7 takes over the dock.',
+    run() {
+      pilotRequireAdmin();
+      // ── Audit-delete coda on a zero-risk early lead — fully auto-driven,
+      // beacon-pinned so the viewer sees the cascade modal/code-entry and
+      // info-modal/OK button (the spots they'd normally click). The beacon
+      // timeline owns everything here, including the final modal. ──
+      // Pick a target: prefer the first company in the list that has 0
+      // deals and 0 orders (a safe 0/0/0 audit target). Fall back to the
+      // Step 1 demo company if none exists.
+      const safe = customers.find(c => DB.dealsOfCompany(c.id).length === 0 && DB.ordersOfCompany(c.id).length === 0) || customers.find(x => x.id === _pilotCompanyId);
+      if (!safe) { showToast('Pilot Step 6: no safe-delete target', 'destructive'); return; }
+      _pilotSafeDeleteId = safe.id;
+      // t=600  Beacon #1 lands on the trash icon for a beat — the
+      //         examiner sees the action that is normally required.
+      // t=1700 Cascade modal opens with the 0/0/0 audit list visible.
+      // t=2500 Beacon pins on the code input, we type the company code,
+      //         beacon hops to Permanently Remove (the button un-locks),
+      //         tour auto-fires the click.
+      // t=3700 Archive visibly: Companies re-renders, row vanishes, beacon
+      //         shifts to the table body, dwell for ~1000ms.
+      // t=4900 Beacon hops to header Reset, info modal opens, beacon pins
+      //         on OK, tour auto-fires the click → dataset reseeds.
+      setTimeout(() => { try { pilotHideCoach(); } catch (e) {} }, 0);
+      setTimeout(() => {
+        try {
+          const trashBtn = document.querySelector(`[data-row-target="record-detail:${safe.id}"] button[onclick*="openCascadeModal"]`) || document.querySelector(`button[onclick*="openCascadeModal"][data-target-company="${safe.id}"]`);
+          // The trash is rendered per-row; the simpler selector above is
+          // the one rendered in the Companies table — fall back to the
+          // first visible trash button if the per-row lookup misses.
+          const btn = trashBtn || Array.from(document.querySelectorAll('button[onclick*="openCascadeModal"]')).find(b => b.offsetParent);
+          if (btn) {
+            pilotSpotTo(btn, 'Step 6a — Trash (cascade delete)', 'This is the row-action delete on a zero-risk early lead. The cascade modal will pop up next.');
+          } else {
+            pilotSpotTo(`[data-row-target="record-detail:${safe.id}"]`, 'Step 6a — Trash (cascade delete)', 'Beacon would land on the per-row trash icon. The cascade modal pops up next.');
+          }
+        } catch (e) {}
+        setTimeout(() => {
+          try {
+            // Open the cascade modal directly with the required code so we
+            // can drive the audit-input + confirm-click timeline from JS
+            // (the modal's own input listener unlocks the button when the
+            // code matches).
+            const impact = {
+              contacts: DB.contactsOfCompany(safe.id).length,
+              deals:    DB.dealsOfCompany(safe.id).length,
+              orders:   DB.ordersOfCompany(safe.id).length,
+              tickets:  DB.ticketsOfCompany(safe.id).length,
+              tasks:    DB.tasksOfCompany(safe.id).length
+            };
+            const finLabel = `Financial risk: €0 (no closed-won deals, no open orders, no overdue A/R) · ${safe.companyName} (${safe.establishmentNumber || 'no Est#'})`;
+            openCascadeModal({
+              title: 'Confirm Cascade Deletion — ' + safe.companyName,
+              desc: 'This will permanently archive ' + safe.companyName + ' and all dependent records:',
+              requiredCode: safe.establishmentNumber || safe.companyName,
+              impact,
+              financialLabel: finLabel,
+              onConfirm: () => {
+                try {
+                  DB.deleteCompany(safe.id);
+                  saveStorage();
+                  if (typeof renderCompanies === 'function') renderCompanies();
+                  showToast(safe.companyName + ' archived (cascade delete tour)', 'destructive');
+                } catch (e) { console.error('[pilot] cascade onConfirm', e); }
+              }
+            });
+            // Beacon lands on the code input + Permanently Remove button
+            // area so the examiner sees the audit gate.
+            setTimeout(() => {
+              try {
+                const input = document.getElementById('cascade-confirm-input');
+                const btn = document.getElementById('cascade-confirm-btn');
+                // Drive the audit input so the button unlocks (real input
+                // event, not just setting .value, so the button enable
+                // listener wakes up).
+                if (input && safe.establishmentNumber) {
+                  input.value = safe.establishmentNumber;
+                  input.dispatchEvent(new Event('input', { bubbles: true }));
+                }
+                // Beacon on the now-unlocked Permanently Remove button.
+                if (btn && !btn.disabled) {
+                  const rect = btn.getBoundingClientRect();
+                  const spot = document.getElementById('pilot-spot');
+                  const beacon = document.getElementById('pilot-beacon');
+                  const coach = document.getElementById('pilot-coach');
+                  if (spot && beacon && coach) {
+                    spot.style.zIndex = '1100'; beacon.style.zIndex = '1101'; coach.style.zIndex = '1102';
+                    const pad = 7;
+                    spot.style.left = (rect.left - pad) + 'px';
+                    spot.style.top = (rect.top - pad) + 'px';
+                    spot.style.width = (rect.width + pad * 2) + 'px';
+                    spot.style.height = (rect.height + pad * 2) + 'px';
+                    spot.classList.remove('hidden');
+                    beacon.style.left = (rect.right - 14) + 'px';
+                    beacon.style.top = (rect.top - 2) + 'px';
+                    beacon.classList.remove('hidden');
+                    document.getElementById('pilot-coach-title').textContent = 'Step 6a — Permanently Remove';
+                    document.getElementById('pilot-coach-body').innerHTML = 'Audit input filled — <strong>0 deals · 0 orders · 0 tickets</strong> — destructive button unlocked. Tour fires it for you.';
+                    coach.style.transform = 'none';
+                    const cw = 300, gap = 14;
+                    let cx = rect.right + gap, cy = Math.max(70, Math.min(window.innerHeight - 240, rect.top - 10));
+                    if (cx + cw > window.innerWidth - 12) cx = rect.left - cw - gap;
+                    if (cx < 12) { cx = Math.max(12, Math.min(window.innerWidth - cw - 12, rect.left)); cy = rect.bottom + gap; }
+                    coach.style.left = cx + 'px'; coach.style.top = cy + 'px';
+                    coach.classList.remove('hidden');
+                  }
+                }
+              } catch (e) { console.error('[pilot] cascade beacon', e); }
+              // Dwell then click Permanently Remove. CRITICAL: do NOT mutate
+              // the global closeCascadeModal/closeInfoModal functions (the
+              // previous attempt overwrote them with no-ops, which then
+              // leaked across the whole session and left the modal stuck).
+              // Instead: drive the onConfirm directly (this is what the
+              // btn click handler would do anyway) and then call the
+              // canonical closeCascadeModal so _cascadePending is reset.
+              setTimeout(() => {
+                try {
+                  if (_cascadePending && typeof _cascadePending.onConfirm === 'function') {
+                    try { _cascadePending.onConfirm(); } catch (e) { console.error('[pilot] cascade onConfirm', e); }
+                  }
+                  if (typeof closeCascadeModal === 'function') closeCascadeModal();
+                } catch (e) { console.error('[pilot] cascade close', e); }
+                // Hop to Companies, dwell so the row-vanish is read.
+                setTimeout(() => {
+                    navigateTo('companies');
+                    if (typeof renderCompanies === 'function') renderCompanies();
+                    showToast(safe.companyName + ' archived — 0/0/0 audit confirmed', 'destructive');
+                    pilotSpotTo('#companies-tbody', 'Step 6a done — row is gone', 'Cascade deleted the company + its dependents in one pass.');
+                  // Header Reset hop.
+                  setTimeout(() => {
+                    try {
+                      pilotSpotTo('#header-reset-btn', 'Step 6b — Reset demo data', 'Header Reset reseeds the sample dataset. The tour opens the confirmation modal, beacons the OK button, and auto-confirms.');
+                    } catch (e) {}
+                    setTimeout(() => {
+                      try {
+                        openInfoModal({
+                          title: 'Reset Demo Data',
+                          message: 'This will erase all CRM data (companies, contacts, deals, orders, tickets, tasks) and restore the original sample dataset. This action cannot be undone.',
+                          okLabel: 'Reset Now',
+                          cancelLabel: 'Cancel',
+                          onOk: () => {
+                            try {
+                              localStorage.removeItem(STORAGE_KEY);
+                              localStorage.removeItem('companies_view_v1');
+                              localStorage.removeItem('companies_columns_v1');
+                            } catch (e) {}
+                            customers = []; companies = []; contacts = []; deals = []; tickets = []; orders = []; tasks = [];
+                            currentTab = 'all';
+                            searchQuery = '';
+                            const si = document.getElementById('search-input');
+                            if (si) si.value = '';
+                            visibleColumns = Object.fromEntries(COLUMNS_DEF.map(c => [c.id, true]));
+                            seedIfEmpty();
+                            showToast('Demo data reset (tour auto)', 'success');
+                            renderDashboard();
+                            navigateTo('dashboard');
+                          }
+                        });
+                        // Pin the yellow beacon on the OK button. It STAYS
+                        // THERE (we do not re-pilotSpotTo) — the viewer reads
+                        // it until the dwell ends, then we auto-fire.
+                        setTimeout(() => {
+                          try {
+                            const okBtn = document.getElementById('info-modal-ok-btn');
+                            if (!okBtn) return;
+                            const spot = document.getElementById('pilot-spot');
+                            const beacon = document.getElementById('pilot-beacon');
+                            const coach = document.getElementById('pilot-coach');
+                            if (!spot || !beacon || !coach) return;
+                            const r = okBtn.getBoundingClientRect();
+                            const pad = 7;
+                            spot.style.zIndex = '1100'; beacon.style.zIndex = '1101'; coach.style.zIndex = '1102';
+                            spot.style.left = (r.left - pad) + 'px';
+                            spot.style.top = (r.top - pad) + 'px';
+                            spot.style.width = (r.width + pad * 2) + 'px';
+                            spot.style.height = (r.height + pad * 2) + 'px';
+                            spot.classList.remove('hidden');
+                            beacon.style.left = (r.right - 14) + 'px';
+                            beacon.style.top = (r.top - 2) + 'px';
+                            beacon.classList.remove('hidden');
+                            document.getElementById('pilot-coach-title').textContent = 'Reset Now';
+                            document.getElementById('pilot-coach-body').innerHTML = 'Tour fires this OK for you. The dataset reseeds and Step 7 lights the dock.';
+                            coach.style.transform = 'none';
+                            const cw = 300, gap = 14;
+                            let cx = r.right + gap, cy = Math.max(70, Math.min(window.innerHeight - 240, r.top - 10));
+                            if (cx + cw > window.innerWidth - 12) cx = r.left - cw - gap;
+                            if (cx < 12) { cx = Math.max(12, Math.min(window.innerWidth - cw - 12, r.left)); cy = r.bottom + gap; }
+                            coach.style.left = cx + 'px'; coach.style.top = cy + 'px';
+                            coach.classList.remove('hidden');
+                            _pilotCoachSel = '#info-modal-ok-btn';
+                          } catch (e) { console.error('[pilot] beacon on OK failed', e); }
+                          // Dwell then auto-fire OK.
+                          setTimeout(() => {
+                            try { _pilotSkipRestore = true; } catch (e) {}
+                            try {
+                              const ok = document.getElementById('info-modal-ok-btn');
+                              if (ok) ok.click();
+                            } catch (e) { console.error('[pilot] click OK failed', e); }
+                            try { pilotHideCoach(); } catch (e) {}
+                            try { pilotStopAuto(); } catch (e) {}
+                            // Mark all steps done — Step 7's run() will
+                            // take over from here and present the final
+                            // "Tour complete" dock state.
+                            try {
+                              _pilotIdx = PILOT_STEPS.length - 1; // advance into Step 7
+                              pilotPaintDock();
+                              // Now run Step 7 explicitly to set the final UI.
+                              pilotRunStep();
+                            } catch (e) {}
+                            try { showToast('Guided demo complete — Step 7 lights the dock', 'success'); } catch (e) {}
+                          }, 2500);
+                        }, 500);
+                      } catch (e) { console.error('[pilot] reset open failed', e); }
+                    }, 800);
+                  }, 1000);
+                }, 400);
+              }, 1100);
+            }, 800);
+          } catch (e) { console.error('[pilot] cascade modal failed', e); }
+        }, 1100);
+      }, 600);
+    },
+    assert() {
+      // The audit + reset ran; assert is only meaningful mid-flight, so
+      // accept if the safe target has been removed.
+      if (_pilotSafeDeleteId) return !customers.some(c => c.id === _pilotSafeDeleteId);
+      // No safe target was selected (replay path with no zero-risk rows).
+      return true;
+    }
+  },
+  {
+    title: 'Tour complete',
+    script: 'Beacons retract; dock shows Replay / End Tour for the examiner.',
+    coachSel: '#pilot-dock',
+    coachTitle: 'Tour complete',
+    coachBody: 'All beacons retracted. You just walked through the full lead-to-cash loop on a meat-CRM dataset — onboarding a plant, opening a deal, advancing to Closed Won (with the Event Bus dispatching the fulfillment order), catch-weight + dock signing, marking the chase Paid, and safely archiving a zero-risk lead. Use the dock buttons below to <strong>Replay</strong> the storyline from the top or <strong>End Tour</strong> to release control.',
+    coachSelAfter: () => '#pilot-dock',
+    coachDoneTitle: 'Tour complete — Replay or End tour',
+    coachDoneBody: 'Replay the storyline from the top, or End Tour to release control back to the dataset.',
+    run() {
+      // No data mutations — this step is purely UI presentation.
+      pilotHideCoach();
+      // Drop onto the Dashboard so the examiner sees the global state.
+      try { navigateTo('dashboard'); } catch (e) {}
+      // Mark all steps done so pilotPaintDock writes the "Tour complete"
+      // final state into the dock (this is also handled by pilotRunStep's
+      // _pilotIdx++ above, but we belt-and-braces it here).
+      try { _pilotIdx = PILOT_STEPS.length; pilotPaintDock(); } catch (e) {}
+      try { updateKbdStatus?.('Guided tour complete — Replay / End Tour'); } catch (e) {}
+      // No toast — the dock itself is the closing card.
+    },
+    assert() {
+      // Always green: this step is a UI presentation step, not a data gate.
+      return true;
+    }
+  }
+];
+function currentTaskFilterSafe() { try { taskFilter = 'all'; } catch (e) {} try { taskSearchQuery = ''; } catch (e) {} }
+
 // ============= STORAGE =============
 function loadStorage() {
   try {
@@ -3698,12 +5003,18 @@ Events.on('order.statusChanged', ({ order, newStatus }) => {
 
 // ============= UTILS =============
 function escapeHtml(s) { if (s==null) return ''; const d=document.createElement('div'); d.textContent=s; return d.innerHTML; }
-function fmtMoney(n) { if (n>=1e6) return '€'+(n/1e6).toFixed(2)+'M'; if (n>=1e3) return '€'+(n/1e3).toFixed(0)+'K'; return '€'+n.toLocaleString(); }
+function fmtMoney(n) {
+  // ABAC masking: Plant QA sees €***,*** (anti-leak) — Finance/Admin see full.
+  // can() is declared later in source order, so guard with typeof for safety.
+  try { if (typeof can === 'function' && !can('moneyFull')) return '€***,***'; } catch (e) {}
+  if (n>=1e6) return '€'+(n/1e6).toFixed(2)+'M'; if (n>=1e3) return '€'+(n/1e3).toFixed(0)+'K'; return '€'+n.toLocaleString();
+}
 function fmtNum(n) { return (n||0).toLocaleString(); }
 function initials(name) { return (name||'?').split(/\s+/).map(p=>p[0]).join('').slice(0,2).toUpperCase(); }
 function getInitialsBg(name) {
   // gradient based on hash
-  const h = (name||'').charCodeAt(0) % 5;
+  if (!name) return 'bg-gradient-to-br from-slate-400 to-slate-500';
+  const h = name.charCodeAt(0) % 5;
   const grads = ['from-rose-400 to-rose-600','from-blue-400 to-blue-600','from-emerald-400 to-emerald-600','from-amber-400 to-amber-600','from-purple-400 to-purple-600'];
   return 'bg-gradient-to-br ' + grads[h];
 }
@@ -3841,15 +5152,19 @@ function showToast(msg, variant = 'success', opts = {}) {
 
 // ============= 1. DESTRUCTIVE CASCADE MODAL ENGINE =============
 let _cascadePending = null;
-function openCascadeModal({ title, desc, requiredCode, impact, financialLabel, onConfirm }) {
+function openCascadeModal({ title, desc, requiredCode, impact, financialLabel, hideImpact, onConfirm }) {
   document.getElementById('cascade-title').textContent = title || 'Confirm Cascade Deletion';
   document.getElementById('cascade-desc').textContent  = desc  || 'This action will trigger a cascade archive and impact the following dependent business objects:';
   document.getElementById('cascade-required-code').textContent = requiredCode;
-  document.getElementById('cascade-count-contacts').textContent = impact.contacts   ?? 0;
-  document.getElementById('cascade-count-deals').textContent    = impact.deals      ?? 0;
-  document.getElementById('cascade-count-orders').textContent   = impact.orders     ?? 0;
-  document.getElementById('cascade-count-tickets').textContent  = impact.tickets    ?? 0;
-  document.getElementById('cascade-count-tasks').textContent    = impact.tasks      ?? 0;
+  const impactList = document.getElementById('cascade-impact-list');
+  if (impactList) impactList.style.display = hideImpact ? 'none' : '';
+  if (!hideImpact && impact) {
+    document.getElementById('cascade-count-contacts').textContent = impact.contacts   ?? 0;
+    document.getElementById('cascade-count-deals').textContent    = impact.deals      ?? 0;
+    document.getElementById('cascade-count-orders').textContent   = impact.orders     ?? 0;
+    document.getElementById('cascade-count-tickets').textContent  = impact.tickets    ?? 0;
+    document.getElementById('cascade-count-tasks').textContent    = impact.tasks      ?? 0;
+  }
   document.getElementById('cascade-financial').textContent      = financialLabel || '';
   document.getElementById('cascade-financial').style.display    = financialLabel ? 'block' : 'none';
   document.getElementById('cascade-confirm-input').value = '';
@@ -3866,6 +5181,41 @@ function closeCascadeModal() {
   document.getElementById('cascade-modal').classList.add('hidden');
   _cascadePending = null;
 }
+
+// ============= 2. LIGHTWEIGHT INFO / ALERT MODAL =============
+let _infoModalOkCallback = null;
+function openInfoModal({ title, message, okLabel, cancelLabel, onOk }) {
+  _infoModalOkCallback = typeof onOk === 'function' ? onOk : null;
+  document.getElementById('info-modal-title').textContent = title || 'Notice';
+  document.getElementById('info-modal-msg').textContent = message || '';
+  const okBtn = document.getElementById('info-modal-ok-btn');
+  if (okBtn) {
+    okBtn.textContent = okLabel || 'OK';
+    okBtn.className = okBtn.className.replace(/\bbg-\w+-\d+\b/g, '').trim() + ' bg-blue-600 hover:bg-blue-700';
+  }
+  const cancelBtn = document.getElementById('info-modal-cancel-btn');
+  if (cancelBtn) {
+    cancelBtn.style.display = cancelLabel ? '' : 'none';
+    cancelBtn.textContent = cancelLabel || 'Cancel';
+  }
+  document.getElementById('info-modal').classList.remove('hidden');
+  refreshIcons();
+}
+function closeInfoModal() {
+  document.getElementById('info-modal').classList.add('hidden');
+  _infoModalOkCallback = null;
+}
+function infoModalOkCallback() {
+  closeInfoModal();
+  if (typeof _infoModalOkCallback === 'function') _infoModalOkCallback();
+}
+// Wire up Escape to close info modal
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape' && !document.getElementById('info-modal')?.classList.contains('hidden')) {
+    closeInfoModal();
+  }
+});
+
 // Wire up confirmation-input live validation
 document.addEventListener('DOMContentLoaded', () => {
   const input = document.getElementById('cascade-confirm-input');
@@ -4238,6 +5588,9 @@ function validateField(field, value, context = {}) {
   if (field === 'creditLimit' && (Number(value) <= 0 || value === '')) {
     return { level: 'warning', hint: '⚠ No credit limit set → orders will default to COD (Cash on Delivery).' };
   }
+  if (field === 'creditLimit' && Number(value) > 0) {
+    return { level: 'success', hint: '✓ Credit limit set' };
+  }
   if (field === 'email' && value) {
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) return { level: 'warning', hint: '⚠ Email format looks invalid.' };
     return { level: 'success', hint: '✓ Email format valid' };
@@ -4507,26 +5860,49 @@ function renderDashboard() {
 }
 
 // ============= COMPANIES =============
-// Cycle through Operational Status pill: Prospect → Active → Credit Hold → Prospect.
-// Persists on the customer object so the badge survives reload.
+// RBAC: only Finance/Eileen (credit owner) and Admin/Sarah may flip the
+// Credit Hold pill; QA/Liam is read-only here and must route via a task.
+// Manual one-click set/clear keeps the audit trail in the toast.
 function cycleOperationalStatus(customerId, e) {
   if (e && e.stopPropagation) e.stopPropagation();
   const c = customers.find(x => x.id === customerId);
   if (!c) return;
+  if (!can('creditToggle')) { denyToast("Only Finance (Eileen) or Admin (Sarah) can set / clear Credit Hold — QA is read-only on credit"); return; }
   const order = ['Prospect', 'Active', 'CreditHold'];
   const derived = (c.outstandingAr||0) > (c.creditLimit||0) ? 'CreditHold' : (c.stage === 'Active Supply Partner' ? 'Active' : 'Prospect');
   const current = c.operationalStatus || derived;
-  const next = order[(order.indexOf(current) + 1) % order.length];
+  const i = order.indexOf(current);
+  if (i === -1) { showToast(`Cannot cycle from unknown status: ${current}`, 'warning'); return; }
+  const next = order[(i + 1) % order.length];
   c.operationalStatus = next;
   saveStorage();
-  showToast(`${c.companyName} → ${next === 'CreditHold' ? 'Credit Hold' : next}`);
+  showToast(`${c.companyName} → ${next === 'CreditHold' ? 'Credit Hold' : next} (set by ${PERSONAS[currentPersona].name}, ${PERSONAS[currentPersona].role})`);
   renderCompanies();
+}
+// RBAC gate used by the company modal entry points: QA/Liam can open records
+// (DAFM / Bord Bia audit) but must never create or edit the master file.
+function requireCompanyWrite(action) {
+  if (can('companyWrite')) return true;
+  denyToast(`Read-only for QA — ${action} is restricted to Admin (Sarah). Credit fields: Finance (Eileen)`);
+  return false;
+}
+function requireCompanyDelete() {
+  if (can('companyDelete')) return true;
+  denyToast('Cascade delete is restricted to System Administrator (Sarah)');
+  return false;
 }
 
 function getFilteredSortedCustomers() {
   let result = customers.filter(c => {
+    const pc = c.primaryContact || {};
+    const fl = c.facilityLocation || {};
     const q = (searchQuery||'').toLowerCase().trim();
-    const matchesQ = !q || c.companyName.toLowerCase().includes(q) || c.establishmentNumber.toLowerCase().includes(q) || c.primaryContact.name.toLowerCase().includes(q) || c.primaryContact.email.toLowerCase().includes(q) || c.facilityLocation.city.toLowerCase().includes(q);
+    const matchesQ = !q
+      || (c.companyName||'').toLowerCase().includes(q)
+      || (c.establishmentNumber||'').toLowerCase().includes(q)
+      || (pc.name||'').toLowerCase().includes(q)
+      || (pc.email||'').toLowerCase().includes(q)
+      || (fl.city||'').toLowerCase().includes(q);
     let matchesT = true;
     // Quick Views
     if (currentTab === 'meat') matchesT = c.sector === 'Meat & Beef Processing';
@@ -4652,12 +6028,12 @@ function renderCompanies() {
           <td class="px-4 py-3"><span class="text-[11px] font-semibold bg-slate-100 text-slate-700 px-2 py-0.5 rounded">${escapeHtml(c.sector)}</span></td>
           <td class="px-4 py-3"><span class="text-[11px] font-semibold px-2 py-0.5 rounded ${stageClass(c.stage)}">${escapeHtml(c.stage)}</span></td>
           <td class="px-4 py-3 relative group cursor-pointer" onclick="event.stopPropagation(); openContactRecordPage('${c.id}')">
-            <div class="font-medium text-slate-900">${escapeHtml(c.primaryContact.name)}</div>
-            <div class="text-[11px] text-slate-500">${escapeHtml(c.primaryContact.title || '—')}</div>
+            <div class="font-medium text-slate-900">${escapeHtml(c.primaryContact?.name || '—')}</div>
+            <div class="text-[11px] text-slate-500">${escapeHtml(c.primaryContact?.title || '—')}</div>
             <div class="absolute left-0 top-full mt-1 z-30 hidden group-hover:block bg-white border border-slate-200 rounded-lg shadow-lg p-2.5 w-56 pointer-events-none">
               <div class="text-[9px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">Contact Details</div>
-              <div class="flex items-center gap-1.5 text-[11px] text-slate-700 mb-1"><i data-lucide="mail" class="w-3 h-3 text-slate-400"></i><span class="font-mono truncate">${escapeHtml(c.primaryContact.email || '—')}</span></div>
-              <div class="flex items-center gap-1.5 text-[11px] text-slate-700"><i data-lucide="phone" class="w-3 h-3 text-slate-400"></i><span class="font-mono">${escapeHtml(c.primaryContact.phone || '—')}</span></div>
+              <div class="flex items-center gap-1.5 text-[11px] text-slate-700 mb-1"><i data-lucide="mail" class="w-3 h-3 text-slate-400"></i><span class="font-mono truncate">${escapeHtml(c.primaryContact?.email || '—')}</span></div>
+              <div class="flex items-center gap-1.5 text-[11px] text-slate-700"><i data-lucide="phone" class="w-3 h-3 text-slate-400"></i><span class="font-mono">${escapeHtml(c.primaryContact?.phone || '—')}</span></div>
             </div>
           </td>
           <td class="px-4 py-3 font-bold text-slate-900" data-col="pipeline">
@@ -4848,15 +6224,30 @@ function toggleUserMenu(e) {
   menu.classList.remove('hidden');
   refreshIcons();
 }
-// ============= DEMO PERSONA SWITCH (fake role-play, header only) =============
-// Purely cosmetic: swaps the identity chip in the header + shows a toast.
-// No permission gates anywhere — the "permissions updated" toast is theatre, not enforcement.
+// ============= DEMO PERSONA SWITCH (RBAC — Liam QA / Eileen Finance / Sarah Admin) =============
+// Three named Irish personas with a real permission matrix (PERMISSIONS below).
+// switchPersona() swaps the identity chip, re-renders every money surface
+// (QA sees masked €), and toasts the active capability set. Gates live in
+// can() — never trust the chip text anywhere else.
 const PERSONAS = {
-  kam: { name: 'Sarah Lin',  role: 'Key Account Manager', email: 'sarah.lin@nouvem.ie',    initials: 'SL', bg: '#ff7a59', toast: 'Permissions updated — now acting as Key Account Manager (Sarah Lin)' },
-  qa:  { name: 'Niamh Walsh', role: 'QA Auditor',         email: 'n.walsh@nouvem.ie',      initials: 'NW', bg: '#059669', toast: 'Permissions updated — now acting as QA Auditor (Niamh Walsh)' },
-  fin: { name: 'Elena Rostova', role: 'Finance Specialist', email: 'e.rostova@nouvem.ie',  initials: 'ER', bg: '#2563eb', toast: 'Permissions updated — now acting as Finance Specialist (Elena Rostova)' }
+  kam: { name: 'Sarah Lin', role: 'System Administrator', shortRole: 'Admin', email: 'sarah.lin@nouvem.ie', initials: 'SL', bg: '#ff7a59', scope: 'Full CRUD · cascade delete · all money', toast: 'Permissions updated — now acting as System Administrator Sarah Lin (full access)' },
+  qa:  { name: "Liam O'Connor", role: 'Plant QA Auditor', shortRole: 'QA', email: 'liam.oconnor@nouvem.ie', initials: 'LO', bg: '#059669', scope: 'Read-only companies · QA review · masked €', toast: "Permissions updated — now acting as Plant QA Auditor Liam O'Connor (amounts masked)" },
+  fin: { name: 'Eileen Doyle', role: 'Finance Controller', shortRole: 'Finance', email: 'eileen.doyle@nouvem.ie', initials: 'ED', bg: '#2563eb', scope: 'Mark Paid · credit hold · full A/R', toast: 'Permissions updated — now acting as Finance Controller Eileen Doyle (settlement + credit)' }
 };
 let currentPersona = 'kam';
+// ---- Permission matrix: persona × capability ----
+// qa (Plant QA Auditor):   money masked · companies read-only · tickets QA-review owner ·
+//                          orders NO Mark Paid · tasks read AR amounts masked
+// fin (Finance Controller): full money · tickets read-only · orders Mark Paid owner ·
+//                          credit-hold toggle owner · companies credit fields editable
+// kam (System Administrator): everything, incl. cascade delete.
+const PERMISSIONS = {
+  kam: { moneyFull: true,  companyWrite: true,  companyDelete: true,  ticketAdvance: true,  qaReview: true,  bordBiaRelease: true,  orderAdvance: true,  orderMarkPaid: true,  creditToggle: true,  taskSettle: true },
+  qa:  { moneyFull: false, companyWrite: false, companyDelete: false, ticketAdvance: true,  qaReview: true,  bordBiaRelease: true,  orderAdvance: true,  orderMarkPaid: false, creditToggle: false, taskSettle: false },
+  fin: { moneyFull: true,  companyWrite: false, companyDelete: false, ticketAdvance: false, qaReview: false, bordBiaRelease: false, orderAdvance: false, orderMarkPaid: true,  creditToggle: true,  taskSettle: true }
+};
+function can(cap) { return !!(PERMISSIONS[currentPersona] && PERMISSIONS[currentPersona][cap]); }
+function denyToast(msg) { showToast(msg, 'destructive'); updateKbdStatus?.('Blocked: ' + msg); }
 function switchPersona(key) {
   const p = PERSONAS[key];
   if (!p || key === currentPersona) { closeAllMenus(); return; }
@@ -4873,12 +6264,29 @@ function switchPersona(key) {
   if (mEmail) mEmail.textContent = p.email;
   const mRole = document.getElementById('user-menu-role');
   if (mRole) mRole.textContent = p.role;
+  const hint = document.getElementById('role-matrix-hint');
+  if (hint) hint.textContent = p.scope + '.';
   document.querySelectorAll('.role-check').forEach(el => el.classList.add('hidden'));
   const chk = document.getElementById('role-check-' + key);
   if (chk) chk.classList.remove('hidden');
   closeAllMenus();
   showToast(p.toast, 'warning');
   updateKbdStatus?.(`Identity switched: ${p.name} — ${p.role}`);
+  if (typeof currentSection !== 'undefined' && typeof renderForPersona === 'function') renderForPersona(currentSection);
+}
+function renderForPersona(section) {
+  // Re-render every money/action surface so gates + masks apply instantly.
+  try {
+    if (section === 'dashboard' && typeof renderDashboard === 'function') renderDashboard();
+    else if (section === 'companies' && typeof renderCompanies === 'function') renderCompanies();
+    else if (section === 'contacts' && typeof renderContacts === 'function') renderContacts();
+    else if (section === 'deals' && typeof renderDeals === 'function') renderDeals();
+    else if (section === 'orders' && typeof renderOrders === 'function') renderOrders();
+    else if (section === 'tickets' && typeof renderTickets === 'function') renderTickets();
+    else if (section === 'tasks' && typeof renderTasks === 'function') renderTasks();
+    else if (section === 'record-detail' && typeof renderRecordDetail === 'function') renderRecordDetail();
+    else if (section === 'contact-detail' && typeof renderContactDetail === 'function') renderContactDetail();
+  } catch (e) {}
 }
 function toggleDealFilterMenu(e) {
   if (e) e.stopPropagation();
@@ -5110,12 +6518,16 @@ document.addEventListener('click', () => closeAllMenus());
 function exportCompaniesCSV() {
   const filtered = getFilteredSortedCustomers();
   const headers = ['Establishment #','Company','Sector','Stage','Contact','Email','Phone','City','Country','Cold Chain','Volume (MT)','Contract (€)','OTIF (%)','Payment Terms','Last Audit'];
-  const rows = filtered.map(c => [
-    c.establishmentNumber, c.companyName, c.sector, c.stage,
-    c.primaryContact.name, c.primaryContact.email, c.primaryContact.phone,
-    c.facilityLocation.city, c.facilityLocation.country, c.coldChainSpec,
-    c.monthlyVolumeMetricTons, c.annualContractValue, c.otifRate, c.paymentTerms, c.lastAuditDate
-  ]);
+  const rows = filtered.map(c => {
+    const pc = c.primaryContact || {};
+    const fl = c.facilityLocation || {};
+    return [
+      c.establishmentNumber, c.companyName, c.sector, c.stage,
+      pc.name, pc.email, pc.phone,
+      fl.city, fl.country, c.coldChainSpec,
+      c.monthlyVolumeMetricTons, c.annualContractValue, c.otifRate, c.paymentTerms, c.lastAuditDate
+    ];
+  });
   const csv = [headers, ...rows].map(r => r.map(x => '"' + String(x||'').replace(/"/g,'""') + '"').join(',')).join('\n');
   const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
   const url = URL.createObjectURL(blob);
@@ -5211,10 +6623,13 @@ function openQuick360Drawer(customerId) {
   const dealCount = deals.filter(d => d.companyId === customerId).length;
   const ticketCount = tickets.filter(t => t.companyId === customerId).length;
   const orderCount = orders.filter(o => o.companyId === customerId).length;
+  const taskCount = tasks.filter(t => t.companyId === customerId).length;
   document.getElementById('q360-contacts-count').textContent = contactCount;
   document.getElementById('q360-deals-count').textContent = dealCount;
   document.getElementById('q360-tickets-count').textContent = ticketCount;
   document.getElementById('q360-orders-count').textContent = orderCount;
+  const taskEl = document.getElementById('q360-tasks-count');
+  if (taskEl) taskEl.textContent = taskCount;
   // Show drawer + overlay
   drawer.classList.remove('translate-x-full');
   drawer.classList.add('translate-x-0');
@@ -5222,6 +6637,44 @@ function openQuick360Drawer(customerId) {
   if (overlay) { overlay.classList.remove('hidden'); }
   currentDrawerId = customerId;
   refreshIcons();
+}
+
+// Drill-through from the drawer: tile → that company's filtered list page.
+// Search is seeded with the company name so the destination table opens
+// pre-scoped and the destination search box reflects the same value.
+// All other filter slots are reset to 'all' so search × filter can never
+// AND into a silent empty table.
+function q360DrillTo(kind) {
+  const c = customers.find(x => x.id === currentDrawerId);
+  if (!c) return;
+  const name = c.companyName || '';
+  const setSearch = (inputId, v) => { const el = document.getElementById(inputId); if (el) el.value = v || ''; };
+  if (kind === 'contacts') { openContactRecordPage(c.id); return; }
+  if (kind === 'deals') {
+    dealSearchQuery = name; dealFilter = 'all'; dealsFunnelFilter = null;
+    setSearch('deal-search-input', name);
+    navigateTo('deals'); return;
+  }
+  if (kind === 'tickets') {
+    ticketSearchQuery = name; currentTicketFilter = 'all'; ticketFilter = 'all';
+    setSearch('ticket-search-input', name);
+    navigateTo('tickets'); return;
+  }
+  if (kind === 'orders') {
+    orderSearchQuery = name; orderFilter = 'all';
+    setSearch('order-search-input', name);
+    navigateTo('orders'); return;
+  }
+  if (kind === 'tasks') {
+    taskSearchQuery = name; taskFilter = 'all';
+    setSearch('task-search-input', name);
+    navigateTo('tasks'); return;
+  }
+}
+// Primary contact card → the contact's own record page.
+function q360OpenPrimaryContact() {
+  if (!currentDrawerId) return;
+  openContactRecordPage(currentDrawerId);
 }
 
 function closeQuick360Drawer() {
@@ -5442,7 +6895,7 @@ function saveNewTicket() {
   saveStorage();
   closeModal('ticket-create-modal');
   showToast('Ticket created');
-  if (currentView === 'tickets-board' || document.getElementById('page-tickets')?.classList.contains('active')) {
+  if (document.getElementById('page-tickets')?.classList.contains('active')) {
     renderTickets();
   }
   refreshIcons();
@@ -5505,9 +6958,7 @@ function renderContactNotes() {
         </div>`;
       }).join('');
   const a = document.getElementById('cd-notes-list');
-  const b = document.getElementById('cd-notes-list-tab');
   if (a) a.innerHTML = html;
-  if (b) b.innerHTML = html;
   refreshIcons();
 }
 
@@ -5688,6 +7139,11 @@ function ticketNextStatus(t) {
 function setTicketStatus(id, next, via) {
   const t = tickets.find(x => x.id === id);
   if (!t) return false;
+  // RBAC: Finance is read-only on tickets (billing disputes are out of scope —
+  // those live in Tasks A/R). QA owns the Under QA Review gate; Admin owns all.
+  if (currentPersona === 'fin') { denyToast('Tickets are read-only for Finance (Eileen) — billing disputes live in Tasks A/R. Switch to QA (Liam) or Admin (Sarah)'); return false; }
+  if (next === 'Under QA Review' && !can('qaReview')) { denyToast('Only Plant QA (Liam) or Admin (Sarah) can move a ticket into Under QA Review'); return false; }
+  if (DB.isTicketResolved(next) && (t.category === 'Bord Bia / DAFM' || t.category === 'Bord Bia / Compliance') && !can('bordBiaRelease')) { denyToast('Only Plant QA (Liam) or Admin (Sarah) can sign off a Bord Bia compliance release'); return false; }
   const from = t.status;
   if (from === next) return true;
   if (DB.isTicketResolved(from)) return false;
@@ -5705,6 +7161,7 @@ function setTicketStatus(id, next, via) {
   t.history.unshift({ at: new Date().toISOString(), from, to: t.status, via: via || 'drawer-stepper' });
   if (DB.isTicketResolved(t.status) && typeof t.slaDueMin === 'number') t.slaDueMin = 0;
   saveStorage();
+  Events.emit('ticket.statusChanged', { ticket: t, oldStatus: from, newStatus: t.status, via: via || 'drawer-stepper' });
   // Live-sync every status-derived surface: the table rows, the four stat
   // cards (counts + which one is highlighted), the Filter-menu dot and the
   // reset chip — all read fresh state in renderTickets(). Dashboard KPIs and
@@ -5878,10 +7335,10 @@ function renderRecordDetail() {
   document.getElementById('rd-name').textContent = c.companyName;
   document.getElementById('rd-est').textContent = c.establishmentNumber;
   document.getElementById('rd-location').textContent = locationParts;
-  document.getElementById('rd-phone').textContent = c.primaryContact.phone || '—';
-  document.getElementById('rd-email').textContent = c.primaryContact.email || '—';
+  document.getElementById('rd-phone').textContent = c.primaryContact?.phone || '—';
+  document.getElementById('rd-email').textContent = c.primaryContact?.email || '—';
   const ccEl = document.getElementById('rd-contact-country');
-  if (ccEl) ccEl.textContent = c.primaryContact.country || c.facilityLocation?.country || '—';
+  if (ccEl) ccEl.textContent = c.primaryContact?.country || c.facilityLocation?.country || '—';
   document.getElementById('rd-stage').innerHTML = `<span class="text-[11px] font-semibold px-2 py-0.5 rounded ${stageClass(c.stage)}">${escapeHtml(c.stage)}</span>`;
   document.getElementById('rd-coldchain').textContent = c.coldChainSpec;
   document.getElementById('rd-payment').textContent = c.paymentTerms;
@@ -5987,10 +7444,22 @@ function openModal(id) {
   // first so only one overlay owns the screen at a time.
   if (typeof closeQuick360Drawer === 'function') closeQuick360Drawer();
   document.getElementById(id).classList.add('active');
+  // Lock body scroll so the viewport's native scrollbar disappears.
+  // The modal itself keeps its own scroll region (max-height calc(100vh
+  // - 110px)), so the form is still scrollable — but the OS scrollbar
+  // that lives at the viewport's right edge can no longer be drawn over
+  // the guided-tour dock's Run / Auto / End / Replay buttons.
+  document.body.classList.add('modal-open');
+  try { window.__pilotPrevScrollY = window.scrollY; window.scrollTo(0, 0); } catch (e) {}
 }
 function closeModal(id) {
   document.getElementById(id).classList.remove('active');
   if (id === 'company-modal') { hideGeoMenu(); hideCountyMenu(); }
+  // If no other modal-overlay is open, release the body scroll lock.
+  if (!document.querySelector('.modal-overlay.active')) {
+    document.body.classList.remove('modal-open');
+    try { window.scrollTo(0, window.__pilotPrevScrollY || 0); } catch (e) {}
+  }
 }
 
 // ============= GEO AUTOCOMPLETE (Country → County/City → Address + lat/lng) =============
@@ -6295,7 +7764,44 @@ function initGeoAutocomplete() {
     if (!e.target.closest('#county-select-wrap')) hideCountyMenu();
   });
 }
+// Live Est# format feedback. Mirrors FORM_HINTS.taxId regex so the
+// examiner can watch the green ✓ / red ✗ appear in real time as the
+// dealer types — IE 621 EC flips the pill to "DAFM Approved" the moment
+// the regex matches.
+function wireEstFormatFeedback() {
+  const input = document.getElementById('form-est');
+  const fb = document.getElementById('form-est-feedback');
+  if (!input || !fb) return;
+  const update = () => {
+    const v = (input.value || '').trim();
+    const country = document.getElementById('form-country')?.value || 'Ireland';
+    const rule = (FORM_HINTS.taxId || {})[country];
+    if (!v) { fb.classList.add('hidden'); fb.innerHTML = ''; input.classList.remove('border-emerald-400','border-rose-400'); return; }
+    if (!rule) { fb.classList.remove('hidden'); fb.innerHTML = `<span class="inline-flex items-center gap-1 text-[11px] text-slate-500"><i data-lucide="info" class="w-3 h-3"></i>Free-text — no country rule for ${escapeHtml(country)}.</span>`; refreshIcons(); return; }
+    const ok = rule.re.test(v);
+    fb.classList.remove('hidden');
+    if (ok) {
+      input.classList.add('border-emerald-400'); input.classList.remove('border-rose-400');
+      fb.innerHTML = `<span class="inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-700"><i data-lucide="check-circle-2" class="w-3.5 h-3.5 text-emerald-500"></i>${escapeHtml(rule.hint || 'Format valid')} ✓ DAFM Approved</span>`;
+    } else {
+      input.classList.add('border-rose-400'); input.classList.remove('border-emerald-400');
+      fb.innerHTML = `<span class="inline-flex items-center gap-1 text-[11px] font-semibold text-rose-600"><i data-lucide="x-circle" class="w-3.5 h-3.5"></i>Expected ${escapeHtml(rule.hint || '—')}</span>`;
+    }
+    refreshIcons();
+  };
+  // Reset on every fresh modal open.
+  fb.classList.add('hidden'); fb.innerHTML = ''; input.classList.remove('border-emerald-400','border-rose-400');
+  input.removeEventListener('input', update);
+  input.addEventListener('input', update);
+  // Country change re-evaluates the rule.
+  const countryEl = document.getElementById('form-country');
+  if (countryEl && !countryEl.__estFbWired) {
+    countryEl.addEventListener('change', update);
+    countryEl.__estFbWired = true;
+  }
+}
 function openCreateModal() {
+  if (!requireCompanyWrite('Creating a company')) return;
   editingCustomerId = null;
   document.getElementById('modal-title').textContent = 'Create company';
   document.getElementById('form-id').value = '';
@@ -6322,11 +7828,17 @@ function openCreateModal() {
   buildCountyOptions('Ireland', '');
   resetGeoPicked();
   hideGeoMenu();
+  // Reset Advanced fields to a clean state for new records
+  resetAdvancedFormFields();
+  // Collapse the Advanced panel on open-create (most records only need the main form)
+  const adv = document.getElementById('company-form-advanced');
+  if (adv) adv.removeAttribute('open');
   openModal('company-modal');
   initGeoAutocomplete();
   refreshIcons();
 }
 function openEditModal(id) {
+  if (!requireCompanyWrite('Editing a company')) return;
   const c = customers.find(x => x.id === id);
   if (!c) return;
   // Defensive: ensure primaryContact exists so reads below are always safe
@@ -6371,9 +7883,63 @@ function openEditModal(id) {
     }
   }
   hideGeoMenu();
+  // Advanced (compliance + A/R + audit) fields — repopulate from the record
+  populateAdvancedFormFields(c);
+  // Auto-open the Advanced panel only when the record has non-default
+  // values in those fields; otherwise keep it collapsed so the edit modal
+  // stays focused on the main record.
+  const hasAdvanced = (c.outstandingAr && c.outstandingAr > 0)
+                   || (c.overdueDays && c.overdueDays > 0)
+                   || c.hasBordBiaMark
+                   || (Array.isArray(c.certifications) && c.certifications.length > 0)
+                   || c.lastAuditDate || c.nextAuditDate;
+  const adv = document.getElementById('company-form-advanced');
+  if (adv) {
+    if (hasAdvanced) adv.setAttribute('open', '');
+    else adv.removeAttribute('open');
+  }
   openModal('company-modal');
   initGeoAutocomplete();
+  wireEstFormatFeedback();
   refreshIcons();
+}
+
+// ===== Advanced (compliance + A/R + audit) form helpers =====
+// Resetting the Advanced panel without firing `change` listeners — we keep
+// the form purely a "starter state" for new records and a "value source"
+// for edits. saveCustomer() treats an empty Advanced field as "leave as-is"
+// when editing, so openEditModal below must always repopulate from the record.
+function resetAdvancedFormFields() {
+  const arEl = document.getElementById('form-ar');
+  const odEl = document.getElementById('form-overdue');
+  const bbEl = document.getElementById('form-bordbia');
+  const laEl = document.getElementById('form-last-audit');
+  const naEl = document.getElementById('form-next-audit');
+  const slaEl = document.getElementById('form-sla');
+  if (arEl)   arEl.value = '';
+  if (odEl)   odEl.value = '';
+  if (bbEl)   bbEl.checked = false;
+  if (laEl)   laEl.value = '';
+  if (naEl)   naEl.value = '';
+  if (slaEl)  slaEl.value = '';
+  document.querySelectorAll('.form-cert').forEach(cb => cb.checked = false);
+}
+
+function populateAdvancedFormFields(c) {
+  const arEl = document.getElementById('form-ar');
+  const odEl = document.getElementById('form-overdue');
+  const bbEl = document.getElementById('form-bordbia');
+  const laEl = document.getElementById('form-last-audit');
+  const naEl = document.getElementById('form-next-audit');
+  const slaEl = document.getElementById('form-sla');
+  if (arEl)   arEl.value = (c.outstandingAr != null) ? c.outstandingAr : '';
+  if (odEl)   odEl.value = (c.overdueDays != null) ? c.overdueDays : '';
+  if (bbEl)   bbEl.checked = !!c.hasBordBiaMark;
+  if (laEl)   laEl.value = c.lastAuditDate || '';
+  if (naEl)   naEl.value = c.nextAuditDate || '';
+  if (slaEl)  slaEl.value = c.slaCutOffTime || '';
+  const certs = Array.isArray(c.certifications) ? c.certifications : [];
+  document.querySelectorAll('.form-cert').forEach(cb => { cb.checked = certs.includes(cb.value); });
 }
 
 // ============= CONTACT MODAL (Create + Edit, used from Contacts page) =============
@@ -6570,6 +8136,19 @@ function saveContactCreate(addAnother) {
   refreshIcons();
 }
 function saveCustomer() {
+  if (!requireCompanyWrite(editingCustomerId ? 'Saving company edits' : 'Creating a company')) return;
+  // Read advanced-fields from the (collapsible) form. When the user leaves an
+  // advanced field blank in edit mode, preserve the existing value rather than
+  // overwriting with the form default — that way Advanced stays a true
+  // opt-in edit panel, not a hidden data-loss landmine.
+  const existing = editingCustomerId ? customers.find(c => c.id === editingCustomerId) : null;
+  const arInput          = parseFloat(document.getElementById('form-ar').value);
+  const overdueInput     = parseInt(document.getElementById('form-overdue').value, 10);
+  const bordBiaChecked   = document.getElementById('form-bordbia').checked;
+  const certsChecked     = Array.from(document.querySelectorAll('.form-cert:checked')).map(cb => cb.value);
+  const lastAuditInput   = document.getElementById('form-last-audit').value;
+  const nextAuditInput   = document.getElementById('form-next-audit').value;
+  const slaInput         = document.getElementById('form-sla').value.trim();
   const data = {
     id: editingCustomerId || ('cust-' + Date.now()),
     establishmentNumber: document.getElementById('form-est').value.trim(),
@@ -6599,13 +8178,14 @@ function saveCustomer() {
     annualContractValue: parseFloat(document.getElementById('form-contract').value) || 0,
     otifRate: parseFloat(document.getElementById('form-otif').value) || 95,
     creditLimit: parseFloat(document.getElementById('form-credit').value) || 0,
-    outstandingAr: 0,
-    overdueDays: 0,
-    hasBordBiaMark: false,
-    certifications: ['HACCP Certified','DAFM Approved Plant (IE)'],
-    lastAuditDate: new Date().toISOString().slice(0,10),
-    nextAuditDate: new Date(Date.now() + 365*24*60*60*1000).toISOString().slice(0,10),
-    slaCutOffTime: '06:00 AM',
+    // Advanced fields — only overwrite existing when the user actually filled the input.
+    outstandingAr   : !isNaN(arInput)        ? arInput                                  : (existing ? (existing.outstandingAr || 0) : 0),
+    overdueDays     : !isNaN(overdueInput)   ? overdueInput                             : (existing ? (existing.overdueDays || 0) : 0),
+    hasBordBiaMark  : bordBiaChecked         || (existing ? !!existing.hasBordBiaMark    : false),
+    certifications  : certsChecked.length    ? certsChecked                            : (existing ? (existing.certifications || []) : ['HACCP Certified','DAFM Approved Plant (IE)']),
+    lastAuditDate   : lastAuditInput         || (existing ? (existing.lastAuditDate || '') : new Date().toISOString().slice(0,10)),
+    nextAuditDate   : nextAuditInput         || (existing ? (existing.nextAuditDate || '') : new Date(Date.now() + 365*24*60*60*1000).toISOString().slice(0,10)),
+    slaCutOffTime   : slaInput               || (existing ? (existing.slaCutOffTime || '') : '06:00 AM'),
     notesList: [{
       id: 'n-' + Date.now(),
       author: 'System',
@@ -6624,6 +8204,18 @@ function saveCustomer() {
     return;
   }
 
+  // Validate Est# (DAFM approval) format if a country-specific rule exists.
+  // Ireland is the only hard requirement for THIS project's domain —
+  // companies elsewhere still save, but get a warning toast so the user
+  // knows the entry won't pass downstream compliance gates.
+  const country = data.facilityLocation && data.facilityLocation.country;
+  const taxRule = country && FORM_HINTS.taxId[country];
+  if (data.establishmentNumber && taxRule && !taxRule.re.test(data.establishmentNumber)) {
+    showToast(`Establishment # for ${country} does not match expected format (${taxRule.hint})`, 'warning');
+    document.getElementById('form-est')?.focus();
+    return;
+  }
+
   if (editingCustomerId) {
     const idx = customers.findIndex(c => c.id === editingCustomerId);
     if (idx !== -1) {
@@ -6632,7 +8224,33 @@ function saveCustomer() {
       customers[idx] = { ...customers[idx], ...data, notesList: keepNotes, createdAt: keepCreatedAt };
       const legacy = customers[idx];
       const ci = companies.findIndex(x => x.id === editingCustomerId);
-      if (ci !== -1) companies[ci] = Object.assign({}, companies[ci], { companyName: legacy.companyName, establishmentNumber: legacy.establishmentNumber, sector: legacy.sector, stage: legacy.stage, facilityLocation: legacy.facilityLocation, coldChainSpec: legacy.coldChainSpec, paymentTerms: legacy.paymentTerms, monthlyVolumeMetricTons: legacy.monthlyVolumeMetricTons, annualContractValue: legacy.annualContractValue, otifRate: legacy.otifRate, creditLimit: legacy.creditLimit });
+      if (ci !== -1) {
+        // Mirror ALL editable fields into the relational `companies[]` row so
+        // DB.company(id) never diverges from the legacy mirror after an edit.
+        // Fields the form doesn't expose are preserved as-is from the legacy
+        // record (not overwritten with form defaults).
+        companies[ci] = Object.assign({}, companies[ci], {
+          establishmentNumber    : legacy.establishmentNumber,
+          tradingName            : legacy.tradingName,
+          sector                 : legacy.sector,
+          stage                  : legacy.stage,
+          facilityLocation       : legacy.facilityLocation,
+          coldChainSpec          : legacy.coldChainSpec,
+          paymentTerms           : legacy.paymentTerms,
+          monthlyVolumeMetricTons: legacy.monthlyVolumeMetricTons,
+          annualContractValue    : legacy.annualContractValue,
+          otifRate               : legacy.otifRate,
+          creditLimit            : legacy.creditLimit,
+          outstandingAr          : legacy.outstandingAr,
+          overdueDays            : legacy.overdueDays,
+          hasBordBiaMark         : legacy.hasBordBiaMark,
+          certifications         : legacy.certifications,
+          lastAuditDate          : legacy.lastAuditDate,
+          nextAuditDate          : legacy.nextAuditDate,
+          slaCutOffTime          : legacy.slaCutOffTime,
+          companyName            : legacy.companyName
+        });
+      }
       const contactRow = DB.primaryContactOfCompany(editingCustomerId);
       if (contactRow) { contactRow.name = legacy.primaryContact.name; contactRow.title = legacy.primaryContact.title; contactRow.email = legacy.primaryContact.email; contactRow.phone = legacy.primaryContact.phone; }
     }
@@ -6652,6 +8270,7 @@ function saveCustomer() {
   refreshIcons();
 }
 function deleteCustomerConfirm(id) {
+  if (!requireCompanyDelete()) return;
   const c = customers.find(x => x.id === id);
   if (!c) return;
   // ---- Cascade impact (canonical stage key is stageId; legacy `stage` alias included) ----
@@ -6692,17 +8311,19 @@ function deleteCustomerConfirm(id) {
 // ============= UNDO SNAPSHOT (for destructive operations) =============
 function snapshotCompany(id) {
   return {
-    company:  structuredClone(customers.find(c => c.id === id)),
-    contacts: structuredClone(contacts.filter(c => c.companyId === id)),
-    deals:    structuredClone(deals.filter(d => d.companyId === id)),
-    orders:   structuredClone(orders.filter(o => o.companyId === id)),
-    tickets:  structuredClone(tickets.filter(t => t.companyId === id)),
-    tasks:    structuredClone(tasks.filter(t => t.companyId === id))
+    company     : structuredClone(customers.find(c => c.id === id)),
+    companiesRow: structuredClone(companies.find(c => c.id === id)),
+    contacts    : structuredClone(contacts.filter(c => c.companyId === id)),
+    deals       : structuredClone(deals.filter(d => d.companyId === id)),
+    orders      : structuredClone(orders.filter(o => o.companyId === id)),
+    tickets     : structuredClone(tickets.filter(t => t.companyId === id)),
+    tasks       : structuredClone(tasks.filter(t => t.companyId === id))
   };
 }
 function restoreCompany(snap) {
   if (!snap.company) return;
   customers.push(snap.company);
+  if (snap.companiesRow) companies.push(snap.companiesRow);
   contacts.push(...snap.contacts);
   deals.push(...snap.deals);
   orders.push(...snap.orders);
@@ -7251,6 +8872,7 @@ function settlePaymentTask(taskId) {
   if (!t) return false;
   if (!isArChaseTask(t)) return false;
   if (t.status === 'Done') return true; // idempotent — already settled, never double-count
+  if (!can('taskSettle')) { denyToast('Only Finance (Eileen) or Admin (Sarah) can collect payment — switch identity to settle'); return false; }
   const order = (t.relatedToType === 'Order' && t.relatedToId) ? DB.order(t.relatedToId) : null;
   const nowIso = new Date().toISOString();
   t.status = 'Done';
@@ -7354,11 +8976,20 @@ function deleteTaskConfirm(id) {
   if (!t) return;
   // Settled payment-chase tasks are financial receipts — keep the audit trail.
   if (isPaymentTaskLocked(t)) { showToast('Payment already collected — this receipt cannot be deleted', 'warning'); return; }
-  if (!confirm(`Delete task "${t.title}"?`)) return;
-  tasks = tasks.filter(x => x.id !== id);
+  // Non-blocking delete with Undo (consistent with the rest of the app).
+  const idx = tasks.findIndex(x => x.id === id);
+  const removed = tasks.splice(idx, 1)[0];
   saveStorage();
-  showToast('Task deleted');
   renderTasks();
+  showToast(`Task deleted: "${removed.title}"`, 'destructive', {
+    undo: true,
+    undoCallback: () => {
+      tasks.splice(Math.min(idx, tasks.length), 0, removed);
+      saveStorage();
+      renderTasks();
+      showToast(`Task restored: "${removed.title}"`, 'success');
+    }
+  });
 }
 function openTaskCreateModal() {
   if (typeof customers === 'undefined' || customers.length === 0) { showToast('No companies on file', 'warning'); return; }
@@ -7569,6 +9200,8 @@ function advanceOrderStatus(id) {
   if (!o) return;
   const next = orderNextStatus(o);
   if (!next) return;
+  if (next === 'Paid' && !can('orderMarkPaid')) { denyToast('Only Finance (Eileen) or Admin (Sarah) can confirm payment — switch identity to Mark Paid'); return; }
+  if (!can('orderAdvance') && next !== 'Paid') { denyToast('Only Plant QA (Liam) or Admin (Sarah) can advance fulfillment — Finance is payment-only'); return; }
   if (next === 'Delivered') {
     // Dock-signed moment: stamp the signed date, then fire the finance chase
     // chain (terms → due date → Tasks) through the event choke point.
@@ -7759,6 +9392,7 @@ function delayOrderStatus(id, anchorEl) {
 function resumeOrderStatus(id) {
   const o = orders.find(x => x.id === id);
   if (!o || o.status !== 'Delayed') return;
+  if (!can('orderAdvance')) { denyToast('Only Plant QA (Liam) or Admin (Sarah) can resume fulfillment — Finance is payment-only'); return; }
   // Guard: an unresolved maintenance ticket opened by the hold cascade blocks
   // resuming an In Production hold until the line issue is closed.
   if (o.holdStage === 'In Production' && o.holdReason) {
@@ -7924,18 +9558,24 @@ function renderOrders() {
   refreshIcons();
 }
 function renderContacts() {
-  document.getElementById('contacts-tbody').innerHTML = customers.map(c => `
-    <tr data-row-target="contact-detail:${c.id}" data-row-label="${escapeHtml(c.primaryContact.name + ' · ' + c.companyName)}" data-email="${escapeHtml(c.primaryContact.email)}" class="hover:bg-slate-50 cursor-pointer" onclick="openContactRecordPage('${c.id}')">
+  document.getElementById('contacts-tbody').innerHTML = customers.map(c => {
+    const pc = c.primaryContact || {};
+    const name = pc.name || '—';
+    const title = pc.title || '—';
+    const email = pc.email || '—';
+    const phone = pc.phone || '—';
+    return `
+    <tr data-row-target="contact-detail:${c.id}" data-row-label="${escapeHtml(name + ' · ' + c.companyName)}" data-email="${escapeHtml(email)}" class="hover:bg-slate-50 cursor-pointer" onclick="openContactRecordPage('${c.id}')">
       <td class="px-3 py-2">
         <div class="flex items-center gap-2">
-          <div class="w-7 h-7 rounded-full ${getInitialsBg(c.primaryContact.name)} text-white flex items-center justify-center text-[10px] font-bold">${initials(c.primaryContact.name)}</div>
-          <div class="font-semibold text-slate-900 text-xs">${escapeHtml(c.primaryContact.name)}</div>
+          <div class="w-7 h-7 rounded-full ${getInitialsBg(name)} text-white flex items-center justify-center text-[10px] font-bold">${initials(name)}</div>
+          <div class="font-semibold text-slate-900 text-xs">${escapeHtml(name)}</div>
         </div>
       </td>
-      <td class="px-3 py-2 text-[11px] text-slate-600">${escapeHtml(c.primaryContact.title)}</td>
+      <td class="px-3 py-2 text-[11px] text-slate-600">${escapeHtml(title)}</td>
       <td class="px-3 py-2"><button onclick="event.stopPropagation(); navigateTo('record-detail',{customerId:'${c.id}'})" class="text-blue-600 hover:underline font-semibold text-[11px]">${escapeHtml(c.companyName)}</button></td>
-      <td class="px-3 py-2 font-mono text-[11px] text-slate-600">${escapeHtml(c.primaryContact.email)}</td>
-      <td class="px-3 py-2 font-mono text-[11px] text-slate-600">${escapeHtml(c.primaryContact.phone)}</td>
+      <td class="px-3 py-2 font-mono text-[11px] text-slate-600">${escapeHtml(email)}</td>
+      <td class="px-3 py-2 font-mono text-[11px] text-slate-600">${escapeHtml(phone)}</td>
       <td class="px-3 py-2 text-right">
         <div class="inline-flex items-center gap-0.5">
           <button onclick="event.stopPropagation(); openContactRecordPage('${c.id}')" title="Open Contact Record Page" class="w-7 h-7 rounded-md hover:bg-blue-50 flex items-center justify-center text-blue-500"><i data-lucide="user" class="w-3.5 h-3.5"></i></button>
@@ -7945,46 +9585,48 @@ function renderContacts() {
           <button onclick="event.stopPropagation(); deleteCustomerConfirm('${c.id}')" title="Delete Related Company" class="w-7 h-7 rounded-md hover:bg-rose-50 flex items-center justify-center text-slate-300 hover:text-rose-500"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button>
         </div>
       </td>
-    </tr>`).join('');
+    </tr>`;
+  }).join('');
   refreshIcons();
 }
 
 // ============= EXPORT CSV =============
-function exportCSV() {
-  const headers = ['Establishment #','Company','Sector','Stage','Contact','Email','Phone','City','Country','Cold Chain','Volume (MT)','Contract (€)','OTIF (%)','Payment Terms','Last Audit'];
-  const rows = customers.map(c => [
-    c.establishmentNumber, c.companyName, c.sector, c.stage,
-    c.primaryContact.name, c.primaryContact.email, c.primaryContact.phone,
-    c.facilityLocation.city, c.facilityLocation.country, c.coldChainSpec,
-    c.monthlyVolumeMetricTons, c.annualContractValue, c.otifRate, c.paymentTerms, c.lastAuditDate
-  ]);
-  const csv = [headers, ...rows].map(r => r.map(x => '"' + String(x||'').replace(/"/g,'""') + '"').join(',')).join('\n');
-  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement('a');
-  link.href = url;
-  link.download = 'provisions_crm_export_' + new Date().toISOString().slice(0,10) + '.csv';
-  link.click();
-  URL.revokeObjectURL(url);
-  showToast('CSV exported successfully');
-}
+// Removed per product request: the redundant header-level CSV button has
+// been deleted, and this function was its only call site. Per-page exports
+// (Companies, Deals, Tickets, Tasks, Orders) are unaffected and live in
+// each toolbar.
+
+// ============= RESET DEMO DATA =============
 function resetDemoData() {
-  if (!confirm('Reset all CRM data to original demo state? This cannot be undone.')) return;
-  try {
-    localStorage.removeItem(STORAGE_KEY);
-    localStorage.removeItem('companies_view_v1');
-    localStorage.removeItem('companies_columns_v1');
-  } catch (e) {}
-  customers = []; companies = []; contacts = []; deals = []; tickets = []; orders = []; tasks = [];
-  currentTab = 'all';
-  searchQuery = '';
-  const si = document.getElementById('search-input');
-  if (si) si.value = '';
-  visibleColumns = Object.fromEntries(COLUMNS_DEF.map(c => [c.id, true]));
-  seedIfEmpty();
-  showToast('Demo data reset');
-  renderDashboard();
-  navigateTo('dashboard');
+  openInfoModal({
+    title: 'Reset Demo Data',
+    message: 'This will erase all CRM data (companies, contacts, deals, orders, tickets, tasks) and restore the original sample dataset. This action cannot be undone.',
+    okLabel: 'Reset Now',
+    cancelLabel: 'Cancel',
+    onOk: () => {
+      try {
+        localStorage.removeItem(STORAGE_KEY);
+        localStorage.removeItem('companies_view_v1');
+        localStorage.removeItem('companies_columns_v1');
+      } catch (e) {}
+      customers = []; companies = []; contacts = []; deals = []; tickets = []; orders = []; tasks = [];
+      currentTab = 'all';
+      searchQuery = '';
+      const si = document.getElementById('search-input');
+      if (si) si.value = '';
+      visibleColumns = Object.fromEntries(COLUMNS_DEF.map(c => [c.id, true]));
+      seedIfEmpty();
+      try { if (typeof pilotHideCoach === 'function') pilotHideCoach(); } catch (e) {}
+      try { if (typeof pilotStopAuto === 'function') pilotStopAuto(); } catch (e) {}
+      _pilotDeleteArmed = false; _pilotDeleteDone = true;
+      _pilotIdx = 0; _pilotCoachIdx = 0;
+      document.getElementById('pilot-dock')?.classList.add('hidden');
+      _pilotSnapshot = null;
+      showToast('Demo data reset successfully', 'success');
+      renderDashboard();
+      navigateTo('dashboard');
+    }
+  });
 }
 
 // ============= MOCK RECALL =============
@@ -8194,8 +9836,11 @@ function ensureKbdHelpPanel() {
         <div class="flex items-center justify-between">
           <span><kbd class="kbd">?</kbd></span><span class="text-slate-500">Show / hide this panel</span>
         </div>
+        <div class="flex items-center justify-between">
+          <span><kbd class="kbd">G</kbd></span><span class="text-slate-500">Run next guide step (when dock live)</span>
+        </div>
       </div>
-      <p class="text-[10px] text-slate-400 mt-3 italic">Press <kbd class="kbd">?</kbd> or <kbd class="kbd">Esc</kbd> to close.</p>
+      <p class="text-[10px] text-slate-400 mt-3 italic">Press <kbd class="kbd">?</kbd> or <kbd class="kbd">Esc</kbd> to close. <kbd class="kbd">Esc</kbd> also ends the guided demo.</p>
     </div>`;
   document.body.appendChild(panel);
   // Style for <kbd> elements inside the panel
@@ -8292,6 +9937,19 @@ window.addEventListener('keydown', (e) => {
 
   // Don't fight the user when they're typing in a form
   if (isEditingText()) return;
+  // Esc ends the guided pilot first (it restores the pre-demo snapshot).
+  const pilotDock = document.getElementById('pilot-dock');
+  if (e.key === 'Escape' && pilotDock && !pilotDock.classList.contains('hidden')) {
+    e.preventDefault();
+    if (typeof pilotStop === 'function') pilotStop();
+    return;
+  }
+  // G advances the guided pilot (same as Run step) when the dock is live.
+  if ((e.key === 'g' || e.key === 'G') && pilotDock && !pilotDock.classList.contains('hidden')) {
+    e.preventDefault();
+    if (typeof pilotRunStep === 'function') pilotRunStep();
+    return;
+  }
   // Esc closes the About / Architecture README first (same class as help).
   const aboutModal = document.getElementById('about-modal');
   if (e.key === 'Escape' && aboutModal && aboutModal.classList.contains('active')) {
