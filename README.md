@@ -11,10 +11,14 @@
 
 ## 📸 System Showcase
 
+<div align="center">
+  <img src="https://github.com/user-attachments/assets/8a6e69b9-64f9-42b1-a310-2661f458e9cc" alt="MeatFlow Ireland 10s Guided Demo Walkthrough" width="100%" style="border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.15);" />
+  <p><em>⚡ 10-Second Lead-to-Cash Interactive Guided Tour: Entity sync, DAFM compliance, and automated dispatch.</em></p>
+</div>
+
 | Full Operational Dashboard & RBAC | GS1-128 Pallet Label & DAFM Health Mark |
 | :---: | :---: |
-| ![Dashboard Screenshot](assets/dashboard_preview.png) | ![GS1 Pallet Label](assets/pallet_label_preview.png) |
-
+| <img src="assets/dashboard_preview.png" alt="Dashboard Preview" width="100%"/> | <img src="assets/pallet_label_preview.png" alt="Pallet Label Preview" width="100%"/> |
 ---
 
 ## 🌟 Key Functional Capabilities
@@ -56,5 +60,48 @@ graph TD
     E --> F[Early Morning CDC Logistics Handover]
     F --> G[Net 30 Invoice & AR Balance Settlement]
     D -.->|Anomaly Detected| H[QA Audit Ticket & Line Hold]
+```
 
-<img width="1920" height="1080" alt="output" src="https://github.com/user-attachments/assets/8a6e69b9-64f9-42b1-a310-2661f458e9cc" />
+## 🛠️ Architecture & Tech Stack
+
+* **Frontend Engine**: Modern Vanilla JavaScript (ES6+), Event-Driven Pub/Sub Pattern.
+* **UI & Styling**: Tailwind CSS, Lucide Icons, industrial status colorimetry.
+* **Data Layer**: High-resilience `localStorage` persistence with seed schemas and dynamic migrations.
+* **Barcode Processing**: Dynamic canvas vector rendering powered by `bwip-js`.
+* **Testing & Seed Data**: Pre-loaded with official registry data of approved Irish meat processing establishments across County Meath, Cork, Cavan, and Waterford.
+
+---
+
+## ⚡ Quick Start (Local Setup)
+
+Clone the repository and launch instantly—zero dependencies or complex compile steps required:
+
+```bash
+# 1. Clone the repository
+git clone [https://github.com/yuanindublin/irish-food-erp-crm.git](https://github.com/yuanindublin/irish-food-erp-crm.git)
+
+# 2. Navigate to project root
+cd irish-food-erp-crm
+
+# 3. Open directly in your browser or run via Live Server
+open index.html
+```
+
+> **Reviewer's Note**: Click the pulsing **`⚡ Demo Tour`** button in the top navigation bar to trigger an automated 60-second interactive guided walkthrough of the full commercial-to-production lifecycle.
+
+---
+
+## 📁 Repository Structure
+
+```text
+├── index.html                  # Standalone SPA Application (Reactive Engine & UI)
+├── assets/                     # Architecture diagrams and system screenshots
+│   ├── demo.gif
+│   ├── dashboard_preview.png
+│   └── pallet_label_preview.png
+├── data/                       # Reference datasets (DAFM Approved Meat Plants)
+│   └── dafm_reference_plants.json
+└── README.md                   # Technical Documentation & Specification
+```
+
+
